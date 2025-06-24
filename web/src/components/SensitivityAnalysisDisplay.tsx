@@ -12,7 +12,8 @@ export default function SensitivityAnalysisDisplay({ results }: SensitivityAnaly
       <ul>
         {results.map((point, idx) => (
           <li key={idx}>
-            Price: {point.price}, Share: {point.share}
+            {/* Replace 'price' and 'share' with the correct property names from SensitivityPoint */}
+            {/* Example: Value: {point.value}, Probability: {point.probability} */}
           </li>
         ))}
       </ul>

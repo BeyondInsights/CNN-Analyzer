@@ -35,11 +35,11 @@ export default function FeatureModal() {
     const featureType = currentEditingProduct.featureType;
 
     if (featureType === 'reader') {
-      existingFeatures = product.selectedReaderFeatures || []; // Changed to selectedReaderFeatures
+      existingFeatures = product.readerFeatures || []; // Changed to readerFeatures
     } else if (featureType === 'streaming') {
-      existingFeatures = product.selectedStreamingFeatures || []; // Changed to selectedStreamingFeatures
+      existingFeatures = product.streamingFeatures || []; // Changed to streamingFeatures
     } else if (featureType === 'vertical') {
-      existingFeatures = product.selectedVerticals || []; // Changed to selectedVerticals
+      existingFeatures = product.verticals || []; // Changed to verticals
     }
     
     return AVAILABLE_FEATURES[featureType].filter(f => !existingFeatures.includes(f));
@@ -72,11 +72,11 @@ export default function FeatureModal() {
     const featureType = currentEditingProduct.featureType;
     let currentFeatureList: string[] = [];
     if (featureType === 'reader') {
-      currentFeatureList = product.selectedReaderFeatures || []; // Changed to selectedReaderFeatures
+      currentFeatureList = product.readerFeatures || []; // Changed to readerFeatures
     } else if (featureType === 'streaming') {
-      currentFeatureList = product.selectedStreamingFeatures || []; // Changed to selectedStreamingFeatures
+      currentFeatureList = product.streamingFeatures || []; // Changed to streamingFeatures
     } else if (featureType === 'vertical') {
-      currentFeatureList = product.selectedVerticals || []; // Changed to selectedVerticals
+      currentFeatureList = product.verticals || []; // Changed to verticals
     }
     const currentCount = currentFeatureList.length;
 

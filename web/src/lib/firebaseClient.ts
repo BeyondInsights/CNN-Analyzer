@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'development') {
     connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
     connectFirestoreEmulator(firestore, 'localhost', 8080);
     connectFunctionsEmulator(functions, 'localhost', 5001);
-    connectStorageEmulator(storage, 'localhost', 9199);
+    // connectStorageEmulator(storage, 'localhost', 9199);  // COMMENT THIS OU
   } catch (e) {
     // Already connected
   }
