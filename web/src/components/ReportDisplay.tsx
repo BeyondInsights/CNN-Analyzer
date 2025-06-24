@@ -2,6 +2,12 @@
 import React from 'react';
 import type { ReportData, ProductSetupConfig } from '@/lib/types';
 
+interface ReportDisplayProps {
+  reportData: ReportData | null;
+  activeProducts: ProductSetupConfig[];
+  priceSensitivityData?: any; // Or use proper type if you have one
+}
+
 export default function ReportDisplay({ reportData, activeProducts, priceSensitivityData }: ReportDisplayProps) {
   if (!reportData) return null;
 
