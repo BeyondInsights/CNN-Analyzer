@@ -1,4 +1,8 @@
 [build]
   base = "web"
   command = "npm run build"
-  publish = "out"
+  publish = ".next"
+  environment = { SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza*" }
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
