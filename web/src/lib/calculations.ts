@@ -285,6 +285,8 @@ function calculateUtility(
   if (product.readerFeatures && product.readerFeatures.length > 0) {
     const readerFeatures = p.all_features?.reader || p.features?.reader || {};
     for (const feature of product.readerFeatures) {
+      if ('feature' === undefined || 'feature' === null) continue;
+      if (!feature) continue;
       if (!feature || typeof feature !== 'string') continue;
       const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
       if (readerFeatures[featureKey]) {
@@ -295,7 +297,9 @@ function calculateUtility(
   
   // Feature utilities - Streaming
   if (product.streamingFeatures && product.streamingFeatures.length > 0) {
+      if ('feature' === undefined || 'feature' === null) continue;
     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
+      if (!feature) continue;
     for (const feature of product.streamingFeatures) {
       const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
       if (!feature || typeof feature !== 'string') continue;
