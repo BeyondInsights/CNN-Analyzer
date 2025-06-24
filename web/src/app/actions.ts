@@ -205,7 +205,7 @@ export async function runServerSimulation(
     // Transform results to match ReportData format
     const allExpectedSegments = DEMOGRAPHIC_SEGMENTS.flatMap(g => g.segments);
     
-    if (reportType === 'tiered' || reportType === 'bundle') {
+    if (reportType === 'tiered') {
       // Use the properly calculated ANY PRODUCT rate
       const anyProductShare = results.anyProductRate || 0;
       
