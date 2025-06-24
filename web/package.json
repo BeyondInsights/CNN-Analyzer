@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "export": "next export",
     "clean": "node scripts/clean.js",
     "rebuild": "npm run clean && npm run build"
   },
@@ -34,6 +35,7 @@
     "d3": "^7.9.0",
     "dotenv": "^16.5.0",
     "firebase": "^11.9.1",
+    "firebase-admin": "^13.4.0",
     "genkit": "^1.12.0",
     "lucide-react": "^0.513.0",
     "netlify-identity-widget": "^1.9.2",
