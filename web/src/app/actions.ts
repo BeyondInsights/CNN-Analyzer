@@ -1,7 +1,7 @@
 'use server';
 const DEBUG_MODE = false;
 import { getStorage } from 'firebase-admin/storage';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import '@/lib/firebaseAdmin';
 import type { 
   ProductSetupConfig, 
   ReportData, 
@@ -17,18 +17,6 @@ import { computeTakeRates } from '@/lib/calculations';
 import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
 import fs from 'fs/promises';
 import path from 'path';
-
-// Initialize Firebase Admin
-if (!getApps().length) {
-  initializeApp({
-    credential: cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
-  });
-}
 
 // Interface definitions
 interface RespondentUtility {
@@ -106,13 +94,12 @@ const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; wi
 
 async function loadJsonData<T>(filename: string): Promise<T> {
   try {
-    // Check if it's a local file (non-sensitive) or Firebase file (sensitive)
     const firebaseFiles = ['a7b9c2d1.json', 'e5f8a3b2.json', 'modelParameters.json', 'drnRates.json'];
     
     if (firebaseFiles.includes(filename)) {
       // Load from Firebase Storage
       const storage = getStorage();
-      const bucket = storage.bucket();
+      const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
       const file = bucket.file(`data/${filename}`);
       const [contents] = await file.download();
       return JSON.parse(contents.toString()) as T;
