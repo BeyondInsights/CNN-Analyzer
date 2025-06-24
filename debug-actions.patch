@@ -1,0 +1,54 @@
+--- a/src/app/actions.ts
++++ b/src/app/actions.ts
+@@ -90,6 +90,8 @@ export async function runServerSimulation(
+   
+   try {
+     console.log('[START] runServerSimulation with', activeProducts.length, 'products');
++    console.log('[DATA] respondentUtilities:', respondentUtilities.length);
++    console.log('[DATA] respondentProfiles:', respondentProfiles.length);
+     
+     if (!activeProducts || activeProducts.length === 0) {
+       console.error('No active products provided');
+@@ -105,7 +107,10 @@ export async function runServerSimulation(
+     // Calculate utilities and probabilities for each respondent/product combination
+     const respondentProductProbabilities: Map<string, Map<string, number>> = new Map();
+     
++    let processedCount = 0;
+     for (const respondent of respondentUtilities) {
++      processedCount++;
++      if (processedCount % 200 === 0) console.log(`[PROGRESS] ${processedCount}/${respondentUtilities.length} respondents`);
+       const respondentProbs = new Map<string, number>();
+       let totalExpUtility = 0;
+       
+@@ -161,10 +166,12 @@ export async function runServerSimulation(
+       
+       respondentProductProbabilities.set(respondent.respondentId, respondentProbs);
+     }
++    console.log('[DONE] Calculated all probabilities');
+     
+     // Apply price sensitivity if enabled
+     if (marketFactors.enablePriceSensitivity || simulationOptions.enablePriceTiers) {
+       console.log('Applying price sensitivity adjustments...');
++      const startTime = Date.now();
+       applyPriceSensitivity(
+         respondentProductProbabilities,
+         activeProducts,
+@@ -172,8 +179,10 @@ export async function runServerSimulation(
+         simulationOptions
+       );
+       console.log("Price sensitivity adjustments applied.");
++      console.log(`[TIME] Price sensitivity took ${Date.now() - startTime}ms`);
+     }
+     
++    console.log('[START] Calculating market shares');
+     // Apply market factors and calculate overall shares
+     const shares: number[] = [];
+     const segmentShares: Map<string, number[]> = new Map();
+@@ -184,6 +193,7 @@ export async function runServerSimulation(
+     
+     // Calculate shares for each product
+     for (const product of activeProducts) {
++      console.log(`[PRODUCT] Processing ${product.product}`);
+       let totalWeightedProb = 0;
+       let totalWeight = 0;
+       

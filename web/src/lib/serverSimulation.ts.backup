@@ -1,0 +1,31 @@
+// web/src/lib/serverSimulation.ts
+import { InputConfig, ReportData } from './types';
+
+/**
+ * Run server simulation
+ * This calls your Next.js server action
+ */
+export async function runServerSimulation(config: InputConfig): Promise<ReportData> {
+  try {
+    // Import the server action
+    const { runServerSimulation: serverAction } = await import('@/app/actions');
+    
+    // Call the server action with the 5 parameters it expects
+    const result = await serverAction(
+      config.products,
+      config.reportType,
+      config.outputType,
+      config.marketFactors,
+      config.simulationOptions
+    );
+    
+    if (!result) {
+      throw new Error('No result returned from simulation');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Server simulation error:', error);
+    throw error;
+  }
+}

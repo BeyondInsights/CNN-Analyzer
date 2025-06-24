@@ -1,0 +1,273 @@
+{
+  "timestamp": "2025-06-16T20:25:18.674Z",
+  "summary": {
+    "totalRespondents": 2158,
+    "respondentsWithAllFeatures": 2158,
+    "respondentsWithReaderFeatures": 2158,
+    "respondentsWithStreamingFeatures": 2158,
+    "respondentsWithVerticals": 0,
+    "respondentsWithFeatureCounts": 2158
+  },
+  "availableKeys": {
+    "reader": [
+      "Unlimited_Articles_on_CNNcom_and_the_CNN_mobile_app",
+      "ShortForm_Video_Unlimited_access",
+      "SubscriberOnly_Articles_Newsletters_and_Podcasts",
+      "CNN_Reality_Check",
+      "Podcast_Club",
+      "News_from_Local_Providers",
+      "CNN_You",
+      "CNN_Technology_Insider_I",
+      "Bonus_Subscription",
+      "News_from_Global_Providers",
+      "CNN_Live_Events_and_Expert",
+      "Ask_CNN",
+      "AI_Anchor",
+      "CNN_Business_Markets_Insider_I",
+      "CNN_Archive"
+    ],
+    "streaming": [
+      "247_Live_News_Channel",
+      "Catch_Up_Channel",
+      "CNN_Library_OnDemand",
+      "Curated_Video_Playlist_Channels",
+      "Multiview",
+      "Personalized_Daily_Video_Briefings",
+      "RealTime_Fact_Checking",
+      "CNN_You_Streaming",
+      "Live_QA_with_CNN_Experts",
+      "Live_Global_Feeds",
+      "Customized_Local_News",
+      "Original_ShortForm_CNN_Series",
+      "Live_Text_Commentary_from_CNN_Experts",
+      "Interactive_Video_Companions",
+      "RealTime_News_Ticker",
+      "Exclusive_SubscriberOnly_Events"
+    ],
+    "verticals": []
+  },
+  "statistics": {
+    "readerFeatures": {
+      "Unlimited_Articles_on_CNNcom_and_the_CNN_mobile_app": {
+        "count": 2158,
+        "mean": 0.03327300000000012,
+        "min": 0.033273,
+        "max": 0.033273,
+        "std": 1.249000902703301e-16
+      },
+      "ShortForm_Video_Unlimited_access": {
+        "count": 2158,
+        "mean": 0.036113999999998925,
+        "min": 0.036114,
+        "max": 0.036114,
+        "std": 1.0755285551056204e-15
+      },
+      "SubscriberOnly_Articles_Newsletters_and_Podcasts": {
+        "count": 2158,
+        "mean": 0.036379999999999586,
+        "min": 0.03638,
+        "max": 0.03638,
+        "std": 4.163336342344337e-16
+      },
+      "CNN_Reality_Check": {
+        "count": 2158,
+        "mean": 0.05328299999999725,
+        "min": 0.053283,
+        "max": 0.053283,
+        "std": 2.7478019859472624e-15
+      },
+      "Podcast_Club": {
+        "count": 2158,
+        "mean": 0.07251599999999862,
+        "min": 0.072516,
+        "max": 0.072516,
+        "std": 1.3739009929736312e-15
+      },
+      "News_from_Local_Providers": {
+        "count": 2158,
+        "mean": 0.050548000000002154,
+        "min": 0.050548,
+        "max": 0.050548,
+        "std": 2.1510571102112408e-15
+      },
+      "CNN_You": {
+        "count": 2158,
+        "mean": -0.012623999999999691,
+        "min": -0.012624,
+        "max": -0.012624,
+        "std": 3.0878077872387166e-16
+      },
+      "CNN_Technology_Insider_I": {
+        "count": 2158,
+        "mean": 0.03996899999999933,
+        "min": 0.039969,
+        "max": 0.039969,
+        "std": 6.661338147750939e-16
+      },
+      "Bonus_Subscription": {
+        "count": 2158,
+        "mean": 0.04763300000000116,
+        "min": 0.047633,
+        "max": 0.047633,
+        "std": 1.1587952819525071e-15
+      },
+      "News_from_Global_Providers": {
+        "count": 2158,
+        "mean": 0.04692799999999835,
+        "min": 0.046928,
+        "max": 0.046928,
+        "std": 1.6445178552260131e-15
+      },
+      "CNN_Live_Events_and_Expert": {
+        "count": 2158,
+        "mean": 0.048325000000001415,
+        "min": 0.048325,
+        "max": 0.048325,
+        "std": 1.4155343563970746e-15
+      },
+      "Ask_CNN": {
+        "count": 2158,
+        "mean": 0.04822500000000134,
+        "min": 0.048225,
+        "max": 0.048225,
+        "std": 1.3461454173580023e-15
+      },
+      "AI_Anchor": {
+        "count": 2158,
+        "mean": 0.049514000000001245,
+        "min": 0.049514,
+        "max": 0.049514,
+        "std": 1.2420620087993939e-15
+      },
+      "CNN_Business_Markets_Insider_I": {
+        "count": 2158,
+        "mean": 0.04784300000000028,
+        "min": 0.047843,
+        "max": 0.047843,
+        "std": 2.8449465006019636e-16
+      },
+      "CNN_Archive": {
+        "count": 2158,
+        "mean": 0.047422999999998494,
+        "min": 0.047423,
+        "max": 0.047423,
+        "std": 1.5057399771478686e-15
+      }
+    },
+    "streamingFeatures": {
+      "247_Live_News_Channel": {
+        "count": 2158,
+        "mean": 0.21715699999998994,
+        "min": 0.217157,
+        "max": 0.217157,
+        "std": 1.0047518372857667e-14
+      },
+      "Catch_Up_Channel": {
+        "count": 2158,
+        "mean": 0.18559699999999102,
+        "min": 0.185597,
+        "max": 0.185597,
+        "std": 8.992806499463768e-15
+      },
+      "CNN_Library_OnDemand": {
+        "count": 2158,
+        "mean": 0.18404500000000792,
+        "min": 0.184045,
+        "max": 0.184045,
+        "std": 7.93809462606987e-15
+      },
+      "Curated_Video_Playlist_Channels": {
+        "count": 2158,
+        "mean": 0.15733599999999195,
+        "min": 0.157336,
+        "max": 0.157336,
+        "std": 8.049116928532385e-15
+      },
+      "Multiview": {
+        "count": 2158,
+        "mean": 0.02041499999999986,
+        "min": 0.020415,
+        "max": 0.020415,
+        "std": 1.3877787807814457e-16
+      },
+      "Personalized_Daily_Video_Briefings": {
+        "count": 2158,
+        "mean": 0.17333300000000887,
+        "min": 0.173333,
+        "max": 0.173333,
+        "std": 8.881784197001252e-15
+      },
+      "RealTime_Fact_Checking": {
+        "count": 2158,
+        "mean": 0.13917300000000377,
+        "min": 0.139173,
+        "max": 0.139173,
+        "std": 3.774758283725532e-15
+      },
+      "CNN_You_Streaming": {
+        "count": 2158,
+        "mean": 0.033523000000001156,
+        "min": 0.033523,
+        "max": 0.033523,
+        "std": 1.1587952819525071e-15
+      },
+      "Live_QA_with_CNN_Experts": {
+        "count": 2158,
+        "mean": 0.11795200000000212,
+        "min": 0.117952,
+        "max": 0.117952,
+        "std": 2.123301534595612e-15
+      },
+      "Live_Global_Feeds": {
+        "count": 2158,
+        "mean": -0.0024289999999999815,
+        "min": -0.002429,
+        "max": -0.002429,
+        "std": 1.8648277366750676e-17
+      },
+      "Customized_Local_News": {
+        "count": 2158,
+        "mean": 0.012434999999999976,
+        "min": 0.012435,
+        "max": 0.012435,
+        "std": 2.42861286636753e-17
+      },
+      "Original_ShortForm_CNN_Series": {
+        "count": 2158,
+        "mean": -0.009973999999999773,
+        "min": -0.009974,
+        "max": -0.009974,
+        "std": 2.2724877535296173e-16
+      },
+      "Live_Text_Commentary_from_CNN_Experts": {
+        "count": 2158,
+        "mean": -0.024006999999999227,
+        "min": -0.024007,
+        "max": -0.024007,
+        "std": 7.73686670285656e-16
+      },
+      "Interactive_Video_Companions": {
+        "count": 2158,
+        "mean": -0.021819000000000557,
+        "min": -0.021819,
+        "max": -0.021819,
+        "std": 5.551115123125783e-16
+      },
+      "RealTime_News_Ticker": {
+        "count": 2158,
+        "mean": 0.004362000000000233,
+        "min": 0.004362,
+        "max": 0.004362,
+        "std": 2.3245294578089215e-16
+      },
+      "Exclusive_SubscriberOnly_Events": {
+        "count": 2158,
+        "mean": -0.02102699999999907,
+        "min": -0.021027,
+        "max": -0.021027,
+        "std": 9.298117831235686e-16
+      }
+    },
+    "verticals": {}
+  }
+}

@@ -1,0 +1,53 @@
+*** Begin Patch: web/src/app/page.tsx
+*** Update File: web/src/app/page.tsx
+@@ -1,6 +1,7 @@
+-export default function Page() {
++export default function Page() {
+   // …your hooks, handlers, etc.
+ 
+   return (
++    <div className={styles.pageContainer}>
+ 
+       {/* ── HEADER ROW ── */}
+       <header className={styles.mainHeader}>
+@@
+-      <div className={styles.logoContainer}>
+-        <a href="https://www.cnn.com" target="_blank" rel="noopener noreferrer">
+-          <img src="/cnn-logo.svg" alt="CNN" height={32} />
+-        </a>
+-      </div>
++      <div className={styles.logoContainer}>
++        <a href="https://www.cnn.com" target="_blank" rel="noopener noreferrer">
++          <img
++            src="https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg"
++            alt="CNN"
++            style={{ height: 40 }}
++          />
++        </a>
++      </div>
+ 
+-      {/* (headerCenter was missing title/subtitle) */}
++      <div className={styles.headerCenter}>
++        <h1 className={styles.headerTitle}>
++          Subscription Bundle Configurator & Simulator
++        </h1>
++        <p className={styles.headerSubtitle}>
++          Configure products, set pricing, and simulate market response
++        </p>
++      </div>
+ 
+       <div className={styles.poweredByContainer}>
+         <span className={styles.poweredByLabel}>Powered by</span>
+@@
+-        <a href="https://www.como.com" target="_blank" rel="noopener noreferrer">
+-          <img
+-            src="/como-logo.svg"
+-            alt="COMO Logo"
+-            className={styles.poweredByLogo}
+-          />
+-        </a>
++        {/* COMO logo removed per request */}
+       </div>
+     </header>
+ 
+*** End Patch ***

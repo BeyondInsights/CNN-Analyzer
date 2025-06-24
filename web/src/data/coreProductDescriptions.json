@@ -1,0 +1,97 @@
+{
+  "CNN Reader": {
+    "title": "CNN Reader",
+    "subtitle": "Digital (web + app)",
+    "description": "Unlimited access to CNN's world-class articles and short-form videos on CNN.com and mobile apps. Enjoy CNN's breaking news coverage, real-time analysis and updates, and exclusive subscriber-only content to keep you informed and in the know.",
+    "features": [
+      {
+        "name": "Unlimited Articles",
+        "description": "Unlimited access to every article on CNN.com and the CNN mobile app."
+      },
+      {
+        "name": "Short-Form Video",
+        "description": "Unlimited access to short news video clips from CNN journalists on CNN.com and the CNN mobile app."
+      },
+      {
+        "name": "Subscriber-Only Content",
+        "description": "Exclusive reporting, analysis, newsletters and other original subscriber-only journalism focusing on the day's most interesting stories and in-depth investigations from around the globe."
+      },
+      {
+        "name": "CNN Reality Check",
+        "description": "One-click fact-checking of news and information across the web, powered by CNN's trusted reporting and enabled by AI."
+      },
+      {
+        "name": "Podcast Club",
+        "description": "CNN's Podcast Club, featuring long-form conversations spanning culture, politics, comedy and news, hosted by your favorite independent comedians, journalists and personalities."
+      },
+      {
+        "name": "News from Local Providers",
+        "description": "Access curated articles and video clips from your preferred state, city or local news provider – up to 100 pieces of content monthly."
+      },
+      {
+        "name": "CNN You",
+        "description": "Personalized experience using AI, adapting your feed to your individual topic interests, consumption preferences and reading behavior."
+      },
+      {
+        "name": "CNN Technology Insider",
+        "description": "Premium subscriber-only coverage of the people, trends and stories driving rapidly evolving sectors in technology from leading minds in AI, crypto, mobility, energy, and more."
+      }
+    ],
+    "note": "Access to live TV requires a separate cable/streaming subscription."
+  },
+  "CNN Streaming": {
+    "title": "CNN Streaming",
+    "subtitle": "Live & On-Demand Video",
+    "description": "Stay ahead of every story with CNN Streaming, your pass to 24/7 news coverage available anywhere you are. Enjoy the daytime and primetime CNN shows you know and love from cable TV, plus live breaking news coverage, video on-demand, headlines of the day and more from CNN's trusted reporters, anchors and correspondents.",
+    "features": [
+      {
+        "name": "24/7 Live News Channel",
+        "description": "Continuous coverage of the day's most important stories, featuring CNN anchors like Anderson Cooper alongside international coverage and original programming."
+      },
+      {
+        "name": "Catch Up Channel",
+        "description": "Never miss a headline. This dedicated channel quickly brings you up to speed with a short summary of the day's most important stories."
+      },
+      {
+        "name": "CNN Library On-Demand",
+        "description": "Dive into CNN's original series and films, historical coverage, interviews, and award-winning docuseries like Parts Unknown with Anthony Bourdain."
+      },
+      {
+        "name": "Curated Video Playlist Channels",
+        "description": "Personalized playlists help keep you up to date on your favorite topics and shows with clips ranging from three to six minutes."
+      },
+      {
+        "name": "Multiview",
+        "description": "There's always more than one news story developing in real-time. This exclusive feature lets you tune into multiple live feeds simultaneously."
+      },
+      {
+        "name": "Personalized Daily Video Briefings",
+        "description": "Get exclusive, personalized daily video briefings on the subjects that matter most to you – every time you sign in."
+      },
+      {
+        "name": "Real-Time Fact Checking",
+        "description": "Our fact checkers watch interviews and events alongside you and verify the truth via an on-screen text companion."
+      },
+      {
+        "name": "CNN You Streaming",
+        "description": "Personalized streaming experience using AI, adapting your feed to your individual topic interests and viewing preferences."
+      },
+      {
+        "name": "Live Q&A with CNN Experts",
+        "description": "Connect directly with anchors, experts and special guests via live, interactive conversations. Ask questions and be part of the story."
+      }
+    ]
+  },
+  "CNN All-Access": {
+    "title": "CNN All-Access",
+    "subtitle": "CNN Reader + CNN Streaming",
+    "description": "Your all-access pass to the CNN universe – unlimited articles, short-form videos, and live and on-demand streaming content. Get the breaking news coverage, depth and authority that only CNN's global newsroom can deliver, whenever you need it, on CNN.com, CNN Streaming, and the app.",
+    "includesReader": true,
+    "includesStreaming": true
+  },
+  "CNN Standalone Vertical": {
+    "title": "CNN Standalone Vertical",
+    "subtitle": "Focused Content Subscription",
+    "description": "A focused subscription to a specific content vertical like Entertainment Tracker, Meditation & Mindfulness, or Personal Finance, targeting your specific interests with deep, specialized coverage."
+  }
+}

@@ -1,0 +1,1459 @@
+/* page.module.css - Complete CNN Simulator Styles */
+
+/* ============ BASE STYLES ============ */
+.pageContainer {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============ MAIN HEADER ============ */
+.mainHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  border-bottom: 2px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.logoContainer img {
+  height: 40px;
+}
+
+.headerCenter {
+  text-align: center;
+  flex: 1;
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.poweredByContainer {
+  position: static;           /* flow in the header, not fixed */
+  display: flex;              /* lay out text + logos in a row */
+  align-items: center;        /* vertically center them */
+  gap: 0.5rem;                /* space between label and logos */
+  margin: 0;                  /* remove any old margins */
+}
+
+.poweredByLabel {
+  font-size: 11px;
+  color: #888;
+  margin: 0;                  /* reset block margins */
+}
+
+.poweredByLogo {
+  height: 40px;
+  margin: 0;                  /* baseline alignment */
+}
+/* ============ CONTROLS SECTION ============ */
+.controlsSection {
+  padding: 20px 40px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.controlsLeftArea {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.headerTamInfo {
+  font-size: 14px;
+  color: #666;
+  margin-right: 20px;
+}
+
+.tamDisplay {
+  font-weight: bold;
+}
+
+.learnMoreLink {
+  margin-left: 10px;
+  color: #0066cc;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.reportTypeDisplayControlsInfo {
+  font-size: 13px;
+  color: #333;
+  padding: 5px 10px;
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.clearButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #dc3545;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: auto;
+}
+
+.clearButton:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.headerButtons {
+  display: flex;
+  flex-wrap: nowrap !important;
+  gap: 8px;
+  margin: 20px auto 0 auto;
+  overflow-x: auto;
+  max-width: max-content;
+  padding-bottom: 5px;
+  justify-content: center;
+  align-self: center;
+  width: auto;
+}
+
+/* ============ HEADER BUTTONS ============ */
+.headerButton {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  margin-right: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.headerButton:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.headerButton:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.runSimulationButton {
+  background: #28a745;
+}
+
+.runSimulationButton:hover:not(:disabled) {
+  background: #218838;
+}
+
+.showProfilesButton {
+  background: #dc3545;
+}
+
+.showProfilesButton:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.marketFactorsButton {
+  background: #ffc107;
+  color: #212529;
+}
+
+.marketFactorsButton:hover:not(:disabled) {
+  background: #e0a800;
+}
+
+.attributeImpactButton {
+  background: #17a2b8;
+  color: white;
+}
+
+.aboutModelButton {
+  background: #6c757d;
+  color: white;
+}
+
+.reviewCoreProductsButton {
+  background: #6f42c1;
+  color: white;
+}
+
+.reviewFeaturesButton {
+  background: #fd7e14;
+  color: white;
+}
+
+.reviewVerticalsButton {
+  background: #20c997;
+  color: white;
+}
+
+.controlsSectionH2 {
+  margin: 20px 0 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* ============ PRODUCT TOGGLES ============ */
+.productToggles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.toggleBtn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toggleBtn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.toggleBtn:hover:not(:disabled) {
+  border-color: #007bff;
+}
+
+/* ============ CARDS CONTAINER ============ */
+.cardContainer {
+  display: flex;
+  gap: 15px;
+  padding: 20px;
+  overflow-x: auto;
+  background: #f8f9fa;
+  min-height: 600px;
+}
+
+/* ============ INDIVIDUAL CARD STYLES ============ */
+.card {
+  flex: 0 0 350px;
+  background: white;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+  transition: all 0.3s;
+  position: relative;
+  min-height: 200px;
+}
+
+.card.inactive {
+  opacity: 0.8;
+  border-color: #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.cardHeader {
+  padding: 15px 20px;
+  background: #dc3545;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card.inactive .cardHeader {
+  background: #f5b3b3;
+  color: #333;
+}
+
+.cardHeader:hover {
+  background: #c82333;
+}
+
+.card.inactive .cardHeader:hover {
+  background: #f0a0a0;
+}
+
+.cardHeaderText {
+  color: white;
+}
+
+.card.inactive .cardHeaderText {
+  color: #333;
+}
+
+.inactiveOverlay {
+  transform: rotate(-25deg);
+  font-size: 14px;
+  font-weight: bold;
+  color: #dc3545;
+  border: 2px solid #dc3545;
+  border-radius: 4px;
+  padding: 5px 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: -70px;
+  margin-top: -20px;
+  background: white;
+  z-index: 10;
+}
+
+.incompleteOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-10deg);
+  font-size: 13px;
+  font-weight: bold;
+  color: #ff6b00;
+  background: #fff3cd;
+  border: 2px solid #ff6b00;
+  border-radius: 4px;
+  padding: 10px 20px;
+  text-align: center;
+  z-index: 5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.productSelect {
+  width: calc(100% - 40px);
+  margin: 20px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center !important;
+  text-align-last: center !important;
+  -moz-text-align-last: center !important;
+  -webkit-text-align-last: center !important;
+  cursor: pointer;
+  background-color: white;
+}
+
+.productSelect:hover:not(:disabled) {
+  border-color: #dc3545;
+}
+
+.productSelect:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.productSelect option {
+  text-align: center;
+}
+
+.content {
+  padding: 20px;
+}
+
+.contentLabel {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #495057;
+  font-size: 14px;
+}
+
+/* ============ FEATURE SECTIONS ============ */
+.featureSection {
+  margin-top: 20px;
+}
+
+.featureList {
+  min-height: 40px;
+  background: #f8f9fa;
+  border: 1px dashed #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 15px;
+}
+
+.featureItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background: #fff;
+  margin: 5px 0;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.featureRemove {
+  color: #dc3545;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.featureRemove:hover {
+  color: #c82333;
+}
+
+/* ============ ADD BUTTONS WITH PROPER COLORS ============ */
+.addBtn {
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.addBtnReader {
+  background: #2563eb;
+}
+
+.addBtnReader:hover {
+  background: #1d4ed8;
+}
+
+.addBtnStreaming {
+  background: #7c3aed;
+}
+
+.addBtnStreaming:hover {
+  background: #6d28d9;
+}
+
+.addBtnVertical {
+  background: #ea580c;
+}
+
+.addBtnVertical:hover {
+  background: #dc2626;
+}
+
+/* ============ PRICING SECTION ============ */
+.pricingSection {
+  margin-top: 30px;
+}
+
+.btnGroup {
+  display: flex;
+  gap: 5px;
+  margin: 15px 0;
+}
+
+.btnGroup button {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.3s;
+}
+
+.btnGroup button.active {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.discountSection {
+  margin: 15px 0;
+}
+
+.discountOptions {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.discountOptions h4 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #495057;
+}
+
+.discountOption {
+  margin: 8px 0;
+}
+
+.discountOption label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.discountOption input[type="radio"] {
+  margin-right: 8px;
+}
+
+/* ============ PRICE SLIDER ============ */
+.priceSliderContainer {
+  margin: 20px 0;
+}
+
+.priceRangeLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: #666;
+}
+
+.priceSlider {
+  width: 100%;
+  cursor: pointer;
+}
+
+.priceLabel {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #333;
+}
+
+.priceValue {
+  font-weight: bold;
+  color: #dc3545;
+}
+
+.pricingDisplay {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dc3545;
+}
+
+.pricingTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pricingTableRow {
+  border-bottom: 1px solid #ddd;
+}
+
+.pricingTableCell {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.pricingTableCellRight {
+  padding: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: right;
+}
+
+.discountText {
+  color: green;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+/* ============ VERTICAL SELECT FOR STANDALONE ============ */
+.verticalSelectStandalone {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+/* ============ MODAL STYLES ============ */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modalLarge {
+  max-width: 900px;
+}
+
+.modalMedium {
+  max-width: 800px;
+}
+
+.modalSmall {
+  max-width: 700px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modalHeader h2 {
+  margin: 0;
+}
+
+.closeModal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.closeModal:hover {
+  color: #000;
+}
+
+.modalContent {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.modalButtonsWithBorder {
+  padding: 20px;
+  border-top: 1px solid #ddd;
+}
+
+/* ============ BUTTONS ============ */
+.btnPrimary {
+  background: #CC0000;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btnPrimary:hover {
+  background: #AA0000;
+}
+
+.btnPrimary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background: #e0e0e0;
+}
+
+/* ============ FEATURE CHECKBOX ============ */
+.featureCheckbox {
+  display: block;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.featureCheckbox input {
+  margin-right: 10px;
+}
+
+/* ============ REPORT DISPLAY ============ */
+.reportOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.reportContainer {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+  position: relative;
+}
+
+.reportHeader {
+  position: sticky;
+  top: 0;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.reportHeader h2 {
+  margin: 0;
+}
+
+.reportButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.reportContent {
+  padding: 20px;
+}
+
+.minimizedReport {
+  margin-top: 40px;
+  padding: 0 20px;
+}
+
+.minimizedReportHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.downloadButtonContainer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ============ PROFILE MODAL STYLES ============ */
+.profileLoadingState {
+  text-align: center;
+  padding: 40px;
+}
+
+.profileContainer {
+  padding: 20px;
+}
+
+.profileCard {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.profileCard h3 {
+  color: #dc3545;
+  margin-bottom: 15px;
+}
+
+.profileSection {
+  margin-bottom: 15px;
+}
+
+.profileSection p {
+  margin: 5px 0;
+}
+
+.profilePricing {
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+.profilePriceHighlight {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.profileFeatures {
+  margin-top: 5px;
+  margin-left: 20px;
+}
+
+.profileFeatures li {
+  margin-bottom: 3px;
+}
+
+.profileConfigSummary {
+  margin-top: 15px;
+  padding: 10px;
+  background: #e9ecef;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.portfolioAnalysis {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+}
+
+/* ============ SENSITIVITY ANALYSIS ============ */
+.sensitivityCard {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.sensitivityTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sensitivityTable thead tr {
+  border-bottom: 2px solid #ddd;
+}
+
+.sensitivityTable th {
+  padding: 10px;
+  text-align: left;
+}
+
+.sensitivityTable th:not(:first-child) {
+  text-align: right;
+}
+
+.sensitivityTableRow {
+  border-bottom: 1px solid #eee;
+}
+
+.sensitivityTableRow.current {
+  background: #fff3cd;
+}
+
+.sensitivityTableCell {
+  padding: 8px;
+}
+
+.sensitivityTableCellRight {
+  padding: 8px;
+  text-align: right;
+}
+
+.sensitivityPositive {
+  color: green;
+}
+
+.sensitivityNegative {
+  color: red;
+}
+
+.sensitivityInsights {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.sensitivityInsights ul {
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+.sensitivityNote {
+  margin-top: 20px;
+  padding: 15px;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* ============ MARKET FACTORS ============ */
+.marketFactorSection {
+  margin-bottom: 20px;
+}
+
+.marketFactorSection h3 {
+  margin-bottom: 10px;
+}
+
+.marketFactorGroup {
+  margin-bottom: 15px;
+}
+
+.marketFactorLabel {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.marketFactorSlider {
+  width: 100%;
+}
+
+.marketFactorNote {
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
+}
+
+.marketFactorCheckbox {
+  margin-bottom: 15px;
+}
+
+/* ============ MARKET SIZING MODAL ============ */
+.marketSizingTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.marketSizingTable thead tr {
+  border-bottom: 2px solid #ddd;
+}
+
+.marketSizingTable th {
+  padding: 10px;
+  text-align: left;
+}
+
+.marketSizingTable th:not(:first-child) {
+  text-align: right;
+}
+
+.marketSizingTable td {
+  padding: 10px;
+}
+
+.marketSizingTable td:not(:first-child) {
+  text-align: right;
+}
+
+.marketSizingTotal {
+  border-top: 2px solid #ddd;
+  font-weight: bold;
+}
+
+.marketSizingAssumptions {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+
+/* ============ REVIEW MODALS ============ */
+.reviewSection {
+  padding: 20px;
+}
+
+.reviewItem {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.reviewItem h3 {
+  color: #dc3545;
+}
+
+.reviewTabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.reviewTab {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background: #6c757d;
+  color: white;
+  cursor: pointer;
+}
+
+.reviewTab.active {
+  background: #dc3545;
+}
+
+.featureReviewItem {
+  margin-bottom: 15px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.featureReviewItem h4 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.featureReviewItem p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.verticalSelect {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.verticalDetails {
+  margin-top: 20px;
+}
+
+.verticalDetails h3 {
+  color: #dc3545;
+}
+
+.verticalFeatures {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.verticalFeaturesList {
+  list-style-type: disc;
+  padding-left: 25px;
+}
+
+.verticalFeaturesList li {
+  margin-bottom: 5px;
+}
+
+/* ============ ABOUT MODEL MODAL ============ */
+.aboutContent {
+  padding: 20px;
+}
+
+.aboutContent h3 {
+  margin-bottom: 10px;
+}
+
+.aboutContent h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.aboutContent ul {
+  margin-bottom: 15px;
+}
+
+.aboutContent ol {
+  margin-bottom: 15px;
+}
+
+/* ============ RADIO INPUTS ============ */
+.radioGroup {
+  margin-bottom: 20px;
+}
+
+.radioOption {
+  display: block;
+  margin: 10px 0;
+  cursor: pointer;
+}
+
+.radioOption input {
+  margin-right: 8px;
+}
+
+/* ============ LOADING & EMPTY STATES ============ */
+.emptyState {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-style: italic;
+}
+
+/* ============ ICON SPACING ============ */
+.iconSpacing {
+  margin-right: 5px;
+}
+
+/* ============ REPORT TYPE SECTION ============ */
+.reportTypeSection {
+  margin-bottom: 20px;
+}
+
+/* ============ RESPONSIVE ADJUSTMENTS ============ */
+@media (max-width: 768px) {
+  .mainHeader {
+    flex-direction: column;
+    padding: 15px 20px;
+    gap: 15px;
+  }
+  
+  .controlsSection {
+    padding: 15px 20px;
+  }
+  
+  .controlsLeftArea {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .headerButtons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .headerButton {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .productToggles {
+    flex-wrap: wrap;
+  }
+  
+  .cardContainer {
+    flex-direction: column;
+    padding: 10px;
+  }
+  
+  .card {
+    flex: 1 1 auto;
+    max-width: 100%;
+  }
+  
+  .modal {
+    width: 95%;
+    margin: 10px;
+  }
+}
+/* ── HEADER FLEX & POWERED-BY ALIGNMENT OVERRIDES ── */
+.mainHeader {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.poweredByContainer {
+  position: static !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin: 0 !important;
+}
+
+.logoContainer img,
+.poweredByLogo {
+  height: 40px !important;
+  margin: 0 !important;
+}
+/* Modal Tabs Container */
+.modalTabs {
+  display: flex;
+  gap: 0;
+  padding: 0;
+  background: #f8f9fa;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 0;
+}
+
+/* Tab Buttons */
+.tabButton {
+  flex: 1;
+  padding: 20px 30px;
+  border: none;
+  background: #f8f9fa;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: normal;
+  transition: all 0.3s ease;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+.tabButton:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+/* Active Tab Styles */
+.tabButton.activeTab {
+  font-weight: bold;
+  background: white;
+}
+
+/* Tab-specific colors when active */
+.tabButton:nth-child(1).activeTab {
+  color: #17a2b8;
+  border-bottom-color: #17a2b8;
+}
+
+.tabButton:nth-child(2).activeTab {
+  color: #dc3545;
+  border-bottom-color: #dc3545;
+}
+
+.tabButton:nth-child(3).activeTab {
+  color: #28a745;
+  border-bottom-color: #28a745;
+}
+
+/* Modal Content Padding */
+.modalContent {
+  padding: 30px;
+  background: white;
+}
+
+/* Price Sensitivity Component Styles */
+.priceSensitivityContainer {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  padding: 25px;
+  margin-top: 20px;
+}
+
+.priceSensitivityHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.priceSensitivityTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.priceSensitivityCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.priceSensitivityCheckbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #17a2b8;
+}
+
+.priceSensitivityCheckbox label {
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+}
+
+.quickSettingsContainer {
+  margin-bottom: 25px;
+}
+
+.quickSettingsLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.quickSettingsButtons {
+  display: flex;
+  gap: 10px;
+}
+
+.presetButton {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.presetButton:hover {
+  background: #e9ecef;
+  border-color: #17a2b8;
+}
+
+.presetButton.active {
+  background: #17a2b8;
+  color: white;
+  border-color: #17a2b8;
+}
+
+.sliderContainer {
+  margin-bottom: 25px;
+}
+
+.sliderLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sliderValue {
+  color: #17a2b8;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e0e0;
+  outline: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #17a2b8;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #17a2b8;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.sliderHelp {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #999;
+}
+
+.exampleBox {
+  background: #f0f8ff;
+  border: 1px solid #cce5ff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.exampleTitle {
+  font-weight: 600;
+  color: #004085;
+  margin-bottom: 10px;
+}
+
+.exampleText {
+  color: #004085;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.exampleText strong {
+  color: #17a2b8;
+}
+
+/* Add these to your page.module.css file */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #CC0000;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.errorContainer h2 {
+  color: #CC0000;
+  font-size: 1.5rem;
+}
+
+.errorContainer button {
+  padding: 0.5rem 1rem;
+  background: #CC0000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.errorContainer button:hover {
+  background: #AA0000;
+}
+
+.userInfo {
+  font-size: 0.875rem;
+  color: #666;
+  padding: 0.5rem 1rem;
+  background: #f0f0f0;
+  border-radius: 4px;
+}

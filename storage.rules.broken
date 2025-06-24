@@ -1,0 +1,118 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for CNN Analyzer
+service firebase.storage {
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // DATA FILES - Public read access (for testing)
+    match /data/{fileName} {
+      // Allow public read access
+      allow read: if true;
+      
+      // Keep write restricted to admins
+      allow write: if request.auth != null 
+                   && request.auth.token.admin == true;
+    }
+    
+  
+    // ==================================================
+    // USER-SPECIFIC FILES
+    // ==================================================
+    
+    // User-specific simulation results and reports
+    match /users/{userId}/{allPaths=**} {
+      // Users can read/write their own files
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId;
+    }
+    
+    // ==================================================
+    // SHARED SIMULATION RESULTS
+    // ==================================================
+    
+    // Shared simulation results that can be accessed by multiple users
+    match /simulations/{simulationId}/{allPaths=**} {
+      // Allow read access to authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access to authenticated users (for creating new simulations)
+      allow write: if request.auth != null;
+    }
+    
+    // ==================================================
+    // REPORTS AND EXPORTS
+    // ==================================================
+    
+    // Generated reports and exports
+    match /reports/{reportId}/{allPaths=**} {
+      // Allow read access to authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access to authenticated users (for generating reports)
+      allow write: if request.auth != null;
+    }
+    
+    // ==================================================
+    // TEMPORARY FILES
+    // ==================================================
+    
+    // Temporary files with automatic cleanup
+    match /temp/{userId}/{allPaths=**} {
+      // Users can read/write their own temporary files
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId;
+    }
+    
+    // ==================================================
+    // ADMIN-ONLY FILES
+    // ==================================================
+    
+    // Administrative files and backups
+    match /admin/{allPaths=**} {
+      // Only admin users can access
+      allow read, write: if request.auth != null 
+                         && request.auth.token.admin == true;
+    }
+    
+    // ==================================================
+    // UPLOADS AND ASSETS
+    // ==================================================
+    
+    // User uploads (profile images, custom data files, etc.)
+    match /uploads/{userId}/{fileName} {
+      // Users can upload their own files
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId
+                         // Limit file size to 10MB
+                         && resource.size < 10 * 1024 * 1024
+                         // Only allow specific file types
+                         && (fileName.matches('.*\\.(jpg|jpeg|png|gif|pdf|csv|json)$'));
+    }
+    
+    // ==================================================
+    // PUBLIC ASSETS
+    // ==================================================
+    
+    // Public assets (logos, documentation, etc.)
+    match /public/{allPaths=**} {
+      // Anyone can read public files
+      allow read: if true;
+      
+      // Only admins can write public files
+      allow write: if request.auth != null 
+                   && request.auth.token.admin == true;
+    }
+    
+    // ==================================================
+    // DEFAULT DENY
+    // ==================================================
+    
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

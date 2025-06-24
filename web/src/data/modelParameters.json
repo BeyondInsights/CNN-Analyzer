@@ -1,0 +1,15 @@
+[
+  {"Parameter": "Total_TAM", "Value": 105624640, "Notes": "Total addressable market"},
+  {"Parameter": "Base_Conversion_Rate", "Value": 0.02, "Notes": "Base conversion rate"},
+  {"Parameter": "DMU_Factor_1", "Value": 1, "Notes": "DMU Factor 1"},
+  {"Parameter": "DMU_Factor_2", "Value": 0.85, "Notes": "DMU Factor 2"},
+  {"Parameter": "DMU_Factor_3", "Value": 0.7, "Notes": "DMU Factor 3"},
+  {"Parameter": "DMU_Factor_4", "Value": 0.55, "Notes": "DMU Factor 4"},
+  {"Parameter": "DMU_Factor_5", "Value": 0.4, "Notes": "DMU Factor 5"},
+  {"Parameter": "DMU_Factor_6_plus", "Value": 0.25, "Notes": "DMU Factor 6+"},
+  {"Parameter": "Feature_Imputation_Factor", "Value": 0.7, "Notes": "Feature imputation"},
+  {"Parameter": "Market_Awareness", "Value": 0.7, "Notes": "Market awareness"},
+  {"Parameter": "Market_Distribution", "Value": 0.85, "Notes": "Market distribution"},
+  {"Parameter": "Market_Competition", "Value": 0.9, "Notes": "Market competition"},
+  {"Parameter": "Market_Marketing", "Value": 0.8, "Notes": "Market marketing"}
+]

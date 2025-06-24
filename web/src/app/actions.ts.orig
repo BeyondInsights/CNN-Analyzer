@@ -1,0 +1,492 @@
+'use server';
+
+import type { 
+  ProductSetupConfig, 
+  ReportData, 
+  ReportDataSegment,
+  ReportType, 
+  OutputType, 
+  ProductProfileData,
+  SensitivityPoint, 
+  MarketFactors,
+  SimulationOptions,
+  RespondentUtility // Import the updated type
+} from '@/lib/types';
+import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
+import { applyPriceSensitivity } from '@/lib/calculations'; // Import the new function
+
+// Import JSON data files directly
+import respondentUtilitiesData from '@/data/respondentUtilities.json';
+import respondentProfileData from '@/data/respondentProfile.json';
+import modelParametersData from '@/data/modelParameters.json';
+import drnRatesData from '@/data/drnRates.json';
+
+// Interface definitions
+// Remove RespondentUtility interface from here, as it's now in lib/types.ts
+
+interface ModelParameters {
+  Total_TAM: number;
+  Base_Conversion_Rate: number;
+  DMU_Factor_1: number;
+  DMU_Factor_2: number;
+  DMU_Factor_3: number;
+  DMU_Factor_4: number;
+  DMU_Factor_5: number;
+  DMU_Factor_6_plus: number;
+  Feature_Imputation_Factor: number;
+  Market_Awareness: number;
+  Market_Distribution: number;
+  Market_Competition: number;
+  Market_Marketing: number;
+}
+
+interface RespondentProfile {
+  Respondent_ID: number;
+  Weight: number;
+  Gender: string;
+  Age_18_34: number;
+  Age_35_54: number;
+  Age_55_74: number;
+  College_GradPlus: number;
+  Employed_FT: number;
+  HHI_100KPlus: number;
+  Median_HHI_Code: number;
+  Have_Linear_TV: number;
+  Digital_News_Subscriber: number;
+  Watched_TV_30D: number;
+  Watched_TV_7D: number;
+  Accessed_CNN_30D: number;
+  Regularly_Access_CNN: number;
+  Occasionally_Access_CNN: number;
+  Rarely_Access_CNN: number;
+  [key: string]: any;
+}
+
+// Constants
+const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; width: number }> = {
+  '1': { name: "Less than $35,000", lower: 0, upper: 34999, width: 34999 },
+  '2': { name: "$35,000 to $49,999", lower: 35000, upper: 49999, width: 14999 },
+  '3': { name: "$50,000 to $74,999", lower: 50000, upper: 74999, width: 24999 },
+  '4': { name: "$75,000 to $99,999", lower: 75000, upper: 99999, width: 24999 },
+  '5': { name: "$100,000 to $124,999", lower: 100000, upper: 124999, width: 24999 },
+  '6': { name: "$125,000 to $149,999", lower: 125000, upper: 149999, width: 24999 },
+  '7': { name: "$150,000 to $199,999", lower: 150000, upper: 199999, width: 49999 },
+  '8': { name: "$200,000 to $299,999", lower: 200000, upper: 299999, width: 99999 },
+  '9': { name: "$300,000 or more", lower: 300000, upper: Infinity, width: Infinity }
+};
+
+// Type cast the imported data
+const respondentUtilities = Object.values(respondentUtilitiesData) as RespondentUtility[];
+console.log('Loaded', respondentUtilities.length, 'respondents'); // Added log
+const respondentProfiles = respondentProfileData as RespondentProfile[];
+const modelParameters = modelParametersData as ModelParameters;
+const drnRates = drnRatesData as any; // Adjust type as needed
+
+// REAL IMPLEMENTATION
+export async function runServerSimulation(
+  activeProducts: ProductSetupConfig[],
+  reportType: ReportType,
+  outputType: OutputType,
+  marketFactors: MarketFactors, 
+  simulationOptions: SimulationOptions
+): Promise<ReportData | null> {
+  console.log(
+    '[actions.ts] Real runServerSimulation called with:',
+    activeProducts.length,
+    reportType,
+    outputType,
+    marketFactors,
+    simulationOptions
+  );
+  
+  try {
+    if (!activeProducts || activeProducts.length === 0) {
+      console.error('No active products provided');
+      return null;
+    }
+
+    // Get TAM directly from modelParameters
+    const TOTAL_TAM = modelParameters.Total_TAM || 105624640; // Your TAM from the UI
+    const BASE_CONVERSION = modelParameters.Base_Conversion_Rate || 0.02; // Base conversion rate
+    
+    console.log('Using TAM:', TOTAL_TAM, 'Base Conversion:', BASE_CONVERSION);
+    console.log('DMU Factors - No subs:', modelParameters.DMU_Factor_1, 'Has subs:', modelParameters.DMU_Factor_2);
+    
+    // Calculate utilities and probabilities for each respondent/product combination
+    for (const respondent of respondentUtilities) {
+      const respondentProbs = new Map<string, number>();
+      let totalExpUtility = 0;
+      const utilities: Map<string, number> = new Map();
+
+      for (const product of activeProducts) {
+        let utility = 0;
+        
+        // Base utility based on product type
+        switch (product.product) {
+          case 'CNN Reader': 
+            utility += respondent.base?.reader || 0; 
+            break;
+          case 'CNN Streaming': 
+            utility += respondent.base?.streaming || 0; 
+            break;
+          case 'CNN All-Access': 
+            utility += respondent.base?.allAccess || 0; 
+            break;
+          case 'CNN Standalone Vertical': 
+            utility += respondent.base?.standalone || 0; 
+            break;
+        }
+        
+        // Price effects with error checking
+        if (product.monthlyRate <= 0) {
+          console.error('Invalid price for', product.product, ':', product.monthlyRate);
+          continue;
+        }
+        const lnPrice = Math.log(product.monthlyRate);
+        utility += (respondent.price?.linear || -1.08) * lnPrice;
+        utility += (respondent.price?.squared || -0.007) * lnPrice * lnPrice;
+
+        utilities.set(product.product, utility);
+        totalExpUtility += Math.exp(utility);
+      }
+      
+      // Add "none" option
+      totalExpUtility += Math.exp(0);
+
+      // Calculate probabilities using softmax
+      for (const [productName, utility] of utilities) {
+        const probability = Math.exp(utility) / totalExpUtility;
+        respondentProbs.set(productName, probability);
+      }
+
+      respondentProductProbabilities.set(respondent.respondentId, respondentProbs);
+    }
+
+    // Apply price sensitivity if enabled
+    if (marketFactors.enablePriceSensitivity || simulationOptions.enablePriceTiers) {
+      applyPriceSensitivity(
+        respondentProductProbabilities,
+        activeProducts,
+        marketFactors,
+        simulationOptions
+      );
+      console.log("Price sensitivity adjustments applied.");
+    }
+    
+    // Apply market factors and calculate overall shares
+    const overallShare: number[] = [];
+    const segmentShares: Map<string, number[]> = new Map();
+    
+    // Initialize segment maps
+    for (const segment of DEMOGRAPHIC_SEGMENTS) {
+      segmentShares.set(segment.group, new Array(activeProducts.length).fill(0));
+    }
+    
+    // Calculate weighted shares
+    for (const product of activeProducts) {
+      let totalWeightedProb = 0;
+      let totalWeight = 0;
+      
+      for (const respondent of respondentUtilities) {
+        const probs = respondentProductProbabilities.get(respondent.respondentId); // Use respondentId
+        if (!probs) continue;
+        
+        const prob = probs.get(product.product) || 0;
+        const weight = respondent.weight || 1; // Use respondent.weight
+        
+        // Apply DRN factor based on existing subscriptions
+        let drnFactor = 1.0; // Default no adjustment
+        const profile = respondentProfiles.find(
+          p => p.Respondent_ID == respondent.respondentId
+        );
+        if (profile && profile.Digital_News_Subscriber === 1) {
+          // Has subscriptions - apply product-specific DRN
+          drnFactor = drnRates[product.product] || 0.85;
+        }
+
+        const adjustedProb = prob * drnFactor;
+        totalWeightedProb += adjustedProb * weight;
+        totalWeight += weight;
+        
+        // Add to segment calculations
+        const profile = respondentProfiles.find(p => p.Respondent_ID == respondent.respondentId); // Use respondentId
+        if (profile) {
+          // Determine which segment this respondent belongs to
+          const segmentName = getSegmentName(profile);
+          if (segmentName && segmentShares.has(segmentName)) {
+            const segmentArray = segmentShares.get(segmentName)!;
+            const productIndex = activeProducts.indexOf(product);
+            segmentArray[productIndex] += adjustedProb * weight;
+          }
+        }
+      }
+      
+      // Calculate base take rate
+      const baseTakeRate = totalWeight > 0 ? (totalWeightedProb / totalWeight) * 100 : 0;
+      
+      // Apply market realization factors
+      const realizedTakeRate = baseTakeRate * 
+        (marketFactors.awareness / 100) *
+        (marketFactors.distribution / 100) *
+        (marketFactors.competitive / 100) *
+        (marketFactors.marketing / 100) *
+        (marketFactors.yearOneAdoption / 100);
+      
+      // You could also use the market factors from modelParameters if needed:
+      // const realizedTakeRate = baseTakeRate * 
+      //   modelParameters.Market_Awareness *
+      //   modelParameters.Market_Distribution *
+      //   modelParameters.Market_Competition *
+      //   modelParameters.Market_Marketing;
+      
+      overallShare.push(parseFloat(realizedTakeRate.toFixed(2)));
+    }
+    
+    // Convert segment shares to percentages
+    const segmentSharesArray: ReportDataSegment[] = [];
+    for (const segment of DEMOGRAPHIC_SEGMENTS) {
+      const shares = segmentShares.get(segment.group) || [];
+      const normalizedShares = shares.map(share => {
+        // Normalize by segment size
+        const segmentSize = getSegmentSize(segment.group, respondentUtilities, respondentProfiles);
+        return segmentSize > 0 ? parseFloat(((share / segmentSize) * 100).toFixed(2)) : 0;
+      });
+      
+      segmentSharesArray.push({
+        segmentName: segment.group,
+        shares: normalizedShares
+      });
+    }
+    
+    // Apply output type transformation if needed
+    if (outputType === 'count') {
+      // Convert percentages to counts
+      const overallCounts = overallShare.map(share => Math.round((share / 100) * TOTAL_TAM));
+      const segmentCounts = segmentSharesArray.map(segment => ({
+        ...segment,
+        shares: segment.shares.map(share => Math.round((share / 100) * TOTAL_TAM))
+      }));
+      
+      return {
+        reportType,
+        outputType,
+        overallShare: overallCounts,
+        segmentShares: segmentCounts
+      };
+    } else if (outputType === 'revenue') {
+      // Convert to revenue
+      const overallRevenue = overallShare.map((share, index) => {
+        const subscribers = (share / 100) * TOTAL_TAM;
+        const monthlyRate = activeProducts[index].monthlyRate;
+        return Math.round(subscribers * monthlyRate * 12); // Annual revenue
+      });
+      
+      const segmentRevenue = segmentSharesArray.map(segment => ({
+        ...segment,
+        shares: segment.shares.map((share, index) => {
+          const subscribers = (share / 100) * TOTAL_TAM;
+          const monthlyRate = activeProducts[index].monthlyRate;
+          return Math.round(subscribers * monthlyRate * 12);
+        })
+      }));
+      
+      return {
+        reportType,
+        outputType,
+        overallShare: overallRevenue,
+        segmentShares: segmentRevenue
+      };
+    }
+    
+    return {
+      reportType,
+      outputType,
+      overallShare,
+      segmentShares: segmentSharesArray
+    };
+    
+  } catch (error) {
+    console.error('[actions.ts] Error in runServerSimulation:', error);
+    throw error;
+  }
+}
+
+// Helper function to determine segment name from demographics
+function getSegmentName(profile: RespondentProfile): string {
+  // Map demographics to your segment groups
+  
+  // Gender
+  const gender = profile.Gender;
+  
+  // Age - using the binary flags
+  let age = 'Unknown';
+  if (profile.Age_18_34 === 1) age = '18-34';
+  else if (profile.Age_35_54 === 1) age = '35-54';
+  else if (profile.Age_55_74 === 1) age = '55-74';
+  
+  // Return the first matching segment
+  if (gender !== 'Unknown' && age !== 'Unknown') {
+    return `${gender} ${age}`;
+  }
+  
+  // Return a default segment
+  return 'Overall';
+}
+
+// Helper function to get segment size
+function getSegmentSize(segmentName: string, respondents: RespondentUtility[], profiles: RespondentProfile[]): number {
+  let totalWeight = 0;
+  
+  for (const respondent of respondents) {
+    const profile = profiles.find(p => p.Respondent_ID == respondent.respondentId); // Use respondentId
+    if (profile && getSegmentName(profile) === segmentName) {
+      totalWeight += respondent.weight || 1; // Use respondent.weight
+    }
+  }
+  
+  return totalWeight;
+}
+
+// Keep the rest of your functions (getProductProfile, runPriceSensitivityAnalysis) as they are...
+export async function getProductProfile(productConfig: ProductSetupConfig): Promise<ProductProfileData | null> {
+  try {
+    const TOTAL_TAM = modelParameters.Total_TAM || 250000000;
+    let productChoosersWeightedProbabilities: { profile: RespondentProfile, prob: number, weight: number }[] = [];
+    let totalWeightedProbabilitySumForProduct = 0;
+
+    for (const respUtil of respondentUtilities) { 
+      let utility = 0;
+      switch (productConfig.product) {
+        case 'CNN Reader': utility += respUtil.base?.reader || 0; break;
+        case 'CNN Streaming': utility += respUtil.base?.streaming || 0; break;
+        case 'CNN All-Access': utility += respUtil.base?.allAccess || 0; break;
+        case 'CNN Standalone Vertical': utility += respUtil.base?.standalone || 0; break;
+      }
+      const lnPrice = Math.log(productConfig.monthlyRate);
+      utility += (respUtil.price?.linear || -1.08) * lnPrice; // Defaulting as in runServerSimulation
+      utility += (respUtil.price?.squared || -0.007) * lnPrice * lnPrice; // Defaulting as in runServerSimulation
+      
+      const probability = 1 / (1 + Math.exp(-utility)); // This is a logistic function, not directly from softmax like in simulation. Consider if this is intended.
+      const weight = respUtil.weight || 1;
+      const profile = respondentProfiles.find(p => p.Respondent_ID == respUtil.respondentId);
+      if (profile) {
+        productChoosersWeightedProbabilities.push({ profile, prob: probability, weight });
+        totalWeightedProbabilitySumForProduct += probability * weight;
+      }
+    } 
+    const totalWeightSum = productChoosersWeightedProbabilities.reduce((sum, item) => sum + item.weight, 0);
+    const overallChooserBase = totalWeightSum > 0 ? totalWeightedProbabilitySumForProduct / totalWeightSum * TOTAL_TAM : 0;
+    
+    const profileMetrics: Array<{ profile: string; variable: string; value: string }> = [];
+    
+    profileMetrics.push({ profile: "Overall", variable: "Population Size (Est.)", value: overallChooserBase.toLocaleString(undefined, { maximumFractionDigits: 0 }) });
+    profileMetrics.push({ profile: "Overall", variable: "TAM Proportion (%)", value: (overallChooserBase / TOTAL_TAM * 100).toFixed(1) });
+    profileMetrics.push({ profile: "Overall", variable: "Est. Yr 1 Revenue ($)", value: (overallChooserBase * productConfig.monthlyRate * 12).toLocaleString(undefined, { maximumFractionDigits: 0, style: 'currency', currency: 'USD' }) });
+    
+    const calculateSegmentPercentage = (filterFn: (profile: RespondentProfile) => boolean, variableName: string) => {
+      let segmentWeightedProbSum = 0;
+      productChoosersWeightedProbabilities.forEach(item => {
+        if (filterFn(item.profile)) { segmentWeightedProbSum += item.prob * item.weight; }
+      });
+      return totalWeightedProbabilitySumForProduct > 0 ? (segmentWeightedProbSum / totalWeightedProbabilitySumForProduct * 100).toFixed(1) : "0.0";
+    };
+    
+    profileMetrics.push({ profile: "Gender", variable: "Male %", value: calculateSegmentPercentage(p => p.Gender === 'Male', "Male") });
+    profileMetrics.push({ profile: "Gender", variable: "Female %", value: calculateSegmentPercentage(p => p.Gender === 'Female', "Female") });
+    profileMetrics.push({ profile: "Age", variable: "18-34 %", value: calculateSegmentPercentage(p => p.Age_18_34 === 1, "18-34") });
+    profileMetrics.push({ profile: "Age", variable: "35-54 %", value: calculateSegmentPercentage(p => p.Age_35_54 === 1, "35-54") });
+    profileMetrics.push({ profile: "Age", variable: "55-74 %", value: calculateSegmentPercentage(p => p.Age_55_74 === 1, "55-74") });
+    
+    profileMetrics.push({ profile: "Education", variable: "College Grad+ %", value: calculateSegmentPercentage(p => p.College_GradPlus === 1, "College Grad+") });
+    profileMetrics.push({ profile: "Employment", variable: "Employed Full-Time %", value: calculateSegmentPercentage(p => p.Employed_FT === 1, "Employed FT") });
+    profileMetrics.push({ profile: "Income", variable: "HHI $100K+ %", value: calculateSegmentPercentage(p => p.HHI_100KPlus === 1, "$100K+") });
+    profileMetrics.push({ profile: "CNN Viewership", variable: "Regularly Access %", value: calculateSegmentPercentage(p => p.Regularly_Access_CNN === 1, "Regularly")});
+    profileMetrics.push({ profile: "CNN Viewership", variable: "Occasionally Access %", value: calculateSegmentPercentage(p => p.Occasionally_Access_CNN === 1, "Occasionally")});
+    profileMetrics.push({ profile: "Linear TV", variable: "Has Linear TV %", value: calculateSegmentPercentage(p => p.Have_Linear_TV === 1, "Has Linear TV") });
+    profileMetrics.push({ profile: "News Subscriptions", variable: "Digital News Subscriber %", value: calculateSegmentPercentage(p => p.Digital_News_Subscriber === 1, "Digital News Subscriber")});
+    
+    const productData: ProductProfileData = {
+      [productConfig.product]: {
+        verticals: productConfig.verticals || [],
+        features: [...(productConfig.readerFeatures || []), ...(productConfig.streamingFeatures || [])],
+        monthlyPrice: productConfig.monthlyRate,
+        annualPrice: productConfig.monthlyRate * 12
+      }
+    };
+
+    return productData;
+
+  } catch (error) {
+    console.error("Get Product Profile Error:", error);
+    return null;
+  }
+}
+
+export async function runPriceSensitivityAnalysis(
+  productConfig: ProductSetupConfig,
+  priceVariations: number[]
+): Promise<SensitivityPoint[]> {
+  const results: SensitivityPoint[] = [];
+  const basePrice = productConfig.monthlyRate;
+
+  for (const variation of priceVariations) {
+    const variationPrice = basePrice * (1 + variation / 100);
+    const tempConfig = { ...productConfig, monthlyRate: variationPrice };
+    
+    // Run a simplified simulation for this price point
+    const takeRate = await calculateSingleProductTakeRate(tempConfig);
+    
+    results.push({
+      variation: variation,
+      price: variationPrice,
+      takeRate: takeRate
+    });
+  }
+  
+  return results;
+}
+
+// Helper function for price sensitivity
+async function calculateSingleProductTakeRate(product: ProductSetupConfig): Promise<number> {
+  let totalWeightedProb = 0;
+  let totalWeight = 0;
+
+  for (const respondent of respondentUtilities) {
+    let utility = 0;
+    
+    // Base utility
+    switch (product.product) {
+      case 'CNN Reader': 
+        utility += respondent.base?.reader || 0; 
+        break;
+      case 'CNN Streaming': 
+        utility += respondent.base?.streaming || 0; 
+        break;
+      case 'CNN All-Access': 
+        utility += respondent.base?.allAccess || 0; 
+        break;
+      case 'CNN Standalone Vertical': 
+        utility += respondent.base?.standalone || 0; 
+        break;
+    }
+    
+    // Price effects
+    const lnPrice = Math.log(product.monthlyRate);
+    utility += (respondent.price?.linear || -1.08) * lnPrice;
+    utility += (respondent.price?.squared || -0.007) * lnPrice * lnPrice;
+    
+    // Convert to probability
+    const probability = 1 / (1 + Math.exp(-utility)); // Consistent with getProductProfile, consider if this is the intended probability calculation for single product take rate.
+    const weight = respondent.weight || 1;
+    
+    totalWeightedProb += probability * weight;
+    totalWeight += weight;
+  }
+  
+  return totalWeight > 0 ? (totalWeightedProb / totalWeight) * 100 : 0;
+}
+
+export async function testServerAction(): Promise<{ message: string }> {
+  console.log('Test server action called - this should appear in terminal');
+  return { message: 'Server action works!' };
+}
