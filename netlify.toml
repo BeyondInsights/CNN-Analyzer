@@ -1,8 +1,4 @@
 [build]
   base = "web"
-  command = "npm run build --no-lint && npm run export"
+  command = "npm run build && npm run export"
   publish = "out"
-  environment = { NEXT_TELEMETRY_DISABLED = "1" }
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"

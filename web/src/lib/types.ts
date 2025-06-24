@@ -34,7 +34,7 @@ export interface ProductSetupConfig {
 }
 
 // Report Types
-export type ReportType = 'tiered' | 'independent';
+export type ReportType = 'tiered' | 'independent' | 'bundle';
 export type OutputType = 'percentage' | 'count' | 'revenue';
 
 export interface ReportDataSegment {

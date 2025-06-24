@@ -12,7 +12,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
   if (!reportData) return null;
 
   // Filter out ANY PRODUCT from activeProducts for tiered reports
-  const filteredProducts = (reportData.reportType === 'tiered' || reportData.reportType === 'bundle')
+  const filteredProducts = (reportData.reportType === 'tiered' || (reportData.reportType as any) === 'bundle')
     ? activeProducts.filter(p => p.product && p.product.toUpperCase() !== 'ANY PRODUCT')
     : activeProducts;
 
@@ -50,7 +50,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
   };
 
   // Generate column headers based on report type
-  const columnHeaders = reportData.reportType === 'tiered' || reportData.reportType === 'bundle'
+  const columnHeaders = reportData.reportType === 'tiered' || (reportData.reportType as any) === 'bundle'
     ? ['ANY PRODUCT', ...filteredProducts.map((p, i) => {
         const productName = p.product || `UNNAMED PRODUCT ${i + 1}`;
         return `PRODUCT ${i + 1}: ${productName.toUpperCase()}`;
@@ -61,7 +61,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
       });
 
   // Make sure we have the right number of columns
-  const expectedColumns = reportData.reportType === 'tiered' || reportData.reportType === 'bundle'
+  const expectedColumns = reportData.reportType === 'tiered' || (reportData.reportType as any) === 'bundle'
     ? filteredProducts.length + 1  // +1 for ANY PRODUCT
     : filteredProducts.length;
 
@@ -83,7 +83,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
           <tr>
             <td colSpan={columnHeaders.length + 1} style={headerStyle}>
               REPORT TYPE: {reportData.reportType === 'tiered' ? 'Tiered Bundles' : 
-                           reportData.reportType === 'bundle' ? 'Bundle Analysis' : 
+                           (reportData.reportType as any) === 'bundle' ? 'Bundle Analysis' : 
                            'Matrix (Independent Products)'}
             </td>
           </tr>
@@ -132,7 +132,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
                 return <td key={idx} style={valueStyle}>${share.toLocaleString()}</td>;
               } else {
                 // For tiered reports, first column is ANY PRODUCT
-                if ((reportData.reportType === 'tiered' || reportData.reportType === 'bundle') && idx === 0) {
+                if ((reportData.reportType === 'tiered' || (reportData.reportType as any) === 'bundle') && idx === 0) {
                   // ANY PRODUCT revenue = sum of all individual product revenues
                   let totalRev = 0;
                   for (let i = 0; i < filteredProducts.length; i++) {
@@ -148,7 +148,7 @@ export default function ReportDisplay({ reportData, activeProducts, priceSensiti
                 }
                 
                 // For individual products
-                const productIndex = (reportData.reportType === 'tiered' || reportData.reportType === 'bundle') ? idx - 1 : idx;
+                const productIndex = (reportData.reportType === 'tiered' || (reportData.reportType as any) === 'bundle') ? idx - 1 : idx;
                 const product = filteredProducts[productIndex];
                 
                 if (!product || !product.monthlyRate || product.monthlyRate === 0) {
