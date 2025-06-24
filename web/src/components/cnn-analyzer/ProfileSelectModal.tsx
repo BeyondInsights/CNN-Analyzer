@@ -39,7 +39,7 @@ export default function ProfileSelectModal() {
       showBrandedAlert("Selection Required: Please select at least one product.", "warning"); // Corrected call
       return;
     }
-    const selectedData = Object.values(productConfigs).filter(p => selectedProductIds.includes(p.id)); // Corrected iteration
+    const selectedData = Object.values(productConfigs).filter(p => selectedProductIds.includes(Number(p.id))); // Corrected iteration
     setSelectedProfileProductsData(selectedData);
     closeProfileSelectModal();
   };
@@ -60,13 +60,13 @@ export default function ProfileSelectModal() {
               {profileProducts.map(product => (
                 <div
                   key={product.id}
-                  className={`flex flex-col items-center justify-center p-3 rounded-md border cursor-pointer hover:bg-muted/50 ${selectedProductIds.includes(product.id) ? 'bg-muted border-primary ring-2 ring-primary' : ''}`}
-                  onClick={() => handleToggleProduct(product.id)}
+                  className={`flex flex-col items-center justify-center p-3 rounded-md border cursor-pointer hover:bg-muted/50 ${selectedProductIds.includes(Number(product.id)) ? 'bg-muted border-primary ring-2 ring-primary' : ''}`}
+                  onClick={() => handleToggleProduct(Number(product.id))}
                 >
                   <Checkbox
                     id={`profile-product-${product.id}`}
-                    checked={selectedProductIds.includes(product.id)}
-                    onCheckedChange={() => handleToggleProduct(product.id)}
+                    checked={selectedProductIds.includes(Number(product.id))}
+                    onCheckedChange={() => handleToggleProduct(Number(product.id))}
                     className="mb-2"
                   />
                   <Label htmlFor={`profile-product-${product.id}`} className="text-center cursor-pointer">

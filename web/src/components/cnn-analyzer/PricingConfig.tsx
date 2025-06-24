@@ -15,8 +15,8 @@ interface PricingConfigProps {
 }
 
 export default function PricingConfig({ productConfig, onUpdate }: PricingConfigProps) {
-  // Changed 'verticals' to 'selectedVerticals' to match updated ProductSetupConfig type
-  const { product, selectedVerticals = [], monthlyRate, pricingType, discount } = productConfig;
+  // Changed 'verticals' to 'verticals' to match updated ProductSetupConfig type
+  const { product, verticals = [], monthlyRate, pricingType, discount } = productConfig;
   const sliderId = `rate-slider-${productConfig.id}`;
 
   const pricingDetails = useMemo(() => {
@@ -28,8 +28,8 @@ export default function PricingConfig({ productConfig, onUpdate }: PricingConfig
       if (product === 'CNN Standalone Vertical') {
         productSpecificRangeData = PRICING_RANGES[product];
       } else {
-        // Use selectedVerticals here
-        const verticalCount = selectedVerticals.length;
+        // Use verticals here
+        const verticalCount = verticals.length;
         productSpecificRangeData = PRICING_RANGES[product]?.[verticalCount] || PRICING_RANGES[product]?.[0];
       }
 
@@ -65,7 +65,7 @@ export default function PricingConfig({ productConfig, onUpdate }: PricingConfig
     }
 
     return calculatedRange;
-  }, [product, selectedVerticals.length]); // Use selectedVerticals in dependency array
+  }, [product, verticals.length]); // Use verticals in dependency array
   
   useEffect(() => {
     const { min, max } = pricingDetails; // Should always be numbers now

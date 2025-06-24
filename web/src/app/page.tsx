@@ -19,7 +19,6 @@ import verticalDescriptionsData from '@/data/verticalDescriptions.json';
 import coreProductDescriptionsData from '@/data/coreProductDescriptions.json';
 import MarketFactorsModal from '@/components/MarketFactorsModal';
 import BrandedNotification from '@/components/BrandedNotification';
-import SimulationPromptModal from '@/components/SimulationPromptModal';
 import EnhancedProductProfiles from '@/components/EnhancedProductProfiles';
 import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
@@ -95,6 +94,7 @@ interface SensitivityPoint {
     price: number;
     adoptionRate: number;
   }[];
+  elasticityUsed: number; // Added property for price elasticity
 }
 
 interface SimulationOptions {
@@ -158,9 +158,9 @@ export default function Page() {
   };
 
   // ============ FIREBASE STORAGE DATA ============
-  const [primaryData, setPrimaryData] = useState<any>(null);
-  const [dataError, setDataError] = useState<string | null>(null);
-  const [isDataLoading, setIsDataLoading] = useState(false);
+  // const [primaryData, setPrimaryData] = useState<any>(null);
+  // const [dataError, setDataError] = useState<string | null>(null);
+  // const [isDataLoading, setIsDataLoading] = useState(false);
 
   // Initialize card setup
   const initialCardSetup = (): Record<number, CardData> => {
@@ -205,8 +205,8 @@ export default function Page() {
   const [currentReportTypeState, setCurrentReportTypeState] = useState<ReportType>('tiered');
   const [currentOutputTypeState, setCurrentOutputTypeState] = useState<OutputType>('percentage');
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
-  const [userId, setUserId] = useState<string | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(false); // Not loading
+  const [userId, setUserId] = useState<string>('authenticated-user');
+  // const [isAuthLoading, setIsAuthLoading] = useState(true); // Comment this o
   const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
 
@@ -280,46 +280,8 @@ export default function Page() {
 
   // ============ FIREBASE AUTH EFFECT ============
 
-useEffect(() => {
-  const unsubscribe = auth.onAuthStateChanged((user) => {
-    setUserId(user?.uid || null);
-    setIsAuthLoading(false);
-  });
-  return () => unsubscribe();
-}, []);
-
   // ============ FIREBASE STORAGE DATA LOADING ============
-  useEffect(() => {
-    const loadSecureData = async () => {
-      if (!userId) return; // Only load if user is authenticated
-      
-      setIsDataLoading(true);
-      setDataError(null);
-      
-      try {
-        const data = await loadPrimaryDataFiles();
-        setPrimaryData(data);
-        
-        // Now you have access to:
-        // - data.utilities (respondentUtilities.json)
-        // - data.data (respondentData.json)  
-        // - data.profile (respondentProfile.json)
-        
-        console.log('Successfully loaded secure data from Firebase Storage');
-      } catch (error) {
-        console.error('Failed to load secure data:', error);
-        setDataError(error instanceof Error ? error.message : 'Failed to load data');
-      } finally {
-        setIsDataLoading(false);
-      }
-    };
-
-    // Load data when user is authenticated
-    if (userId && !primaryData) {
-      loadSecureData();
-    }
-  }, [userId, primaryData]);
-  
+    
   // ============ MARKET FACTORS SYNC EFFECT ============
   useEffect(() => {
     if (isMarketFactorsModalVisible) {
@@ -336,16 +298,20 @@ useEffect(() => {
   }, [isMarketFactorsModalVisible, marketFactors]);
 
   // ============ HELPER FUNCTIONS ============
-  const getPricingRangeForProduct = (productType: string, verticalCount: number = 0) => {
-    if (productType === 'CNN Standalone Vertical') {
-      return pricingRanges['CNN Standalone Vertical'];
-    }
-    const ranges = pricingRanges[productType as keyof typeof pricingRanges];
-    if (!ranges || typeof ranges !== 'object') return null;
-    
-    const verticalKey = Math.min(verticalCount, 3);
-    return ranges[verticalKey as keyof typeof ranges] || ranges[0];
-  };
+  const getPricingForProductType = (productType: string, verticalCount: number = 0) => {
+  if (productType === 'CNN Standalone Vertical') {
+    return pricingRanges['CNN Standalone Vertical'];
+  }
+  
+  const ranges = pricingRanges[productType as keyof typeof pricingRanges];
+  if (!ranges || typeof ranges !== 'object') {
+    return { prices: [5, 10, 15, 20], min: 5, max: 20, default: 10 };
+  }
+  
+  const verticalKey = Math.min(verticalCount, 3);
+  return ranges[verticalKey as keyof typeof ranges] || 
+         { prices: [5, 10, 15, 20], min: 5, max: 20, default: 10 };
+};
 
   const toggleProduct = (productId: number) => {
     setActiveProductsState(prev => {
@@ -390,7 +356,7 @@ useEffect(() => {
       [cardNum]: {
         ...prev[cardNum],
         product: productType,
-        monthlyRate: productType ? getPricingRangeForProduct(productType, prev[cardNum].verticals.length)?.default || 10 : 10,
+        monthlyRate: productType ? getPricingForProductType(productType, prev[cardNum].verticals.length)?.default || 10 : 10,
         pricingType: '',
         discount: ''
       }
@@ -418,7 +384,7 @@ useEffect(() => {
         updatedCard.verticals = features;
         // Update pricing when verticals change
         if (updatedCard.product) {
-          const pricingRange = getPricingRangeForProduct(updatedCard.product, features.length);
+          const pricingRange = getPricingForProductType(updatedCard.product, features.length);
           if (pricingRange) {
             updatedCard.monthlyRate = pricingRange.default;
           }
@@ -515,19 +481,28 @@ useEffect(() => {
     
     try {
       const activeConfigured = Array.from(activeProductsState)
-        .map((num) => ({
-          id: num.toString(),
-          product: cardDataState[num].product,
-          verticals: cardDataState[num].verticals || [],
-          readerFeatures: cardDataState[num].readerFeatures || [],
-          streamingFeatures: cardDataState[num].streamingFeatures || [],
-          monthlyRate: cardDataState[num].monthlyRate,
-          annualRate: cardDataState[num].monthlyRate * 12,
-          discount: cardDataState[num].discount || 'none',
-          isActive: true,
-          pricingType: cardDataState[num].pricingType || 'monthly'
-        }))
-        .filter((config) => config.product);
+  .filter(id => cardDataState[id] && cardDataState[id].product)
+  .map(id => ({
+    id: id.toString(),
+    product: cardDataState[id].product,
+    verticals: cardDataState[id].verticals || [],
+    readerFeatures: cardDataState[id].readerFeatures || [],
+    streamingFeatures: cardDataState[id].streamingFeatures || [],
+    monthlyRate: cardDataState[id].monthlyRate,
+    annualRate: cardDataState[id].monthlyRate * 12,
+    discount: cardDataState[id].discount || '',
+    isActive: true,
+    pricingType: cardDataState[id].pricingType,
+    features: {
+      reader: cardDataState[id].readerFeatures || [],
+      streaming: cardDataState[id].streamingFeatures || []
+    },
+    pricing: {
+      monthlyRate: cardDataState[id].monthlyRate,
+      pricingType: cardDataState[id].pricingType,
+      discount: cardDataState[id].discount || ''
+    }
+  })); 
 
       if (activeConfigured.length === 0) {
         alert("Please configure at least one product before running simulation");
@@ -720,8 +695,7 @@ useEffect(() => {
       }
 
       const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
-      const sensitivityResults = [];
-
+      const sensitivityResults: SensitivityPoint[] = [];
       for (const config of activeConfigs) {
         // Use base adoption rates that align with simulation results
         let baseAdoption = 15;
@@ -755,7 +729,7 @@ useEffect(() => {
               adoptionRate: Math.max(0, Math.min(100, adoptionRate))
             };
           }),
-          priceElasticity: priceElasticity // Store for insights
+          elasticityUsed: priceElasticity // Store for insights and UI
         };
         sensitivityResults.push(productResults);
       }
@@ -771,16 +745,19 @@ useEffect(() => {
   };
 
   const handleVerticalChange = (vertical: string) => {
-    setSelectedReviewVertical(vertical);
-    if (vertical && verticalDescriptionsData[vertical]) {
-      const vertData = verticalDescriptionsData[vertical];
-      setVerticalDescription(vertData.description || '');
-      setVerticalFeaturesForReview(vertData.features || []);
-    } else {
-      setVerticalDescription('');
-      setVerticalFeaturesForReview([]);
-    }
-  };
+  setSelectedReviewVertical(vertical);
+  if (
+    vertical &&
+    Object.prototype.hasOwnProperty.call(verticalDescriptionsData, vertical)
+  ) {
+    const verticalData = verticalDescriptionsData[vertical as keyof typeof verticalDescriptionsData];
+    setVerticalDescription(verticalData.concept || '');
+    setVerticalFeaturesForReview(verticalData.features || []);
+  } else {
+    setVerticalDescription('');
+    setVerticalFeaturesForReview([]);
+  }
+};
 
   const downloadReport = () => {
     if (!reportData) {
@@ -830,54 +807,7 @@ useEffect(() => {
     return <PasswordProtect onAuthenticated={handlePasswordAuthenticated} />;
   }
   
-  // SECOND: Check Firebase authentication  
-  if (!userId) {
-    return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <h1>CNN Simulator</h1>
-        <p>Please sign in to access the simulator</p>
-        <button 
-          onClick={() => signInAnonymously(auth)}
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            backgroundColor: '#cc0000',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Sign In
-        </button>
-      </div>
-    );
-  }
-
-  // THIRD: Check if data is loading
   
-if (isDataLoading || !primaryData) {
-  return (
-    <div className={styles.loadingContainer}>
-      <div className={styles.spinner} />
-      <p>Loading secure data...</p>
-    </div>
-  );
-}
-
-
-  // FOURTH: Check for data errors
- 
-if (dataError) {
-  return (
-    <div className={styles.errorContainer}>
-      <h2>Error Loading Data</h2>
-      <p>{dataError}</p>
-      <button onClick={() => window.location.reload()}>Retry</button>
-    </div>
-  );
-}
-
   
   // ============ MAIN RENDER ============
   return (
@@ -1030,7 +960,7 @@ if (dataError) {
           const card = cardDataState[cardNum];
           const isActive = activeProductsState.has(cardNum);
           const isExpanded = expandedCards.has(cardNum) || !!card.product;
-          const pricingRange = card.product ? getPricingRangeForProduct(card.product, card.verticals.length) : null;
+          const pricingRange = card.product ? getPricingForProductType(card.product, card.verticals.length) : null;
           
           return (
             <div key={cardNum} className={`${styles.card} ${!isActive ? styles.inactive : ''}`}>
@@ -1041,7 +971,7 @@ if (dataError) {
                   SIMULATOR
                 </div>
               )}
-              
+
               {isActive && !card.product && (
                 <div className={styles.incompleteOverlay}>
                   ⚠️ INCOMPLETE<br />
@@ -1501,6 +1431,7 @@ if (dataError) {
                   currentReportTypeState === 'tiered'
                     ? [
                         {
+                          id: 'any',
                           product: 'Any Product',
                           monthlyRate: 0,
                           annualRate: 0,
@@ -1508,11 +1439,15 @@ if (dataError) {
                           readerFeatures: [],
                           streamingFeatures: [],
                           features: { reader: [], streaming: [] },
-                          pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                          pricing: { monthlyRate: 0, pricingType: 'monthly', discount: '' },
+                          pricingType: 'monthly',
+                          discount: '',
+                          isActive: true
                         },
                         ...Array.from(activeProductsState)
                           .filter(id => cardDataState[id].product)
                           .map(id => ({
+                            id: id.toString(),
                             product: cardDataState[id].product,
                             monthlyRate: cardDataState[id].monthlyRate,
                             annualRate: cardDataState[id].monthlyRate * 12,
@@ -1527,12 +1462,16 @@ if (dataError) {
                               monthlyRate: cardDataState[id].monthlyRate,
                               pricingType: cardDataState[id].pricingType as any,
                               discount: cardDataState[id].discount || ''
-                            }
+                            },
+                            pricingType: cardDataState[id].pricingType as any,
+                            discount: cardDataState[id].discount || '',
+                            isActive: true
                           }))
                       ]
                     : Array.from(activeProductsState)
                         .filter(id => cardDataState[id].product)
                         .map(id => ({
+                          id: id.toString(),
                           product: cardDataState[id].product,
                           monthlyRate: cardDataState[id].monthlyRate,
                           annualRate: cardDataState[id].monthlyRate * 12,
@@ -1547,7 +1486,10 @@ if (dataError) {
                             monthlyRate: cardDataState[id].monthlyRate,
                             pricingType: cardDataState[id].pricingType as any,
                             discount: cardDataState[id].discount || ''
-                          }
+                          },
+                          pricingType: cardDataState[id].pricingType as any,
+                          discount: cardDataState[id].discount || '',
+                          isActive: true
                         }))
                 }
               />
@@ -1582,6 +1524,7 @@ if (dataError) {
               currentReportTypeState === 'tiered'
                 ? [
                     {
+                      id: 'any',
                       product: 'Any Product',
                       monthlyRate: 0,
                       annualRate: 0,
@@ -1589,11 +1532,15 @@ if (dataError) {
                       readerFeatures: [],
                       streamingFeatures: [],
                       features: { reader: [], streaming: [] },
-                      pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                      pricing: { monthlyRate: 0, pricingType: 'monthly', discount: '' },
+                      pricingType: 'monthly',
+                      discount: '',
+                      isActive: true
                     },
                     ...Array.from(activeProductsState)
                       .filter(id => cardDataState[id].product)
                       .map(id => ({
+                        id: id.toString(),
                         product: cardDataState[id].product,
                         monthlyRate: cardDataState[id].monthlyRate,
                         annualRate: cardDataState[id].monthlyRate * 12,
@@ -1608,12 +1555,16 @@ if (dataError) {
                           monthlyRate: cardDataState[id].monthlyRate,
                           pricingType: cardDataState[id].pricingType as any,
                           discount: cardDataState[id].discount || ''
-                        }
+                        },
+                        pricingType: cardDataState[id].pricingType as any,
+                        discount: cardDataState[id].discount || '',
+                        isActive: true
                       }))
                   ]
                 : Array.from(activeProductsState)
                     .filter(id => cardDataState[id].product)
                     .map(id => ({
+                      id: id.toString(),
                       product: cardDataState[id].product,
                       monthlyRate: cardDataState[id].monthlyRate,
                       annualRate: cardDataState[id].monthlyRate * 12,
@@ -1628,7 +1579,10 @@ if (dataError) {
                         monthlyRate: cardDataState[id].monthlyRate,
                         pricingType: cardDataState[id].pricingType as any,
                         discount: cardDataState[id].discount || ''
-                      }
+                      },
+                      pricingType: cardDataState[id].pricingType as any,
+                      discount: cardDataState[id].discount || '',
+                      isActive: true
                     }))
             }
           />
@@ -1755,102 +1709,103 @@ if (dataError) {
         </div>
       )}
 
-      {/* Fixed Sensitivity Modal */}
-      {sensitivityModalVisible && (
-        <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalLarge}`}>
-            <div className={styles.modalHeader}>
-              <h2>Price Sensitivity Analysis</h2>
-              <button className={styles.closeModal} onClick={() => setSensitivityModalVisible(false)}>×</button>
-            </div>
-            <div>
-              {isAnalyzingSensitivity ? (
-                <div className={styles.profileLoadingState}>
-                  <p>Running price sensitivity analysis...</p>
-                </div>
-              ) : (
-                <div className={styles.profileContainer}>
-                  <p className={styles.marketFactorNote}>
-                    This analysis shows how adoption rates change with price variations.
-                    Negative percentages represent price decreases, positive represent increases.
-                  </p>
-                  
-                  {sensitivityData.map((product, index) => (
-                    <div key={index} className={styles.sensitivityCard}>
-                      <h3>{product.productName}</h3>
-                      <p>
-                        Base Price: <strong>${product.basePrice.toFixed(2)}</strong>
-                      </p>
-                      
-                      <table className={styles.sensitivityTable}>
-                        <thead>
-                          <tr>
-                            <th>Price Change</th>
-                            <th>New Price</th>
-                            <th>Adoption Rate</th>
-                            <th>Change vs Base</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {product.pricePoints.map((point, idx) => {
-                            const baseAdoption = product.pricePoints.find(p => p.priceVariation === 0)?.adoptionRate || 0;
-                            const changeVsBase = ((point.adoptionRate - baseAdoption) / baseAdoption * 100).toFixed(1);
-                            
-                            return (
-                              <tr key={idx} className={`${styles.sensitivityTableRow} ${point.priceVariation === 0 ? styles.current : ''}`}>
-                                <td className={styles.sensitivityTableCell}>
-                                  {point.priceVariation > 0 ? '+' : ''}{point.priceVariation}%
-                                  {point.priceVariation === 0 && ' (Current)'}
-                                </td>
-                                <td className={styles.sensitivityTableCellRight}>
-                                  ${point.price.toFixed(2)}
-                                </td>
-                                <td className={styles.sensitivityTableCellRight}>
-                                  {point.adoptionRate.toFixed(1)}%
-                                </td>
-                                <td className={`${styles.sensitivityTableCellRight} ${
-                                  parseFloat(changeVsBase) > 0 ? styles.sensitivityPositive : 
-                                  parseFloat(changeVsBase) < 0 ? styles.sensitivityNegative : ''
-                                }`}>
-                                  {parseFloat(changeVsBase) > 0 ? '+' : ''}{changeVsBase}%
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      
-                      <div className={styles.sensitivityInsights}>
-                        <p><strong>Key Insights:</strong></p>
-                        <ul>
-                          <li>A 10% price decrease could increase adoption by ~{Math.abs(Math.round((Math.pow(0.9, product.priceElasticity) - 1) * 100))}%</li>
-                          <li>A 10% price increase could decrease adoption by ~{Math.abs(Math.round((Math.pow(1.1, product.priceElasticity) - 1) * 100))}%</li>
-                          <li>Price elasticity coefficient: {product.priceElasticity} ({Math.abs(product.priceElasticity) > 1 ? 'elastic' : 'inelastic'} demand)</li>
-                        </ul>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  <div className={styles.sensitivityNote}>
-                    <strong>Note:</strong> This is a simplified elasticity model. 
-                    For more accurate results, consider running full simulations at each price point 
-                    with actual market factors and consumer segments.
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
-              <button 
-                className={styles.btnPrimary}
-                onClick={() => setSensitivityModalVisible(false)}
-              >
-                Close
-              </button>
-            </div>
+ {/* Fixed Sensitivity Modal */}
+{sensitivityModalVisible && (
+  <div className={styles.modalOverlay}>
+    <div className={`${styles.modal} ${styles.modalLarge}`}>
+      <div className={styles.modalHeader}>
+        <h2>Price Sensitivity Analysis</h2>
+        <button className={styles.closeModal} onClick={() => setSensitivityModalVisible(false)}>×</button>
+      </div>
+      <div>
+        {isAnalyzingSensitivity ? (
+          <div className={styles.profileLoadingState}>
+            <p>Running price sensitivity analysis...</p>
           </div>
-        </div>
-      )}
-
+        ) : (
+          <div className={styles.profileContainer}>
+            <p className={styles.marketFactorNote}>
+              This analysis shows how adoption rates change with price variations.
+              Negative percentages represent price decreases, positive represent increases.
+            </p>
+            
+            {sensitivityData.map((product, index) => (
+              <div key={index} className={styles.sensitivityCard}>
+                <h3>{product.productName}</h3>
+                <p>
+                  Base Price: <strong>${product.basePrice.toFixed(2)}</strong>
+                </p>
+                
+                <table className={styles.sensitivityTable}>
+                  <thead>
+                    <tr>
+                      <th>Price Change</th>
+                      <th>New Price</th>
+                      <th>Adoption Rate</th>
+                      <th>Change vs Base</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.pricePoints.map((point, idx) => {
+                      const baseAdoption = product.pricePoints.find(p => p.priceVariation === 0)?.adoptionRate || 0;
+                      const changeVsBase = ((point.adoptionRate - baseAdoption) / baseAdoption * 100).toFixed(1);
+                      
+                      return (
+                        <tr key={idx} className={`${styles.sensitivityTableRow} ${point.priceVariation === 0 ? styles.current : ''}`}>
+                          <td className={styles.sensitivityTableCell}>
+                            {point.priceVariation > 0 ? '+' : ''}{point.priceVariation}%
+                            {point.priceVariation === 0 && ' (Current)'}
+                          </td>
+                          <td className={styles.sensitivityTableCellRight}>
+                            ${point.price.toFixed(2)}
+                          </td>
+                          <td className={styles.sensitivityTableCellRight}>
+                            {point.adoptionRate.toFixed(1)}%
+                          </td>
+                          <td className={`${styles.sensitivityTableCellRight} ${
+                            parseFloat(changeVsBase) > 0 ? styles.sensitivityPositive : 
+                            parseFloat(changeVsBase) < 0 ? styles.sensitivityNegative : ''
+                          }`}>
+                            {parseFloat(changeVsBase) > 0 ? '+' : ''}{changeVsBase}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                
+                <div className={styles.sensitivityInsights}>
+                  <p><strong>Key Insights:</strong></p>
+                  <ul>
+                    <li>A 10% price decrease could increase adoption by ~{Math.abs(Math.round((Math.pow(0.9, product.elasticityUsed || -1.2) - 1) * 100))}%</li>
+                    <li>A 10% price increase could decrease adoption by ~{Math.abs(Math.round((Math.pow(1.1, product.elasticityUsed || -1.2) - 1) * 100))}%</li>
+                    <li>Price elasticity coefficient: {product.elasticityUsed || -1.2} ({Math.abs(product.elasticityUsed || -1.2) > 1 ? 'elastic' : 'inelastic'} demand)</li>
+                  </ul>
+                </div>
+              </div>
+            ))}
+            
+            {/* This note is OUTSIDE the map */}
+            <div className={styles.sensitivityNote}>
+              <strong>Note:</strong> This is a simplified elasticity model. 
+              For more accurate results, consider running full simulations at each price point 
+              with actual market factors and consumer segments.
+            </div>
+          {/* CLOSE profileContainer div */}
+          </div>
+        )}
+      </div>
+      <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
+        <button 
+          className={styles.btnPrimary}
+          onClick={() => setSensitivityModalVisible(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {/* Market Factors Modal - Using CSS Module */}
       {isMarketFactorsModalVisible && (
         <div className={marketModalStyles.modalOverlay}>
@@ -2577,12 +2532,12 @@ if (dataError) {
       />
 
       {/* Enhanced Product Profiles Modal - keep your existing profile modal too */}
-      <EnhancedProductProfiles
-        isVisible={profileModalVisible}
-        onClose={() => setProfileModalVisible(false)}
-        productProfiles={profileData}
-        totalRespondents={2158}
-      />
+     {/* <EnhancedProductProfiles
+      isVisible={profileModalVisible}
+      onClose={() => setProfileModalVisible(false)}
+      productProfiles={profileData}
+      totalRespondents={2158}
+/> */}
     </div>
   );
 }

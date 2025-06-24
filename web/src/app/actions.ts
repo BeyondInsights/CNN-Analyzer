@@ -1,12 +1,13 @@
 'use server';
 const DEBUG_MODE = false;
+import { cert, initializeApp, getApps } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 import '@/lib/firebaseAdmin';
 import type { 
   ProductSetupConfig, 
   ReportData, 
   ReportDataSegment,
-  ReportType, 
+  ReportType,
   OutputType, 
   ProductProfileData,
   SensitivityPoint, 
@@ -93,28 +94,22 @@ const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; wi
 };
 
 async function loadJsonData<T>(filename: string): Promise<T> {
-  try {
-    const firebaseFiles = ['a7b9c2d1.json', 'e5f8a3b2.json', 'modelParameters.json', 'drnRates.json'];
-    
-    if (firebaseFiles.includes(filename)) {
-      // Load from Firebase Storage
-      const storage = getStorage();
-      const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-      const file = bucket.file(`data/${filename}`);
-      const [contents] = await file.download();
-      return JSON.parse(contents.toString()) as T;
-    } else {
-      // Load locally (for any other files)
-      const filePath = path.join(process.cwd(), 'src', 'data', filename);
-      const fileContents = await fs.readFile(filePath, 'utf8');
-      return JSON.parse(fileContents) as T;
-    }
-  } catch (error) {
-    console.error(`Error loading ${filename}:`, error);
-    throw new Error(`Could not load data file: ${filename}`);
+  const firebaseFiles = ['a7b9c2d1.json', 'c9d4e7f1.json', 'e5f8a3b2.json'];
+  
+  if (firebaseFiles.includes(filename)) {
+    // Load from Firebase Storage
+    const storage = getStorage();
+    const bucket = storage.bucket('cnn-analyzer.firebasestorage.app');
+    const file = bucket.file(`data/${filename}`);
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString()) as T;
+  } else {
+    // Load locally (modelParameters.json, drnRates.json, etc.)
+    const filePath = path.join(process.cwd(), 'src', 'data', filename);
+    const fileContents = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(fileContents) as T;
   }
 }
-
 
 export async function runServerSimulation(
   activeProducts: ProductSetupConfig[],
@@ -144,7 +139,10 @@ export async function runServerSimulation(
 
     // Load the data files
     const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
-    const demographicsData = await loadJsonData<DemographicData[]>('e5f8a3b2.json');
+    const demographicsDataRaw = await loadJsonData<any>('c9d4e7f1.json');
+    const demographicsData = Array.isArray(demographicsDataRaw) 
+      ? demographicsDataRaw 
+      : Object.values(demographicsDataRaw);
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const drnRates = await loadJsonData<any>('drnRates.json');
     
@@ -309,7 +307,15 @@ export async function getProductProfile(productConfig: ProductSetupConfig): Prom
   try {
     const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
     const respondentProfilesObj = await loadJsonData<any>('e5f8a3b2.json');
+    
     // Convert object to array so .find() will work
+    const demographicsData = Array.isArray(respondentProfilesObj) 
+      ? respondentProfilesObj 
+      : Object.entries(respondentProfilesObj).map(([id, data]) => ({
+          Respondent_ID: id,
+          ...(data as any)
+        }));
+    
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const modelParams: Record<string, number> = {};
     modelParametersList.forEach(p => { modelParams[p.Parameter] = p.Value; });
@@ -431,22 +437,22 @@ export async function runPriceSensitivityAnalysis(
     const adoptionImpact = 1 + (priceElasticity * (variation / 100));
    
     // Apply market factors with price sensitivity
-    let finalAdoptionRate = marketFactors.baseConversion;
+    let finalAdoptionRate: number = marketFactors.baseConversion ?? 1.0;
    
     // Apply awareness factor
-    finalAdoptionRate *= (1 + (marketFactors.awareness - 50) / 100 * marketFactors.awarenessWeight);
-   
+    finalAdoptionRate *= (1 + (marketFactors.awareness - 50) / 100 * (marketFactors.awarenessWeight || 30));
+
     // Apply distribution factor
-    finalAdoptionRate *= (1 + (marketFactors.distribution - 50) / 100 * marketFactors.distributionWeight);
-   
+    finalAdoptionRate *= (1 + (marketFactors.distribution - 50) / 100 * (marketFactors.distributionWeight || 25));
+
     // Apply competitive factor
-    finalAdoptionRate *= (1 + (marketFactors.competitive - 50) / 100 * marketFactors.competitiveWeight);
-   
+    finalAdoptionRate *= (1 + (marketFactors.competitive - 50) / 100 * (marketFactors.competitiveWeight || 10));
+
     // Apply marketing factor
-    finalAdoptionRate *= (1 + (marketFactors.marketing - 50) / 100 * marketFactors.marketingWeight);
-   
+    finalAdoptionRate *= (1 + (marketFactors.marketing - 50) / 100 * (marketFactors.marketingWeight || 15));
+
     // Apply year one adoption factor
-    finalAdoptionRate *= (1 + (marketFactors.yearOneAdoption - 50) / 100 * marketFactors.yearOneWeight);
+    finalAdoptionRate *= (1 + (marketFactors.yearOneAdoption - 50) / 100 * (marketFactors.yearOneWeight || 20));
    
     // Apply price sensitivity impact
     finalAdoptionRate *= adoptionImpact;
@@ -461,34 +467,44 @@ export async function runPriceSensitivityAnalysis(
       yearlyRate: testPrice * 12 * (product.pricingType === 'annual' ? 0.85 : 1)
     };
    
-    const simulationResult = await runServerSimulation({
-      products: [testProduct],
-      marketFactors: {
-        ...marketFactors,
-        baseConversion: finalAdoptionRate
-      },
-      reportType: 'independent',
-      outputType: 'percentage',
-      userId
-    });
-   
-    results.push({
-      priceVariation: variation,
-      testPrice,
-      adoptionRate: finalAdoptionRate,
-      adoptionImpact: ((adoptionImpact - 1) * 100).toFixed(1),
-      sharePercentage: simulationResult.overallShare?.[0] || 0,
-      estimatedRevenue: (simulationResult.overallShare?.[0] || 0) * testPrice * 12 / 100,
-      elasticityUsed: priceElasticity // Add this for transparency
-    });
+   const simulationResult = await runServerSimulation(
+  [testProduct],
+  'independent',
+  'percentage',
+  {
+    ...marketFactors,
+    baseConversion: finalAdoptionRate
+  },
+  {
+    takeThreshold: 0.01,
+    drnFactor: 1.0,
+    allocationMethod: 'proportional'
+  }
+);
+
+// Add this null check
+if (!simulationResult) {
+  console.error('Simulation returned null for price variation:', variation);
+  continue; // Skip this iteration
+}
+
+results.push({
+  priceVariation: variation,
+  testPrice,
+  adoptionRate: finalAdoptionRate,
+  adoptionImpact: ((adoptionImpact - 1) * 100).toFixed(1),
+  sharePercentage: simulationResult.overallShare?.[0] || 0,
+  estimatedRevenue: (simulationResult.overallShare?.[0] || 0) * testPrice * 12 / 100,
+  elasticityUsed: priceElasticity
+});
   }
  
   return {
-    productName: product.name,
+    productName: product.product || product.name || 'Unknown',
     basePrice,
     results,
     optimalPrice: results.reduce((optimal, current) =>
       current.estimatedRevenue > optimal.estimatedRevenue ? current : optimal
     ).testPrice
-  };
-}
+  };  // <-- closes the return object
+}  // <-- closes the function

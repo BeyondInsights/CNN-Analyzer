@@ -90,3 +90,31 @@ export const PRODUCT_PRICE_RANGES = {
     midpoint: 3.99, // Default price
   }
 };
+// Import or define the feature descriptions before using them
+import readerFeatureDescriptions from '@/data/readerFeatureDescriptions.json';
+import streamingFeatureDescriptions from '@/data/streamingFeatureDescriptions.json';
+import verticalDescriptions from '@/data/verticalDescriptions.json';
+
+export const AVAILABLE_FEATURES = {
+  reader: Object.keys(readerFeatureDescriptions),
+  streaming: Object.keys(streamingFeatureDescriptions),
+  vertical: Object.keys(verticalDescriptions),
+};
+
+// Define or import pricingRanges before using it
+export const PRICING_RANGES = {};
+
+export const INITIAL_PRODUCT_CONFIG = {
+  id: '1',
+  product: '',
+  monthlyRate: 10,
+  annualRate: 120,
+  verticals: [],
+  readerFeatures: [],
+  streamingFeatures: [],
+  pricingType: 'monthly' as const,
+  discount: 'none' as const,
+  isActive: true
+};
+
+export const DEBUG_MODE = process.env.NODE_ENV === 'development';

@@ -80,34 +80,34 @@ export default function ProductCard({ productConfig }: ProductCardProps) {
     const productForContext = toProductSetupConfigName(value);
     let newRate = currentPricingRange.default;
     if (value) {
-      const vCount = Math.min((productConfig.selectedVerticals || []).length, 3) as 0 | 1 | 2 | 3;
+      const vCount = Math.min((productConfig.verticals || []).length, 3) as 0 | 1 | 2 | 3;
       const range = pricingTable[value]?.[vCount];
       if (range) newRate = range.default;
     }
     setCurrentRate(newRate);
-    updateProductSetupConfig(productConfig.id, { product: productForContext, monthlyRate: newRate });
+    updateProductSetupConfig(Number(productConfig.id), { product: productForContext, monthlyRate: newRate });
   };
 
   const handleSliderChange = (value: number[]) => {
     setCurrentRate(value[0]);
-    updateProductSetupConfig(productConfig.id, { monthlyRate: value[0] });
+    updateProductSetupConfig(Number(productConfig.id), { monthlyRate: value[0] });
   };
 
   const handlePricingTypeBtnClick = (type: ProductPricingType) => {
     setCurrentPricingType(type);
     const newDiscount = type !== 'both' ? '' : currentDiscount;
     if (type !== 'both') setCurrentDiscount('');
-    updateProductSetupConfig(productConfig.id, { pricingType: type, discount: newDiscount });
+    updateProductSetupConfig(Number(productConfig.id), { pricingType: type, discount: newDiscount });
   };
 
   const handleDiscountRadioChange = (value: ProductDiscountType) => {
     setCurrentDiscount(value);
-    updateProductSetupConfig(productConfig.id, { discount: value });
+    updateProductSetupConfig(Number(productConfig.id), { discount: value });
   };
 
   const handleExcludedChange = (checked: boolean) => {
     setIsExcluded(checked);
-    updateProductSetupConfig(productConfig.id, { excluded: checked });
+    updateProductSetupConfig(Number(productConfig.id), { excluded: checked });
   };
 
   const headerText = productConfig.product || `PRODUCT ${productConfig.id}`;
@@ -135,19 +135,19 @@ export default function ProductCard({ productConfig }: ProductCardProps) {
 
           {(currentBaseProduct === 'CNN Reader' || currentBaseProduct === 'CNN All-Access') && (
             <div>
-              <Label className="text-xs">Reader Features ({productConfig.selectedReaderFeatures?.length || 0} selected)</Label>
-              <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(productConfig.id, 'reader')} disabled={isExcluded || !currentBaseProduct}>+ Add Features</Button>
+              <Label className="text-xs">Reader Features ({productConfig.readerFeatures?.length || 0} selected)</Label>
+              <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(Number(productConfig.id), 'reader')} disabled={isExcluded || !currentBaseProduct}>+ Add Features</Button>
             </div>
           )}
           {(currentBaseProduct === 'CNN Streaming' || currentBaseProduct === 'CNN All-Access') && (
             <div>
-              <Label className="text-xs">Streaming Features ({productConfig.selectedStreamingFeatures?.length || 0} selected)</Label>
-              <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(productConfig.id, 'streaming')} disabled={isExcluded || !currentBaseProduct}>+ Add Features</Button>
+              <Label className="text-xs">Streaming Features ({productConfig.streamingFeatures?.length || 0} selected)</Label>
+              <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(Number(productConfig.id), 'streaming')} disabled={isExcluded || !currentBaseProduct}>+ Add Features</Button>
             </div>
           )}
           <div>
-            <Label className="text-xs">Verticals ({productConfig.selectedVerticals?.length || 0} selected)</Label>
-            <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(productConfig.id, 'vertical')} disabled={isExcluded || !currentBaseProduct}>+ Add Verticals</Button>
+            <Label className="text-xs">Verticals ({productConfig.verticals?.length || 0} selected)</Label>
+            <Button variant="outline" size="sm" className="w-full mt-1 text-xs" onClick={() => openFeatureModal(Number(productConfig.id), 'vertical')} disabled={isExcluded || !currentBaseProduct}>+ Add Verticals</Button>
           </div>
 
           <div className="pt-2">

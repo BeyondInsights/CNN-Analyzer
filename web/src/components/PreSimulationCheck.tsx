@@ -24,7 +24,11 @@ export function PreSimulationCheck({ products, respondents, marketFactors }: Pre
       checkList.push('❌ No respondent data loaded');
     }
     
-    if (marketFactors.baseConversion > 1 || marketFactors.baseConversion < 0) {
+    if (
+      marketFactors.baseConversion === undefined ||
+      marketFactors.baseConversion > 1 ||
+      marketFactors.baseConversion < 0
+    ) {
       checkList.push('❌ Invalid base conversion rate');
     }
     

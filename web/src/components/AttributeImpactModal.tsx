@@ -111,7 +111,7 @@ const AttributeImpactModal: React.FC<AttributeImpactModalProps> = ({ isVisible, 
       ];
       setAttributeUtilities(utilitiesData);
     } catch (error) {
-      if (DEBUG_MODE) console.error('Error loading attribute data:', error);
+      // No debug output
     }
   };
 

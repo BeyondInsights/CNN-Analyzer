@@ -3,13 +3,20 @@
 import React from 'react';
 import MarketFactorsModal from './MarketFactorsModal';
 
-export default function MarketAdjModal({ open, onClose, settings, onChange }) {
+type MarketAdjModalProps = {
+  open: boolean;
+  onClose: () => void;
+  settings: any; // Replace 'any' with the actual type if known
+  onChange: (settings: any) => void; // Adjust type as needed
+};
+
+export default function MarketAdjModal({ open, onClose, settings, onChange }: MarketAdjModalProps) {
   return (
     <MarketFactorsModal
       isOpen={open}
       onClose={onClose}
-      settings={settings}
-      onChange={onChange}
+      currentFactors={settings}
+      onApplyFactors={onChange}
     />
   );
 }

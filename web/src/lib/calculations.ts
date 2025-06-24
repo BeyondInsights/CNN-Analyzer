@@ -118,7 +118,7 @@ if (Object.keys(VERTICAL_NAME_TO_CODE).length === 0) {
   if (DEBUG_MODE) console.log(`Loaded ${Object.keys(VERTICAL_NAME_TO_CODE).length} vertical mappings`);
 }
 
-const MODEL_CALIBRATION_FACTOR = 3.5
+const MODEL_CALIBRATION_FACTOR = 3.0  
 
 const PRODUCT_CALIBRATION: Record<string, number> = {
   'CNN Reader': .95,
@@ -1484,7 +1484,6 @@ export function computeTakeRates(
   };
 }
 
-// Replace the matchSegment function in calculations.ts with this:
 function matchSegment(demo: any, groupName: string, segmentName: string): boolean {
   switch (groupName) {
     case "Overall":
@@ -1500,38 +1499,39 @@ function matchSegment(demo: any, groupName: string, segmentName: string): boolea
       return false;
       
     case "Age":
+      // Convert to number for comparison
       if (segmentName === "18-34") {
-        return demo.Age_18_34 === 1 || demo.Age_18_34 === "1";
+        return Number(demo.Age_18_34) === 1;
       }
       if (segmentName === "35-54") {
-        return demo.Age_35_54 === 1 || demo.Age_35_54 === "1";
+        return Number(demo.Age_35_54) === 1;
       }
       if (segmentName === "55-74") {
-        return demo.Age_55_74 === 1 || demo.Age_55_74 === "1";
+        return Number(demo.Age_55_74) === 1;
       }
       return false;
       
     case "Linear TV Status":
       if (segmentName === "Have Linear TV") {
-        return demo.Have_Linear_TV === 1 || demo.Have_Linear_TV === "1";
+        return Number(demo.Have_Linear_TV) === 1;
       }
       return false;
       
     case "Digital News Subscriber":
       if (segmentName === "Digital News Subscriber") {
-        return demo.Digital_News_Subscriber === 1 || demo.Digital_News_Subscriber === "1";
+        return Number(demo.Digital_News_Subscriber) === 1;
       }
       return false;
       
     case "CNN Access":
       if (segmentName === "Regularly Access CNN") {
-        return demo.Regularly_Access_CNN === 1 || demo.Regularly_Access_CNN === "1";
+        return Number(demo.Regularly_Access_CNN) === 1;
       }
       if (segmentName === "Occasionally Access CNN") {
-        return demo.Occasionally_Access_CNN === 1 || demo.Occasionally_Access_CNN === "1";
+        return Number(demo.Occasionally_Access_CNN) === 1;
       }
       if (segmentName === "Rarely Access CNN") {
-        return demo.Rarely_Access_CNN === 1 || demo.Rarely_Access_CNN === "1";
+        return Number(demo.Rarely_Access_CNN) === 1;
       }
       return false;
       
