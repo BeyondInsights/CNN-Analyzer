@@ -1,5 +1,7 @@
 'use server';
 const DEBUG_MODE = false;
+import { getStorage } from 'firebase-admin/storage';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import type { 
   ProductSetupConfig, 
   ReportData, 
@@ -15,6 +17,18 @@ import { computeTakeRates } from '@/lib/calculations';
 import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
 import fs from 'fs/promises';
 import path from 'path';
+
+// Initialize Firebase Admin
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+  });
+}
 
 // Interface definitions
 interface RespondentUtility {
@@ -91,15 +105,29 @@ const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; wi
 };
 
 async function loadJsonData<T>(filename: string): Promise<T> {
-  const filePath = path.join(process.cwd(), 'src', 'data', filename);
   try {
-    const fileContents = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(fileContents) as T;
+    // Check if it's a local file (non-sensitive) or Firebase file (sensitive)
+    const firebaseFiles = ['a7b9c2d1.json', 'e5f8a3b2.json', 'modelParameters.json', 'drnRates.json'];
+    
+    if (firebaseFiles.includes(filename)) {
+      // Load from Firebase Storage
+      const storage = getStorage();
+      const bucket = storage.bucket();
+      const file = bucket.file(`data/${filename}`);
+      const [contents] = await file.download();
+      return JSON.parse(contents.toString()) as T;
+    } else {
+      // Load locally (for any other files)
+      const filePath = path.join(process.cwd(), 'src', 'data', filename);
+      const fileContents = await fs.readFile(filePath, 'utf8');
+      return JSON.parse(fileContents) as T;
+    }
   } catch (error) {
-    if (DEBUG_MODE) console.error(`Error loading ${filename}:`, error);
+    console.error(`Error loading ${filename}:`, error);
     throw new Error(`Could not load data file: ${filename}`);
   }
 }
+
 
 export async function runServerSimulation(
   activeProducts: ProductSetupConfig[],
@@ -295,10 +323,6 @@ export async function getProductProfile(productConfig: ProductSetupConfig): Prom
     const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
     const respondentProfilesObj = await loadJsonData<any>('e5f8a3b2.json');
     // Convert object to array so .find() will work
-    const demographicsData = Object.entries(respondentProfilesObj).map(([id, data]) => ({
-      Respondent_ID: id,
-      ...data
-    }));
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const modelParams: Record<string, number> = {};
     modelParametersList.forEach(p => { modelParams[p.Parameter] = p.Value; });
