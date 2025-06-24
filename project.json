@@ -1,0 +1,6 @@
+{
+  "name": "cnn-simulator-root",
+  "root": ".",
+  "projectType": "library",
+  "targets": {}
+}

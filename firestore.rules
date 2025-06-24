@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default Rule: Deny all reads and writes to any document
+    // if no other more specific rule matches.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Example: User Profiles
+    // A user can read and write their own profile document,
+    // but not anyone else's.
+    // This assumes you'll have a collection named 'userProfiles'
+    // where each document ID is the user's Firebase UID.
+    match /userProfiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rule for a 'simulations' collection.
+    // Users can create and read their own simulation documents.
+    // They cannot update or delete them after creation.
+    // This assumes simulation documents have a 'userId' field.
+    match /simulations/{simulationId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if false;
+    }
+
+    // All data related to simulations.
+    // This rule blocks client access to any document or subcollection
+    // within the 'SimulationData' collection.
+    // Only Firebase Functions (server-side) should access this.
+    match /SimulationData/{document=**} { // The {document=**} wildcard matches all documents and subcollections
+      allow read, write: if false;
+    }
+
+    // You would add more specific rules for other collections here if needed.
+  }
+}

@@ -1,0 +1,71 @@
+/* chart.module.css */
+
+/* 1. Container sizing & layout */
+.chart-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem; /* matches text-xs */
+  aspect-ratio: 16/9;  /* matches aspect-video */
+}
+
+/* 3. Recharts defaults you might have customized */
+.recharts-wrapper {
+  font-family: inherit;
+}
+
+.recharts-surface {
+  background-color: transparent;
+}
+
+/* 4. Tooltip styling (if you had custom rules) */
+.recharts-default-tooltip {
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 5. Legend styling (if you customized it) */
+.recharts-default-legend {
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+/* === any other rules from your chartCssString go below === */
+/* e.g., axis lines, grid, labels, etc. */
+
+/* Styling for Axis Lines */
+.chart-container .recharts-cartesian-axis-line {
+  stroke: #e0e0e0;
+  stroke-width: 1;
+}
+
+/* Styling for Grid Lines */
+.chart-container .recharts-cartesian-grid-horizontal line,
+.chart-container .recharts-cartesian-grid-vertical line {
+  stroke: #f0f0f0;
+  stroke-dasharray: 3 3;
+}
+
+/* Styling for Axis Tick Labels */
+.chart-container .recharts-text.recharts-cartesian-axis-tick-value {
+  font-size: 0.7rem;
+  fill: #666;
+}
+
+/* Styling for Chart Labels */
+.chart-container .recharts-text.recharts-label {
+  font-size: 0.8rem;
+  fill: #333;
+  font-weight: 500;
+}
+/* Styling for Chart Labels */
+.chart-container .recharts-text.recharts-label {
+  font-size: 0.8rem;
+  fill: #333;
+  font-weight: 500;
+}

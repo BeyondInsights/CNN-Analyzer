@@ -1,0 +1,604 @@
+'use server';
+
+import type { 
+  ProductSetupConfig, 
+  ReportData, 
+  ReportDataSegment,
+  ReportType, 
+  OutputType, 
+  ProductProfileData,
+  SensitivityPoint, 
+  MarketFactors,
+  SimulationOptions 
+} from '@/lib/types';
+import respondentProfile from "@/data/respondentProfile.json";
+import drnRates from "@/data/drnRates.json";
+import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
+import fs from 'fs/promises';
+import path from 'path';
+import { performSimulation } from '@/lib/calculations';
+
+// Interface definitions moved to top
+interface RespondentUtility {
+  Respondent_ID: string;
+  Weight: number;
+  Base_Reader?: number;
+  Base_Streaming?: number;
+  Base_AllAccess?: number;
+  Base_Standalone?: number;
+  Price_Linear?: number;
+  Price_Squared?: number;
+  [key: string]: any;
+}
+
+interface ModelParameter {
+  Parameter: string;
+  Value: number;
+  Notes: string;
+}
+
+interface DemographicData {
+  Respondent_ID: string;
+  Gender?: string;
+  Age_Group?: string;
+  Political?: string;
+  CNN_Access?: string;
+  News_Subs?: number;
+  Linear_TV?: string;
+  Ad_Preference?: string;
+  SG?: number;
+  hAgeRecode?: number;
+  SE?: number;
+  SI?: number;
+  S201?: number;
+  S214?: number;
+  TV5a06?: number;
+  TV5b06?: number;
+  N312?: number;
+  N4_loop_13_N4?: number;
+  [key: string]: any;
+}
+
+// Constants
+const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; width: number }> = {
+  '1': { name: "Less than $35,000", lower: 0, upper: 34999, width: 34999 },
+  '2': { name: "$35,000 to $49,999", lower: 35000, upper: 49999, width: 14999 },
+  '3': { name: "$50,000 to $74,999", lower: 50000, upper: 74999, width: 24999 },
+  '4': { name: "$75,000 to $99,999", lower: 75000, upper: 99999, width: 24999 },
+  '5': { name: "$100,000 to $124,999", lower: 100000, upper: 124999, width: 24999 },
+  '6': { name: "$125,000 to $149,999", lower: 125000, upper: 149999, width: 24999 },
+  '7': { name: "$150,000 to $199,999", lower: 150000, upper: 199999, width: 49999 },
+  '8': { name: "$200,000 to $299,999", lower: 200000, upper: 299999, width: 99999 },
+  '9': { name: "$300,000 or more", lower: 300000, upper: Infinity, width: Infinity }
+};
+
+async function loadJsonData<T>(filename: string): Promise<T> {
+  // For testing: load from local data directory
+  // TODO: In production, load from Firebase Storage using loadDataFromStorage()
+  const filePath = path.join(process.cwd(), 'src', 'data', filename);
+  try {
+    const fileContents = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(fileContents) as T;
+  } catch (error) {
+    console.error(`Error loading ${filename}:`, error);
+    throw new Error(`Could not load data file: ${filename}`);
+  }
+}
+
+// REAL IMPLEMENTATION
+export async function runServerSimulation(
+  activeProducts: ProductSetupConfig[],
+  reportType: ReportType,
+  outputType: OutputType,
+  marketFactors: MarketFactors,
+  simulationOptions: SimulationOptions
+): Promise<ReportData | null> {
+  console.log(
+    '[actions.ts] Real runServerSimulation called with:',
+    activeProducts.length,
+    reportType,
+    outputType,
+    marketFactors,
+    simulationOptions
+  );
+  
+  try {
+    if (!activeProducts || activeProducts.length === 0) {
+      console.error('No active products provided');
+      return null;
+    }
+
+    // Load the actual respondent data
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
+    const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
+    const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
+    
+    // Convert model parameters to a map
+    const modelParams: Record<string, number> = {};
+    modelParametersList.forEach(p => { 
+      modelParams[p.Parameter] = p.Value; 
+    });
+    
+    const TOTAL_TAM = modelParams['Total_TAM'] || 105624640; // Your TAM from the UI
+    
+    // Calculate utilities and probabilities for each respondent/product combination
+    const respondentProductProbabilities: Map<string, Map<string, number>> = new Map();
+    
+    for (const respondent of respondentUtilities) {
+      const respondentProbs = new Map<string, number>();
+      let totalExpUtility = 0;
+      
+      // Calculate utilities for each product
+      const utilities: Map<string, number> = new Map();
+      
+      for (const product of activeProducts) {
+        let utility = 0;
+        
+        // Base utility based on product type
+        switch (product.product) {
+          case 'CNN Reader': 
+            utility += respondent.Base_Reader || 0; 
+            break;
+          case 'CNN Streaming': 
+            utility += respondent.Base_Streaming || 0; 
+            break;
+          case 'CNN All-Access': 
+            utility += respondent.Base_AllAccess || 0; 
+            break;
+          case 'CNN Standalone Vertical': 
+            utility += respondent.Base_Standalone || 0; 
+            break;
+        }
+        
+        // Price effects
+        const lnPrice = Math.log(product.monthlyRate);
+        utility += (respondent.Price_Linear || -1.08) * lnPrice;
+        utility += (respondent.Price_Squared || -0.007) * lnPrice * lnPrice;
+        
+        // Add feature utilities based on respondent preferences
+        for (const feature of product.readerFeatures) {
+          const featureCoef = respondent[`Reader_${feature}`] || 0;
+          utility += featureCoef;
+        }
+        
+        for (const feature of product.streamingFeatures) {
+          const featureCoef = respondent[`Streaming_${feature}`] || 0;
+          utility += featureCoef;
+        }
+        
+        // Vertical utilities
+        for (const vertical of product.verticals) {
+          const verticalCoef = respondent[`Vertical_${vertical}`] || 0;
+          utility += verticalCoef;
+        }
+        
+        // Vertical count effect (diminishing returns)
+        if (product.verticals.length > 0) {
+          const countEffect = respondent[`VerticalCount_${product.verticals.length}`] || 0;
+          utility += countEffect;
+        }
+        
+        utilities.set(product.product, utility);
+        totalExpUtility += Math.exp(utility);
+      }
+      
+      // Add "none" option
+      totalExpUtility += Math.exp(0); // Utility of not subscribing
+      
+      // Calculate probabilities using softmax
+      for (const [productName, utility] of utilities) {
+        const probability = Math.exp(utility) / totalExpUtility;
+        respondentProbs.set(productName, probability);
+      }
+      
+      respondentProductProbabilities.set(respondent.Respondent_ID, respondentProbs);
+    }
+    
+    // Apply market factors and calculate overall shares
+    const overallShare: number[] = [];
+    const segmentShares: Map<string, number[]> = new Map();
+    
+    // Initialize segment maps
+    for (const segment of DEMOGRAPHIC_SEGMENTS) {
+      segmentShares.set(segment.group, new Array(activeProducts.length).fill(0));
+    }
+    
+    // Calculate weighted shares
+    for (const product of activeProducts) {
+      let totalWeightedProb = 0;
+      let totalWeight = 0;
+      
+      for (const respondent of respondentUtilities) {
+        const probs = respondentProductProbabilities.get(respondent.Respondent_ID);
+        if (!probs) continue;
+        
+        const prob = probs.get(product.product) || 0;
+        const weight = respondent.Weight || 1;
+        
+        // Apply DRN factor from drnRates
+        const drnData = drnRates.find((d: any) => d.Respondent_ID === respondent.Respondent_ID);
+        const drnFactor = drnData?.DRN_Composite || drnData?.DRN_Base || 0.85;
+        
+        const adjustedProb = prob * drnFactor;
+        totalWeightedProb += adjustedProb * weight;
+        totalWeight += weight;
+        
+        // Add to segment calculations
+        const demo = demographicsData.find(d => d.Respondent_ID === respondent.Respondent_ID);
+        if (demo) {
+          // Determine which segment this respondent belongs to
+          // This is simplified - you'd need to map demographics to your segments
+          const segmentName = getSegmentName(demo);
+          if (segmentName && segmentShares.has(segmentName)) {
+            const segmentArray = segmentShares.get(segmentName)!;
+            const productIndex = activeProducts.indexOf(product);
+            segmentArray[productIndex] += adjustedProb * weight;
+          }
+        }
+      }
+      
+      // Calculate base take rate
+      const baseTakeRate = totalWeight > 0 ? (totalWeightedProb / totalWeight) * 100 : 0;
+      
+      // Apply market realization factors
+      const realizedTakeRate = baseTakeRate * 
+        (marketFactors.awareness / 100) *
+        (marketFactors.distribution / 100) *
+        (marketFactors.competitive / 100) *
+        (marketFactors.marketing / 100) *
+        (marketFactors.yearOneAdoption / 100);
+      
+      overallShare.push(parseFloat(realizedTakeRate.toFixed(2)));
+    }
+    
+    // Convert segment shares to percentages
+    const segmentSharesArray: ReportDataSegment[] = [];
+    for (const segment of DEMOGRAPHIC_SEGMENTS) {
+      const shares = segmentShares.get(segment.group) || [];
+      const normalizedShares = shares.map(share => {
+        // Normalize by segment size
+        const segmentSize = getSegmentSize(segment.group, respondentUtilities, demographicsData);
+        return segmentSize > 0 ? parseFloat(((share / segmentSize) * 100).toFixed(2)) : 0;
+      });
+      
+      segmentSharesArray.push({
+        segmentName: segment.group,
+        shares: normalizedShares
+      });
+    }
+    
+    // Apply report type specific logic
+    if (reportType === 'tiered' || reportType === 'bundle') {
+      // Bundle analysis - products compete for same customers
+      // Already handled in base calculation
+    } else if (reportType === 'matrix') {
+      // Matrix comparison - show cross-product effects
+      // TODO: Add cross-product interaction effects
+    } else if (reportType === 'independent') {
+      // Independent analysis - each product evaluated separately
+      // Adjust probabilities to not compete
+      for (const [respondentId, probs] of respondentProductProbabilities) {
+        const independentProbs = new Map<string, number>();
+        for (const [productName, prob] of probs) {
+          // Each product gets its share without competition
+          independentProbs.set(productName, prob / (1 - prob));
+        }
+        respondentProductProbabilities.set(respondentId, independentProbs);
+      }
+    }
+    
+    // Apply output type transformation if needed
+    if (outputType === 'count') {
+      // Convert percentages to counts
+      const overallCounts = overallShare.map(share => Math.round((share / 100) * TOTAL_TAM));
+      const segmentCounts = segmentSharesArray.map(segment => ({
+        ...segment,
+        shares: segment.shares.map(share => Math.round((share / 100) * TOTAL_TAM))
+      }));
+      
+      return {
+        reportType,
+        outputType,
+        overallShare: overallCounts,
+        segmentShares: segmentCounts
+      };
+    } else if (outputType === 'revenue') {
+      // Convert to revenue
+      const overallRevenue = overallShare.map((share, index) => {
+        const subscribers = (share / 100) * TOTAL_TAM;
+        const monthlyRate = activeProducts[index].monthlyRate;
+        return Math.round(subscribers * monthlyRate * 12); // Annual revenue
+      });
+      
+      const segmentRevenue = segmentSharesArray.map(segment => ({
+        ...segment,
+        shares: segment.shares.map((share, index) => {
+          const subscribers = (share / 100) * TOTAL_TAM;
+          const monthlyRate = activeProducts[index].monthlyRate;
+          return Math.round(subscribers * monthlyRate * 12);
+        })
+      }));
+      
+      return {
+        reportType,
+        outputType,
+        overallShare: overallRevenue,
+        segmentShares: segmentRevenue
+      };
+    }
+    
+    return {
+      reportType,
+      outputType,
+      overallShare,
+      segmentShares: segmentSharesArray
+    };
+    
+  } catch (error) {
+    console.error('[actions.ts] Error in runServerSimulation:', error);
+    throw error;
+  }
+}
+
+// Helper function to determine segment name from demographics
+function getSegmentName(demo: DemographicData): string {
+  // Map demographics to your segment groups based on DEMOGRAPHIC_SEGMENTS
+  
+  // Gender
+  const gender = demo.SG === 1 ? 'Male' : 
+                demo.SG === 2 ? 'Female' : 
+                demo.Gender || 'Unknown';
+  
+  // Age groups
+  const age = demo.hAgeRecode === 1 ? '18-34' : 
+              demo.hAgeRecode === 2 ? '35-54' : 
+              demo.hAgeRecode === 3 ? '55-74' :
+              demo.Age_Group || 'Unknown';
+  
+  // Try to match specific segments first
+  if (gender === 'Male' && age === '18-34') return 'Male 18-34';
+  if (gender === 'Male' && age === '35-54') return 'Male 35-54';
+  if (gender === 'Male' && age === '55-74') return 'Male 55+';
+  if (gender === 'Female' && age === '18-34') return 'Female 18-34';
+  if (gender === 'Female' && age === '35-54') return 'Female 35-54';
+  if (gender === 'Female' && age === '55-74') return 'Female 55+';
+  
+  // Political segments
+  if (demo.S201 === 1) return 'Liberal/Democrat';
+  if (demo.S201 === 2) return 'Conservative/Republican';
+  if (demo.S201 === 3) return 'Independent/Moderate';
+  
+  // CNN viewership
+  if (demo.S214 === 1 || demo.S214 === 2) return 'CNN Regular Viewers';
+  if (demo.S214 === 3 || demo.S214 === 4) return 'CNN Occasional Viewers';
+  
+  // Income segments
+  const income = demo.SI || 0;
+  if (income < 50000) return 'Income <$50k';
+  if (income >= 50000 && income < 100000) return 'Income $50k-$100k';
+  if (income >= 100000) return 'Income $100k+';
+  
+  // Default segment
+  return 'General Population';
+}
+
+// Helper function to get segment size
+function getSegmentSize(segmentName: string, respondents: RespondentUtility[], demographics: DemographicData[]): number {
+  let totalWeight = 0;
+  
+  for (const respondent of respondents) {
+    const demo = demographics.find(d => d.Respondent_ID === respondent.Respondent_ID);
+    if (demo && getSegmentName(demo) === segmentName) {
+      totalWeight += respondent.Weight || 1;
+    }
+  }
+  
+  return totalWeight;
+}
+
+export async function getProductProfile(productConfig: ProductSetupConfig): Promise<ProductProfileData | null> {
+  try {
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
+    const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
+    const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
+    const modelParams: Record<string, number> = {};
+    modelParametersList.forEach(p => { modelParams[p.Parameter] = p.Value; });
+    const TOTAL_TAM = modelParams['Total_TAM'] || 250000000;
+    let productChoosersWeightedProbabilities: { demo: DemographicData, prob: number, weight: number }[] = [];
+    let totalWeightedProbabilitySumForProduct = 0;
+
+    for (const respUtil of respondentUtilities) { 
+      let utility = 0;
+      // Logic based on the updated ProductSetupConfig in types.ts (product: string)
+      switch (productConfig.product) {
+        case 'CNN Reader': utility += respUtil.Base_Reader || 0; break;
+        case 'CNN Streaming': utility += respUtil.Base_Streaming || 0; break;
+        case 'CNN All-Access': utility += respUtil.Base_AllAccess || 0; break;
+        case 'CNN Standalone Vertical': utility += respUtil.Base_Standalone || 0; break;
+        // Case 'None' or '' might not have a base utility, or it's handled by not adding base utility
+      }
+      const lnPrice = Math.log(productConfig.monthlyRate);
+      utility += (respUtil.Price_Linear || 0) * lnPrice;
+      if (respUtil.Price_Squared) utility += (respUtil.Price_Squared || 0) * lnPrice * lnPrice;
+      const probability = 1 / (1 + Math.exp(-utility));
+      const weight = respUtil.Weight || 1;
+      const demo = demographicsData.find(d => d.Respondent_ID === respUtil.Respondent_ID);
+      if (demo) {
+        productChoosersWeightedProbabilities.push({ demo, prob: probability, weight });
+        totalWeightedProbabilitySumForProduct += probability * weight;
+      }
+    } 
+    const totalWeightSum = productChoosersWeightedProbabilities.reduce((sum, item) => sum + item.weight, 0);
+    const overallChooserBase = totalWeightSum > 0 ? totalWeightedProbabilitySumForProduct / totalWeightSum * TOTAL_TAM : 0;
+    
+    // Changed type definition here
+    const profileMetrics: Array<{ profile: string; variable: string; value: string }> = [];
+    
+    // Rest of the function remains the same
+    profileMetrics.push({ profile: "Overall", variable: "Population Size (Est.)", value: overallChooserBase.toLocaleString(undefined, { maximumFractionDigits: 0 }) });
+    profileMetrics.push({ profile: "Overall", variable: "TAM Proportion (%)", value: (overallChooserBase / TOTAL_TAM * 100).toFixed(1) });
+    profileMetrics.push({ profile: "Overall", variable: "Est. Yr 1 Revenue ($)", value: (overallChooserBase * productConfig.monthlyRate * 12).toLocaleString(undefined, { maximumFractionDigits: 0, style: 'currency', currency: 'USD' }) });
+    const calculateSegmentPercentage = (filterFn: (demo: DemographicData) => boolean, variableName: string) => {
+      let segmentWeightedProbSum = 0;
+      productChoosersWeightedProbabilities.forEach(item => {
+        if (filterFn(item.demo)) { segmentWeightedProbSum += item.prob * item.weight; }
+      });
+      return totalWeightedProbabilitySumForProduct > 0 ? (segmentWeightedProbSum / totalWeightedProbabilitySumForProduct * 100).toFixed(1) : "0.0";
+    };
+    
+    // Gender
+    profileMetrics.push({ profile: "Male", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Gender === 'Male', 'Gender') });
+    profileMetrics.push({ profile: "Female", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Gender === 'Female', 'Gender') });
+    
+    // Age
+    profileMetrics.push({ profile: "18-34", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Age_Group === '18-34', 'Age_Group') });
+    profileMetrics.push({ profile: "35-54", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Age_Group === '35-54', 'Age_Group') });
+    profileMetrics.push({ profile: "55+", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Age_Group === '55+', 'Age_Group') });
+    
+    // Political
+    profileMetrics.push({ profile: "Liberal", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Political === 'Liberal', 'Political') });
+    profileMetrics.push({ profile: "Moderate", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Political === 'Moderate', 'Political') });
+    profileMetrics.push({ profile: "Conservative", variable: "% of Choosers", value: calculateSegmentPercentage(d => d.Political === 'Conservative', 'Political') });
+    
+    // HHI - New segment based on HHI bands
+    const calculateHHISegmentPercentage = (band: string) => {
+      return calculateSegmentPercentage(d => {
+        const hhiValue = d.SI || 0;
+        const bandInfo = HHI_BANDS[band];
+        return bandInfo && hhiValue >= bandInfo.lower && hhiValue <= bandInfo.upper;
+      }, 'HHI');
+    };
+    
+    // Select specific HHI bands to display
+    // HHI median calculation
+    const hhiValues = productChoosersWeightedProbabilities
+      .map(item => item.demo.SI || 0)
+      .filter(val => val > 0)
+      .sort((a, b) => a - b);
+    const medianHHI = hhiValues.length > 0 ? 
+      hhiValues[Math.floor(hhiValues.length / 2)] : 0;
+    const medianHHIString = medianHHI > 0 ? 
+      `${medianHHI.toLocaleString()}` : "N/A";
+    
+    profileMetrics.push({ profile: "Overall", variable: "Median HHI", value: medianHHIString });
+    
+    // Income segments
+    profileMetrics.push({ profile: "HHI < $50k", variable: "% of Choosers", value: calculateSegmentPercentage(d => (d.SI || 0) < 50000, 'HHI') });
+    profileMetrics.push({ profile: "HHI $50k-$100k", variable: "% of Choosers", value: calculateSegmentPercentage(d => (d.SI || 0) >= 50000 && (d.SI || 0) < 100000, 'HHI') });
+    profileMetrics.push({ profile: "HHI $100k+", variable: "% of Choosers", value: calculateSegmentPercentage(d => (d.SI || 0) >= 100000, 'HHI') });
+    
+    // Additional demographic metrics
+    profileMetrics.push({ profile: "Education", variable: "College Grad+ %", value: calculateSegmentPercentage(d => d.SE === 1 || d.SE === 2, "College Grad+") });
+    profileMetrics.push({ profile: "CNN Viewership", variable: "Regularly (Daily/Weekly) %", value: calculateSegmentPercentage(d => d.S214 === 1 || d.S214 === 2, "Regularly")});
+    profileMetrics.push({ profile: "Linear TV", variable: "Has Linear TV Service %", value: calculateSegmentPercentage(d => d.TV5a06 === 1, "Has Linear TV") });
+    profileMetrics.push({ profile: "Ad Preference", variable: "Prefers Ad-Free %", value: calculateSegmentPercentage(d => d.TV5b06 === 3, "Prefers Ad-Free") });
+    profileMetrics.push({ profile: "News Subscriptions", variable: "Subscribes to 1+ News %", value: calculateSegmentPercentage(d => (d.N312 || 0) >= 1, "Subscribes to 1+ News")});
+    profileMetrics.push({ profile: "Other News Source", variable: "Uses NYT %", value: calculateSegmentPercentage(d => d.N4_loop_13_N4 === 1, "Uses NYT") });
+    
+    // Convert to expected format
+    const productProfileData: ProductProfileData = {
+      productName: productConfig.product,
+      description: getProductDescription(productConfig),
+      targetAudience: getTargetAudience(productConfig),
+      keyFeatures: getKeyFeatures(productConfig),
+      configuration: {
+        readerFeatures: productConfig.readerFeatures,
+        streamingFeatures: productConfig.streamingFeatures,
+        verticals: productConfig.verticals
+      },
+      pricing: {
+        monthlyRate: productConfig.monthlyRate,
+        annualRate: productConfig.annualRate,
+        pricingType: productConfig.pricingType,
+        discount: productConfig.discount
+      },
+      profileMetrics: profileMetrics
+    };
+    
+    return productProfileData;
+  } catch (error) {
+    console.error("Get Product Profile Error:", error);
+    return null;
+  }
+}
+
+// Helper functions for product profile
+function getProductDescription(config: ProductSetupConfig): string {
+  const descriptions: Record<string, string> = {
+    'CNN Reader': 'Premium digital reading experience with exclusive articles and ad-free browsing',
+    'CNN Streaming': 'Live and on-demand video content with exclusive shows and documentaries',
+    'CNN All-Access': 'Complete CNN experience combining all reader and streaming benefits',
+    'CNN Standalone Vertical': `Specialized content focused on ${config.verticals[0] || 'selected topic'}`
+  };
+  return descriptions[config.product] || 'CNN subscription product';
+}
+
+function getTargetAudience(config: ProductSetupConfig): string {
+  const audiences: Record<string, string> = {
+    'CNN Reader': 'News enthusiasts who prefer reading in-depth articles and analysis',
+    'CNN Streaming': 'Viewers who want live coverage and video content on-demand',
+    'CNN All-Access': 'Power users who want the complete CNN experience across all platforms',
+    'CNN Standalone Vertical': 'Specialists and enthusiasts focused on specific topics'
+  };
+  return audiences[config.product] || 'CNN audience';
+}
+
+function getKeyFeatures(config: ProductSetupConfig): string[] {
+  const features: string[] = [];
+  
+  // Add product-specific features
+  if (config.product === 'CNN Reader' || config.product === 'CNN All-Access') {
+    features.push(...config.readerFeatures.map(f => `Reader: ${f}`));
+  }
+  
+  if (config.product === 'CNN Streaming' || config.product === 'CNN All-Access') {
+    features.push(...config.streamingFeatures.map(f => `Streaming: ${f}`));
+  }
+  
+  if (config.verticals.length > 0) {
+    features.push(...config.verticals.map(v => `Vertical: ${v}`));
+  }
+  
+  return features;
+}
+
+export async function runPriceSensitivityAnalysis(
+  productConfig: ProductSetupConfig,
+  priceRange: { min: number; max: number; steps: number },
+  marketFactors: MarketFactors,
+  simulationOptions: SimulationOptions
+): Promise<SensitivityPoint[]> {
+  const results: SensitivityPoint[] = [];
+  const { min, max, steps } = priceRange;
+  const stepSize = steps > 1 ? (max - min) / (steps - 1) : 0;
+  const baseRate = productConfig.monthlyRate;
+
+  for (let i = 0; i < steps; i++) {
+    const price = steps > 1 ? min + stepSize * i : min;
+    const tempConfig: ProductSetupConfig = { ...productConfig, monthlyRate: price };
+
+    const sim = await runServerSimulation(
+      [tempConfig],
+      'bundle',
+      'percentage',
+      marketFactors,
+      simulationOptions
+    );
+
+    results.push({
+      productName: productConfig.product,
+      basePrice: baseRate,
+      pricePoints: [{
+        priceVariation: ((price - baseRate) / baseRate) * 100,
+        price: price,
+        adoptionRate: sim ? sim.overallShare[0] : 0
+      }]
+    });
+  }
+  return results;
+}
+
+export async function testServerAction(): Promise<{ message: string }> {
+  console.log('Test server action called - this should appear in terminal');
+  return { message: 'Server action works!' };
+}

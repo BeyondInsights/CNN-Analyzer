@@ -1,0 +1,1688 @@
+{
+  "version": "6.0",
+  "nxVersion": "21.2.0",
+  "pathMappings": {
+    "@/*": [
+      "./src/*"
+    ]
+  },
+  "nxJsonPlugins": [],
+  "fileMap": {
+    "projectFileMap": {
+      "cnn-simulator": [
+        {
+          "file": ".eslintrc.json",
+          "hash": "15294778825840797375"
+        },
+        {
+          "file": ".firebaserc",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": ".gitignore",
+          "hash": "6706213445537822926"
+        },
+        {
+          "file": ".idx/dev.nix",
+          "hash": "3088258304930933180"
+        },
+        {
+          "file": ".modified",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": ".vscode/settings.json",
+          "hash": "14397654593988601043"
+        },
+        {
+          "file": "CNN-Analyzer.git/HEAD",
+          "hash": "11710400652189793685"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/.editorconfig",
+          "hash": "5443105041930014821"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/.gitignore",
+          "hash": "18435103667633526488"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/.npmrc",
+          "hash": "1880664178033616490"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/.vscode/extensions.json",
+          "hash": "3833545590435012078"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/README.md",
+          "hash": "15088409552265390563"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.editorconfig",
+          "hash": "5443105041930014821"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.github/workflows/ci.yml",
+          "hash": "4539041984386434704"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.gitignore",
+          "hash": "15397233327289499588"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.npmrc",
+          "hash": "1880664178033616490"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.prettierignore",
+          "hash": "14688272390704683536"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.prettierrc",
+          "hash": "16267754514737964994"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/.vscode/extensions.json",
+          "hash": "11309362834336059819"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/README.md",
+          "hash": "2579609374133963494"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web-e2e/eslint.config.mjs",
+          "hash": "1172734138943286526"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web-e2e/package.json",
+          "hash": "14067198556293826057"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web-e2e/playwright.config.ts",
+          "hash": "8457964042834231707"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web-e2e/src/example.spec.ts",
+          "hash": "16019101014373124625"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web-e2e/tsconfig.json",
+          "hash": "15001458170383955177"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/.swcrc",
+          "hash": "2742566327615098680"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/eslint.config.mjs",
+          "hash": "9395599417347553521"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/index.d.ts",
+          "hash": "5498222895072842432"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/jest.config.ts",
+          "hash": "6712642872172946790"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/next.config.js",
+          "hash": "5443563404894739361"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/package.json",
+          "hash": "11504862953310903510"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/public/.gitkeep",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/public/favicon.ico",
+          "hash": "9303420814833116677"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/specs/index.spec.tsx",
+          "hash": "2873936096691223229"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/src/app/api/hello/route.ts",
+          "hash": "495073956729887886"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/src/app/global.css",
+          "hash": "2063387531564215811"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/src/app/layout.tsx",
+          "hash": "17768227939851893254"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/src/app/page.module.css",
+          "hash": "4786619528779355986"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/src/app/page.tsx",
+          "hash": "9273557916447853387"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/tsconfig.json",
+          "hash": "9630976855835518804"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/apps/web/tsconfig.spec.json",
+          "hash": "5667077840779508676"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/eslint.config.mjs",
+          "hash": "10770449096712831357"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/jest.config.ts",
+          "hash": "6870352021923392442"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/jest.preset.js",
+          "hash": "9430166341120122740"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/nx.json",
+          "hash": "16968262991666197520"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/package.json",
+          "hash": "8058419822560588595"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/pnpm-lock.yaml",
+          "hash": "8873557077117176585"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/pnpm-workspace.yaml",
+          "hash": "13800489465155511935"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/tsconfig.base.json",
+          "hash": "18132073024976155609"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/cnn-analyzer/tsconfig.json",
+          "hash": "17776307692739676931"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/nx.json",
+          "hash": "16860011446866357783"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/package.json",
+          "hash": "12170661530268248226"
+        },
+        {
+          "file": "CNN-Analyzer.git/cnn-analyzer/pnpm-lock.yaml",
+          "hash": "2411710870900603376"
+        },
+        {
+          "file": "CNN-Analyzer.git/config",
+          "hash": "6537163383517915342"
+        },
+        {
+          "file": "CNN-Analyzer.git/description",
+          "hash": "6589616779641096119"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/applypatch-msg.sample",
+          "hash": "3740124940738663445"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/commit-msg.sample",
+          "hash": "11930680668000581900"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/fsmonitor-watchman.sample",
+          "hash": "5519580754951798083"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/post-update.sample",
+          "hash": "16498975149454253769"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-applypatch.sample",
+          "hash": "1595391782482835178"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-commit.sample",
+          "hash": "2931916916104981897"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-merge-commit.sample",
+          "hash": "5691533144974613569"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-push.sample",
+          "hash": "3666369642558647280"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-rebase.sample",
+          "hash": "15784748353859782246"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/pre-receive.sample",
+          "hash": "8999430056057037490"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/prepare-commit-msg.sample",
+          "hash": "4009645067798984574"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/push-to-checkout.sample",
+          "hash": "5194610557431485830"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/sendemail-validate.sample",
+          "hash": "7660090827690999586"
+        },
+        {
+          "file": "CNN-Analyzer.git/hooks/update.sample",
+          "hash": "14696759095365231402"
+        },
+        {
+          "file": "CNN-Analyzer.git/info/exclude",
+          "hash": "2084763735014985388"
+        },
+        {
+          "file": "CNN-Analyzer.git/objects/pack/pack-29a5a165973089afd8fd922789e40e5265d6cfac.idx",
+          "hash": "932550457626071714"
+        },
+        {
+          "file": "CNN-Analyzer.git/objects/pack/pack-29a5a165973089afd8fd922789e40e5265d6cfac.pack",
+          "hash": "14408640156412208435"
+        },
+        {
+          "file": "CNN-Analyzer.git/objects/pack/pack-29a5a165973089afd8fd922789e40e5265d6cfac.rev",
+          "hash": "2955701380932074413"
+        },
+        {
+          "file": "CNN-Analyzer.git/packed-refs",
+          "hash": "14875968870679179483"
+        },
+        {
+          "file": "README.md",
+          "hash": "13656763592873009662"
+        },
+        {
+          "file": "actions.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "all-inline-css.txt",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "apphosting.yaml",
+          "hash": "6018759874393723843"
+        },
+        {
+          "file": "bfg.jar",
+          "hash": "17267067602930479191"
+        },
+        {
+          "file": "check-data-files.js",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "check-ids.js",
+          "hash": "10084430923766833088"
+        },
+        {
+          "file": "check.js",
+          "hash": "3619499491310929208"
+        },
+        {
+          "file": "debug-actions.patch",
+          "hash": "6545117224043790545"
+        },
+        {
+          "file": "demographic-counts.json",
+          "hash": "2325081531290265381"
+        },
+        {
+          "file": "diagnose.js",
+          "hash": "10073991058636913680"
+        },
+        {
+          "file": "dirlist.txt",
+          "hash": "11669002439225220121"
+        },
+        {
+          "file": "feature-vertical-analysis.json",
+          "hash": "16582267108935245025"
+        },
+        {
+          "file": "firebase.json",
+          "hash": "18091972704267363580"
+        },
+        {
+          "file": "firestore.indexes.json",
+          "hash": "10168258939385609953"
+        },
+        {
+          "file": "firestore.rules",
+          "hash": "10294638077101716541"
+        },
+        {
+          "file": "fix-ts-errors.js",
+          "hash": "9668375822777435233"
+        },
+        {
+          "file": "fix_sensitivity.sh",
+          "hash": "12064941840314826139"
+        },
+        {
+          "file": "functions/.eslintignore",
+          "hash": "3631626238759664225"
+        },
+        {
+          "file": "functions/.eslintrc.js",
+          "hash": "13141640442703855494"
+        },
+        {
+          "file": "functions/lib/calculations.js",
+          "hash": "13730348519414356514"
+        },
+        {
+          "file": "functions/lib/calculations.js.map",
+          "hash": "4693890570142643711"
+        },
+        {
+          "file": "functions/lib/constants.js",
+          "hash": "11291677631398271759"
+        },
+        {
+          "file": "functions/lib/constants.js.map",
+          "hash": "9838322446816012331"
+        },
+        {
+          "file": "functions/lib/functions/src/index.js",
+          "hash": "8999879668087137832"
+        },
+        {
+          "file": "functions/lib/functions/src/index.js.map",
+          "hash": "15644740825238372868"
+        },
+        {
+          "file": "functions/lib/index.js",
+          "hash": "551186015363493333"
+        },
+        {
+          "file": "functions/lib/index.js.map",
+          "hash": "15122673697280776991"
+        },
+        {
+          "file": "functions/lib/src/lib/calculations.js",
+          "hash": "12400511841903329374"
+        },
+        {
+          "file": "functions/lib/src/lib/calculations.js.map",
+          "hash": "561998451702834167"
+        },
+        {
+          "file": "functions/lib/src/lib/constants.js",
+          "hash": "5411466609930144848"
+        },
+        {
+          "file": "functions/lib/src/lib/constants.js.map",
+          "hash": "6618936456074742498"
+        },
+        {
+          "file": "functions/lib/src/lib/types.js",
+          "hash": "2288349115704570607"
+        },
+        {
+          "file": "functions/lib/src/lib/types.js.map",
+          "hash": "5726943187935244879"
+        },
+        {
+          "file": "functions/lib/types.js",
+          "hash": "16337552782982042042"
+        },
+        {
+          "file": "functions/lib/types.js.map",
+          "hash": "17305938616271985771"
+        },
+        {
+          "file": "functions/package-lock.json",
+          "hash": "981838310528532327"
+        },
+        {
+          "file": "functions/package.json",
+          "hash": "11180326456279272572"
+        },
+        {
+          "file": "functions/src/calculations.ts",
+          "hash": "12402056644388229810"
+        },
+        {
+          "file": "functions/src/constants.ts",
+          "hash": "2050176413437435325"
+        },
+        {
+          "file": "functions/src/index.ts",
+          "hash": "4155886527563203043"
+        },
+        {
+          "file": "functions/src/lib/firebase-admin.ts",
+          "hash": "11095183435453117550"
+        },
+        {
+          "file": "functions/src/types.ts",
+          "hash": "6416151308951341494"
+        },
+        {
+          "file": "functions/tsconfig.json",
+          "hash": "5520099447494030364"
+        },
+        {
+          "file": "h restore-page-from-git.sh",
+          "hash": "18332972380767449257"
+        },
+        {
+          "file": "inline-styles-locations.txt",
+          "hash": "2946394339100133286"
+        },
+        {
+          "file": "lib/firebase-admin.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "next.config.js",
+          "hash": "13727946816596720434"
+        },
+        {
+          "file": "nx.json",
+          "hash": "7824603087571036832"
+        },
+        {
+          "file": "package-lock.json",
+          "hash": "9528126913441378804"
+        },
+        {
+          "file": "package.json",
+          "hash": "15680029230907546397",
+          "deps": [
+            "npm:@next/swc-linux-x64-gnu",
+            "npm:@types/d3",
+            "npm:@types/node",
+            "npm:@types/react",
+            "npm:@types/react-dom",
+            "npm:@typescript-eslint/eslint-plugin",
+            "npm:@typescript-eslint/parser",
+            "npm:autoprefixer",
+            "npm:eslint",
+            "npm:eslint-config-next",
+            "npm:nx",
+            "npm:postcss",
+            "npm:tailwindcss",
+            "npm:ts-node",
+            "npm:tsx",
+            "npm:typescript",
+            "npm:@nx/eslint",
+            "npm:@nx/jest",
+            "npm:@nx/playwright",
+            "npm:@genkit-ai/googleai",
+            "npm:@headlessui/react",
+            "npm:@heroicons/react",
+            "npm:@opentelemetry/exporter-jaeger",
+            "npm:@radix-ui/react-checkbox",
+            "npm:@radix-ui/react-dialog",
+            "npm:@radix-ui/react-dropdown-menu",
+            "npm:@radix-ui/react-label",
+            "npm:@radix-ui/react-popover",
+            "npm:@radix-ui/react-radio-group",
+            "npm:@radix-ui/react-scroll-area",
+            "npm:@radix-ui/react-select",
+            "npm:@radix-ui/react-slider",
+            "npm:@radix-ui/react-slot",
+            "npm:@radix-ui/react-switch",
+            "npm:@radix-ui/react-tabs",
+            "npm:@radix-ui/react-tooltip",
+            "npm:@tanstack/react-query",
+            "npm:@types/dotenv",
+            "npm:class-variance-authority",
+            "npm:d3",
+            "npm:dotenv",
+            "npm:firebase",
+            "npm:genkit",
+            "npm:lucide-react",
+            "npm:netlify-identity-widget",
+            "npm:next",
+            "npm:react",
+            "npm:react-dom",
+            "npm:tailwind-merge"
+          ]
+        },
+        {
+          "file": "postcss.config.js",
+          "hash": "1579725330904862112"
+        },
+        {
+          "file": "product_card_observations.txt",
+          "hash": "11761675446858980922"
+        },
+        {
+          "file": "profile-ids.txt",
+          "hash": "14033975264854073429"
+        },
+        {
+          "file": "restore-page-from-git.sh",
+          "hash": "16869378550342251015"
+        },
+        {
+          "file": "scripts/analyze-feature-values.js",
+          "hash": "12818668689965950526"
+        },
+        {
+          "file": "scripts/analyze-takerate-similarity.js",
+          "hash": "10383804103715867552"
+        },
+        {
+          "file": "scripts/clean.js",
+          "hash": "17390842442417047964"
+        },
+        {
+          "file": "scripts/cleanup.ts",
+          "hash": "14772373927151847228"
+        },
+        {
+          "file": "scripts/count-demographics.js",
+          "hash": "2443323321298774497"
+        },
+        {
+          "file": "scripts/firebase-check.js",
+          "hash": "9426454356611215551"
+        },
+        {
+          "file": "scripts/quick-diagnosis.js",
+          "hash": "8157433393415343039"
+        },
+        {
+          "file": "scripts/test-mapping-functions.js",
+          "hash": "1428542642221054923"
+        },
+        {
+          "file": "scripts/test-mappings-clean.js",
+          "hash": "4877477086967210998"
+        },
+        {
+          "file": "scripts/test-mappings.js",
+          "hash": "15411294522340204958"
+        },
+        {
+          "file": "selected-code.tar.gz",
+          "hash": "4165006904392709030"
+        },
+        {
+          "file": "simulation_assets.tar.gz",
+          "hash": "15806803480881115483"
+        },
+        {
+          "file": "src/app/actions.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/app/layout.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/app/page.module.css",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/app/page.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/cnn-analyzer/ProductCard.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/cnn-analyzer/ProfileDisplay.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/button.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/card.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/chart.module.css",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/chart.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/checkbox.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/dialog.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/label.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/components/ui/scroll-area.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/contexts/AppContext.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/lib/constants.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/lib/types.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "src/lib/utils.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "storage.rules",
+          "hash": "13566300881882554596"
+        },
+        {
+          "file": "tailwind.config.js",
+          "hash": "11671628369229366874"
+        },
+        {
+          "file": "tailwind.config.ts",
+          "hash": "3013051709637330124"
+        },
+        {
+          "file": "takerate-similarity-analysis.json",
+          "hash": "8556290376348501068"
+        },
+        {
+          "file": "tsconfig.json",
+          "hash": "13486347395936872762"
+        },
+        {
+          "file": "types.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "util-ids.txt",
+          "hash": "14033975264854073429"
+        },
+        {
+          "file": "web/.next/app-build-manifest.json",
+          "hash": "7205868890036356358"
+        },
+        {
+          "file": "web/.next/build-manifest.json",
+          "hash": "5125768831124365349"
+        },
+        {
+          "file": "web/.next/cache/config.json",
+          "hash": "3289378308076542120"
+        },
+        {
+          "file": "web/.next/cache/webpack/client-development/0.pack.gz",
+          "hash": "13216500030319664426"
+        },
+        {
+          "file": "web/.next/cache/webpack/client-development/1.pack.gz",
+          "hash": "3596978853344083407"
+        },
+        {
+          "file": "web/.next/cache/webpack/client-development/index.pack.gz",
+          "hash": "2742959882519833179"
+        },
+        {
+          "file": "web/.next/cache/webpack/client-development/index.pack.gz.old",
+          "hash": "17193184818817502150"
+        },
+        {
+          "file": "web/.next/cache/webpack/server-development/0.pack.gz",
+          "hash": "17353699966428320618"
+        },
+        {
+          "file": "web/.next/cache/webpack/server-development/index.pack.gz",
+          "hash": "11260740863700698872"
+        },
+        {
+          "file": "web/.next/cache/webpack/server-development/index.pack.gz.old",
+          "hash": "10528739101265756485"
+        },
+        {
+          "file": "web/.next/package.json",
+          "hash": "11338307439248427064"
+        },
+        {
+          "file": "web/.next/react-loadable-manifest.json",
+          "hash": "1389868326933519382"
+        },
+        {
+          "file": "web/.next/server/app-paths-manifest.json",
+          "hash": "6045270427439857966"
+        },
+        {
+          "file": "web/.next/server/app/page.js",
+          "hash": "12082463371691450722"
+        },
+        {
+          "file": "web/.next/server/app/page_client-reference-manifest.js",
+          "hash": "10463901508418011221"
+        },
+        {
+          "file": "web/.next/server/interception-route-rewrite-manifest.js",
+          "hash": "10484309360224763022"
+        },
+        {
+          "file": "web/.next/server/middleware-build-manifest.js",
+          "hash": "10146558356613894909"
+        },
+        {
+          "file": "web/.next/server/middleware-manifest.json",
+          "hash": "9889576824779923310"
+        },
+        {
+          "file": "web/.next/server/middleware-react-loadable-manifest.js",
+          "hash": "9185069726031651908"
+        },
+        {
+          "file": "web/.next/server/next-font-manifest.js",
+          "hash": "16541577805185552134"
+        },
+        {
+          "file": "web/.next/server/next-font-manifest.json",
+          "hash": "11891788324563068681"
+        },
+        {
+          "file": "web/.next/server/pages-manifest.json",
+          "hash": "1389868326933519382"
+        },
+        {
+          "file": "web/.next/server/server-reference-manifest.js",
+          "hash": "18428887558342862111"
+        },
+        {
+          "file": "web/.next/server/server-reference-manifest.json",
+          "hash": "15419812973234292310"
+        },
+        {
+          "file": "web/.next/server/vendor-chunks/@opentelemetry.js",
+          "hash": "3621963348984491488"
+        },
+        {
+          "file": "web/.next/server/vendor-chunks/@swc.js",
+          "hash": "4028232035078836638"
+        },
+        {
+          "file": "web/.next/server/vendor-chunks/next.js",
+          "hash": "14893956955022121137"
+        },
+        {
+          "file": "web/.next/server/webpack-runtime.js",
+          "hash": "16882762859296912015"
+        },
+        {
+          "file": "web/.next/static/chunks/app-pages-internals.js",
+          "hash": "12502939297355377647"
+        },
+        {
+          "file": "web/.next/static/chunks/app/layout.js",
+          "hash": "7395551958061729624"
+        },
+        {
+          "file": "web/.next/static/chunks/app/page.js",
+          "hash": "11740357568545705014"
+        },
+        {
+          "file": "web/.next/static/chunks/main-app.js",
+          "hash": "14167330190791738311"
+        },
+        {
+          "file": "web/.next/static/chunks/polyfills.js",
+          "hash": "8152964857117933876"
+        },
+        {
+          "file": "web/.next/static/chunks/webpack.js",
+          "hash": "8579890213562525424"
+        },
+        {
+          "file": "web/.next/static/css/app/layout.css",
+          "hash": "11906127339302035530"
+        },
+        {
+          "file": "web/.next/static/development/_buildManifest.js",
+          "hash": "13063724784290855366"
+        },
+        {
+          "file": "web/.next/static/development/_ssgManifest.js",
+          "hash": "17018243955171961484"
+        },
+        {
+          "file": "web/.next/static/webpack/633457081244afec._.hot-update.json",
+          "hash": "10481436618516908015"
+        },
+        {
+          "file": "web/.next/trace",
+          "hash": "3263700231397180359"
+        },
+        {
+          "file": "web/.next/types/app/layout.ts",
+          "hash": "4283048402486227573"
+        },
+        {
+          "file": "web/.next/types/app/page.ts",
+          "hash": "4189844149802896887"
+        },
+        {
+          "file": "web/.next/types/cache-life.d.ts",
+          "hash": "12858368115349027927"
+        },
+        {
+          "file": "web/.next/types/package.json",
+          "hash": "6094546126370684104"
+        },
+        {
+          "file": "web/next.config.js",
+          "hash": "13727946816596720434"
+        },
+        {
+          "file": "web/package-lock.json",
+          "hash": "16843323290706143207"
+        },
+        {
+          "file": "web/package.json",
+          "hash": "15221448919122728937"
+        },
+        {
+          "file": "web/src/app/actions.ts",
+          "hash": "7141310857426441329"
+        },
+        {
+          "file": "web/src/app/actions.ts.backup",
+          "hash": "16192552264329019061"
+        },
+        {
+          "file": "web/src/app/actions.ts.orig",
+          "hash": "1401064162830421413"
+        },
+        {
+          "file": "web/src/app/actions.ts.rej",
+          "hash": "8262817172111450720"
+        },
+        {
+          "file": "web/src/app/favicon.ico",
+          "hash": "7425710272746114310"
+        },
+        {
+          "file": "web/src/app/globals.css",
+          "hash": "8312460607083451121"
+        },
+        {
+          "file": "web/src/app/globals.css.bak",
+          "hash": "1135834817046950824"
+        },
+        {
+          "file": "web/src/app/head",
+          "hash": "11820427582866374785"
+        },
+        {
+          "file": "web/src/app/layout.tsx",
+          "hash": "8000176868085045994"
+        },
+        {
+          "file": "web/src/app/mapProductAndFeatures.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/app/page.module.css",
+          "hash": "9659868318739091954"
+        },
+        {
+          "file": "web/src/app/page.tsx",
+          "hash": "11919561756529479946"
+        },
+        {
+          "file": "web/src/app/pagebackup.tsx",
+          "hash": "17954002680620000296"
+        },
+        {
+          "file": "web/src/components/# Code Citations.md",
+          "hash": "17688767903639413991"
+        },
+        {
+          "file": "web/src/components/AttributeImpactView.tsx",
+          "hash": "1941856690556088679"
+        },
+        {
+          "file": "web/src/components/AuthGate.js",
+          "hash": "17650507460424225099"
+        },
+        {
+          "file": "web/src/components/MarketAdjModal.tsx",
+          "hash": "4544103902757093133"
+        },
+        {
+          "file": "web/src/components/MarketFactorsModal.module.css",
+          "hash": "10749095977579128717"
+        },
+        {
+          "file": "web/src/components/MarketFactorsModal.tsx",
+          "hash": "717614508122561894"
+        },
+        {
+          "file": "web/src/components/ModelInfoModal.module.css",
+          "hash": "5776497162913335883"
+        },
+        {
+          "file": "web/src/components/ModelInfoModal.tsx",
+          "hash": "13144062633807139229"
+        },
+        {
+          "file": "web/src/components/PreSimulationCheck.tsx",
+          "hash": "14447130671444705486"
+        },
+        {
+          "file": "web/src/components/PriceSensitivityControl.tsx",
+          "hash": "9577734451986603620"
+        },
+        {
+          "file": "web/src/components/ReportConfigModal.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/components/ReportDisplay.tsx",
+          "hash": "3179217846892340166"
+        },
+        {
+          "file": "web/src/components/SEMVisualization.tsx",
+          "hash": "8139565062867623223"
+        },
+        {
+          "file": "web/src/components/SensitivityAnalysisDisplay.tsx",
+          "hash": "5141570112713541617"
+        },
+        {
+          "file": "web/src/components/SimulatorSection.tsx",
+          "hash": "17117185069752010767"
+        },
+        {
+          "file": "web/src/components/attributeImportance.json",
+          "hash": "16635066811545421657"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/AlertDialogs.tsx",
+          "hash": "17451911911964933374"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ControlsSection.tsx",
+          "hash": "2283851100430654594"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/FeatureList.tsx",
+          "hash": "4046782167415065996"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/FeatureModal.tsx",
+          "hash": "4282175507851314077"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/MainHeader.tsx",
+          "hash": "4234747636545063879"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/MarketFactorWeights.tsx",
+          "hash": "12430614533279842427"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/PasswordProtect.tsx",
+          "hash": "7207878516043295522"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/PricingConfig.tsx",
+          "hash": "13082220270406790703"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ProductCard.tsx",
+          "hash": "7238630533414609763"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ProductCardContainer.tsx",
+          "hash": "14505970683944485187"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ProfileDisplay.tsx",
+          "hash": "17312985590794716822"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ProfileSelectModal.tsx",
+          "hash": "2104589763147952965"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ReportConfigModal.tsx",
+          "hash": "9808190816111635602"
+        },
+        {
+          "file": "web/src/components/cnn-analyzer/ReportDisplay.tsx",
+          "hash": "3041687582904342867"
+        },
+        {
+          "file": "web/src/components/ui/accordion.tsx",
+          "hash": "13528365161596224788"
+        },
+        {
+          "file": "web/src/components/ui/alert-dialog.tsx",
+          "hash": "11015655068511686163"
+        },
+        {
+          "file": "web/src/components/ui/alert.tsx",
+          "hash": "1861621377426642757"
+        },
+        {
+          "file": "web/src/components/ui/avatar.tsx",
+          "hash": "8660661188500548189"
+        },
+        {
+          "file": "web/src/components/ui/badge.tsx",
+          "hash": "8406134610660828449"
+        },
+        {
+          "file": "web/src/components/ui/button.tsx",
+          "hash": "9710439442847983636"
+        },
+        {
+          "file": "web/src/components/ui/calendar.tsx",
+          "hash": "5479500782881706249"
+        },
+        {
+          "file": "web/src/components/ui/card.tsx",
+          "hash": "8258172798928960664"
+        },
+        {
+          "file": "web/src/components/ui/chart.module.css",
+          "hash": "8876798732108832664"
+        },
+        {
+          "file": "web/src/components/ui/chart.tsx",
+          "hash": "3672526926209176010"
+        },
+        {
+          "file": "web/src/components/ui/checkbox.tsx",
+          "hash": "4395817200678297811"
+        },
+        {
+          "file": "web/src/components/ui/dialog.tsx",
+          "hash": "6257434488129205118"
+        },
+        {
+          "file": "web/src/components/ui/dropdown-menu.tsx",
+          "hash": "3762317119239581082"
+        },
+        {
+          "file": "web/src/components/ui/form.tsx",
+          "hash": "14373301194178947649"
+        },
+        {
+          "file": "web/src/components/ui/input.tsx",
+          "hash": "667422176216627357"
+        },
+        {
+          "file": "web/src/components/ui/label.tsx",
+          "hash": "958057014707211056"
+        },
+        {
+          "file": "web/src/components/ui/menubar.tsx",
+          "hash": "15588426639867591240"
+        },
+        {
+          "file": "web/src/components/ui/popover.tsx",
+          "hash": "17435332130791270188"
+        },
+        {
+          "file": "web/src/components/ui/progress.tsx",
+          "hash": "17647409214643394547"
+        },
+        {
+          "file": "web/src/components/ui/radio-group.tsx",
+          "hash": "10646533303141561680"
+        },
+        {
+          "file": "web/src/components/ui/scroll-area.tsx",
+          "hash": "13404180905107961392"
+        },
+        {
+          "file": "web/src/components/ui/select.tsx",
+          "hash": "11567637437200228108"
+        },
+        {
+          "file": "web/src/components/ui/separator.tsx",
+          "hash": "1978076718437868180"
+        },
+        {
+          "file": "web/src/components/ui/sheet.tsx",
+          "hash": "1045531335628912137"
+        },
+        {
+          "file": "web/src/components/ui/sidebar.tsx",
+          "hash": "5737226236318221248"
+        },
+        {
+          "file": "web/src/components/ui/skeleton.tsx",
+          "hash": "7739192301396167804"
+        },
+        {
+          "file": "web/src/components/ui/slider.tsx",
+          "hash": "2536831074048741659"
+        },
+        {
+          "file": "web/src/components/ui/switch.tsx",
+          "hash": "1390340863608304624"
+        },
+        {
+          "file": "web/src/components/ui/table.tsx",
+          "hash": "12220893068497995597"
+        },
+        {
+          "file": "web/src/components/ui/tabs.tsx",
+          "hash": "12745308935332524510"
+        },
+        {
+          "file": "web/src/components/ui/textarea.tsx",
+          "hash": "7226685058810507191"
+        },
+        {
+          "file": "web/src/components/ui/toast.tsx",
+          "hash": "14657746038572471583"
+        },
+        {
+          "file": "web/src/components/ui/toaster.tsx",
+          "hash": "12424583411356286543"
+        },
+        {
+          "file": "web/src/components/ui/tooltip.tsx",
+          "hash": "15991294883522004040"
+        },
+        {
+          "file": "web/src/contexts/AppContext.tsx",
+          "hash": "13663457153756954379"
+        },
+        {
+          "file": "web/src/data/AttributeImpactView.tsx",
+          "hash": "8713736147263057724"
+        },
+        {
+          "file": "web/src/data/attributeImportance.json",
+          "hash": "7526521806581295597"
+        },
+        {
+          "file": "web/src/data/coreProductDescriptions.json",
+          "hash": "5243617616652352828"
+        },
+        {
+          "file": "web/src/data/drnRates.json",
+          "hash": "9198785851664238551"
+        },
+        {
+          "file": "web/src/data/featureMapping.json",
+          "hash": "11138554060272859160"
+        },
+        {
+          "file": "web/src/data/modelParameters.json",
+          "hash": "15897802257625800259"
+        },
+        {
+          "file": "web/src/data/readerFeatureDescriptions.json",
+          "hash": "7019570896896343935"
+        },
+        {
+          "file": "web/src/data/respondentData.json",
+          "hash": "296541758102324345"
+        },
+        {
+          "file": "web/src/data/respondentProfile.json",
+          "hash": "11349773120063443488"
+        },
+        {
+          "file": "web/src/data/respondentUtilities.json",
+          "hash": "7598418673312866503"
+        },
+        {
+          "file": "web/src/data/streamingFeatureDescriptions.json",
+          "hash": "7519160008938938547"
+        },
+        {
+          "file": "web/src/data/turfAnalysis.json",
+          "hash": "5414203245810251307"
+        },
+        {
+          "file": "web/src/data/verticalDescriptions.json",
+          "hash": "16386397603275083726"
+        },
+        {
+          "file": "web/src/data/verticalMapping.json",
+          "hash": "15146035558915310310"
+        },
+        {
+          "file": "web/src/hooks/use-mobile.tsx",
+          "hash": "14900138732519213047"
+        },
+        {
+          "file": "web/src/hooks/use-toast.ts",
+          "hash": "1926694879104732356"
+        },
+        {
+          "file": "web/src/lib/calculations.ts",
+          "hash": "12827619879734455716"
+        },
+        {
+          "file": "web/src/lib/components/AuthGate.js",
+          "hash": "17650507460424225099"
+        },
+        {
+          "file": "web/src/lib/components/MarketAdjModal.tsx",
+          "hash": "4544103902757093133"
+        },
+        {
+          "file": "web/src/lib/components/MarketFactorsModal.module.css",
+          "hash": "10749095977579128717"
+        },
+        {
+          "file": "web/src/lib/components/MarketFactorsModal.tsx",
+          "hash": "717614508122561894"
+        },
+        {
+          "file": "web/src/lib/components/ModelInfoModal.module.css",
+          "hash": "5776497162913335883"
+        },
+        {
+          "file": "web/src/lib/components/ModelInfoModal.tsx",
+          "hash": "13144062633807139229"
+        },
+        {
+          "file": "web/src/lib/components/PreSimulationCheck.tsx",
+          "hash": "14447130671444705486"
+        },
+        {
+          "file": "web/src/lib/components/ReportConfigModal.tsx",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/lib/components/ReportDisplay.tsx",
+          "hash": "3179217846892340166"
+        },
+        {
+          "file": "web/src/lib/components/SEMVisualization.tsx",
+          "hash": "8139565062867623223"
+        },
+        {
+          "file": "web/src/lib/components/SimulatorSection.tsx",
+          "hash": "17117185069752010767"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/AlertDialogs.tsx",
+          "hash": "17451911911964933374"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ControlsSection.tsx",
+          "hash": "2283851100430654594"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/FeatureList.tsx",
+          "hash": "4046782167415065996"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/FeatureModal.tsx",
+          "hash": "4282175507851314077"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/MainHeader.tsx",
+          "hash": "4234747636545063879"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/PasswordProtect.tsx",
+          "hash": "7207878516043295522"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/PricingConfig.tsx",
+          "hash": "13082220270406790703"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ProductCard.tsx",
+          "hash": "7238630533414609763"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ProductCardContainer.tsx",
+          "hash": "14505970683944485187"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ProfileDisplay.tsx",
+          "hash": "17312985590794716822"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ProfileSelectModal.tsx",
+          "hash": "2104589763147952965"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ReportConfigModal.tsx",
+          "hash": "9808190816111635602"
+        },
+        {
+          "file": "web/src/lib/components/cnn-analyzer/ReportDisplay.tsx",
+          "hash": "3041687582904342867"
+        },
+        {
+          "file": "web/src/lib/components/ui/accordion.tsx",
+          "hash": "13528365161596224788"
+        },
+        {
+          "file": "web/src/lib/components/ui/alert-dialog.tsx",
+          "hash": "11015655068511686163"
+        },
+        {
+          "file": "web/src/lib/components/ui/alert.tsx",
+          "hash": "1861621377426642757"
+        },
+        {
+          "file": "web/src/lib/components/ui/avatar.tsx",
+          "hash": "8660661188500548189"
+        },
+        {
+          "file": "web/src/lib/components/ui/badge.tsx",
+          "hash": "8406134610660828449"
+        },
+        {
+          "file": "web/src/lib/components/ui/button.tsx",
+          "hash": "9710439442847983636"
+        },
+        {
+          "file": "web/src/lib/components/ui/calendar.tsx",
+          "hash": "5479500782881706249"
+        },
+        {
+          "file": "web/src/lib/components/ui/card.tsx",
+          "hash": "8258172798928960664"
+        },
+        {
+          "file": "web/src/lib/components/ui/chart.modules.css",
+          "hash": "8876798732108832664"
+        },
+        {
+          "file": "web/src/lib/components/ui/chart.tsx",
+          "hash": "4587680353265420567"
+        },
+        {
+          "file": "web/src/lib/components/ui/checkbox.tsx",
+          "hash": "4395817200678297811"
+        },
+        {
+          "file": "web/src/lib/components/ui/dialog.tsx",
+          "hash": "6257434488129205118"
+        },
+        {
+          "file": "web/src/lib/components/ui/dropdown-menu.tsx",
+          "hash": "3762317119239581082"
+        },
+        {
+          "file": "web/src/lib/components/ui/form.tsx",
+          "hash": "14373301194178947649"
+        },
+        {
+          "file": "web/src/lib/components/ui/input.tsx",
+          "hash": "667422176216627357"
+        },
+        {
+          "file": "web/src/lib/components/ui/label.tsx",
+          "hash": "958057014707211056"
+        },
+        {
+          "file": "web/src/lib/components/ui/menubar.tsx",
+          "hash": "15588426639867591240"
+        },
+        {
+          "file": "web/src/lib/components/ui/popover.tsx",
+          "hash": "17435332130791270188"
+        },
+        {
+          "file": "web/src/lib/components/ui/progress.tsx",
+          "hash": "17647409214643394547"
+        },
+        {
+          "file": "web/src/lib/components/ui/radio-group.tsx",
+          "hash": "10646533303141561680"
+        },
+        {
+          "file": "web/src/lib/components/ui/scroll-area.tsx",
+          "hash": "13404180905107961392"
+        },
+        {
+          "file": "web/src/lib/components/ui/select.tsx",
+          "hash": "11567637437200228108"
+        },
+        {
+          "file": "web/src/lib/components/ui/separator.tsx",
+          "hash": "1978076718437868180"
+        },
+        {
+          "file": "web/src/lib/components/ui/sheet.tsx",
+          "hash": "1045531335628912137"
+        },
+        {
+          "file": "web/src/lib/components/ui/sidebar.tsx",
+          "hash": "5737226236318221248"
+        },
+        {
+          "file": "web/src/lib/components/ui/skeleton.tsx",
+          "hash": "7739192301396167804"
+        },
+        {
+          "file": "web/src/lib/components/ui/slider.tsx",
+          "hash": "2536831074048741659"
+        },
+        {
+          "file": "web/src/lib/components/ui/switch.tsx",
+          "hash": "1390340863608304624"
+        },
+        {
+          "file": "web/src/lib/components/ui/table.tsx",
+          "hash": "12220893068497995597"
+        },
+        {
+          "file": "web/src/lib/components/ui/tabs.tsx",
+          "hash": "12745308935332524510"
+        },
+        {
+          "file": "web/src/lib/components/ui/textarea.tsx",
+          "hash": "7226685058810507191"
+        },
+        {
+          "file": "web/src/lib/components/ui/toast.tsx",
+          "hash": "14657746038572471583"
+        },
+        {
+          "file": "web/src/lib/components/ui/toaster.tsx",
+          "hash": "12424583411356286543"
+        },
+        {
+          "file": "web/src/lib/components/ui/tooltip.tsx",
+          "hash": "15991294883522004040"
+        },
+        {
+          "file": "web/src/lib/constants.ts",
+          "hash": "10750420666366318661"
+        },
+        {
+          "file": "web/src/lib/contexts/AppContext.tsx",
+          "hash": "13663457153756954379"
+        },
+        {
+          "file": "web/src/lib/data/AttributeImpactView.tsx",
+          "hash": "8713736147263057724"
+        },
+        {
+          "file": "web/src/lib/data/attributeImportance.json",
+          "hash": "7526521806581295597"
+        },
+        {
+          "file": "web/src/lib/data/coreProductDescriptions.json",
+          "hash": "5243617616652352828"
+        },
+        {
+          "file": "web/src/lib/data/drnRates.json",
+          "hash": "9198785851664238551"
+        },
+        {
+          "file": "web/src/lib/data/featureMapping.json",
+          "hash": "11138554060272859160"
+        },
+        {
+          "file": "web/src/lib/data/modelParameters.json",
+          "hash": "15897802257625800259"
+        },
+        {
+          "file": "web/src/lib/data/readerFeatureDescriptions.json",
+          "hash": "7019570896896343935"
+        },
+        {
+          "file": "web/src/lib/data/respondentData.json",
+          "hash": "296541758102324345"
+        },
+        {
+          "file": "web/src/lib/data/respondentProfile.json",
+          "hash": "11349773120063443488"
+        },
+        {
+          "file": "web/src/lib/data/respondentUtilities.json",
+          "hash": "7598418673312866503"
+        },
+        {
+          "file": "web/src/lib/data/streamingFeatureDescriptions.json",
+          "hash": "7519160008938938547"
+        },
+        {
+          "file": "web/src/lib/data/turfAnalysis.json",
+          "hash": "5414203245810251307"
+        },
+        {
+          "file": "web/src/lib/data/verticalDescriptions.json",
+          "hash": "16386397603275083726"
+        },
+        {
+          "file": "web/src/lib/data/verticalMapping.json",
+          "hash": "15146035558915310310"
+        },
+        {
+          "file": "web/src/lib/firebaseAdmin.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/lib/firebaseClient.ts",
+          "hash": "9163823982906093184"
+        },
+        {
+          "file": "web/src/lib/hooks/use-mobile.tsx",
+          "hash": "14900138732519213047"
+        },
+        {
+          "file": "web/src/lib/hooks/use-toast.ts",
+          "hash": "1926694879104732356"
+        },
+        {
+          "file": "web/src/lib/lib/calculations.ts",
+          "hash": "12827619879734455716"
+        },
+        {
+          "file": "web/src/lib/lib/constants.ts",
+          "hash": "10750420666366318661"
+        },
+        {
+          "file": "web/src/lib/lib/firebaseAdmin.ts",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/lib/lib/firebaseClient.ts",
+          "hash": "9163823982906093184"
+        },
+        {
+          "file": "web/src/lib/lib/pricingTable.ts",
+          "hash": "17140698189617821036"
+        },
+        {
+          "file": "web/src/lib/lib/types.ts",
+          "hash": "2224918175783245433"
+        },
+        {
+          "file": "web/src/lib/lib/types.ts.additions",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/lib/lib/utils.ts",
+          "hash": "7559012436968567657"
+        },
+        {
+          "file": "web/src/lib/mappings.ts",
+          "hash": "3053301958439701309"
+        },
+        {
+          "file": "web/src/lib/pricingTable.ts",
+          "hash": "17140698189617821036"
+        },
+        {
+          "file": "web/src/lib/types.ts",
+          "hash": "2224918175783245433"
+        },
+        {
+          "file": "web/src/lib/types.ts.additions",
+          "hash": "3244421341483603138"
+        },
+        {
+          "file": "web/src/lib/utils.ts",
+          "hash": "7559012436968567657"
+        },
+        {
+          "file": "web/src/lib/utils/debugDataFlow.ts",
+          "hash": "9717482304262087213"
+        },
+        {
+          "file": "web/src/lib/utils/marketFactors.ts",
+          "hash": "17180434846237701797"
+        },
+        {
+          "file": "web/src/lib/utils/validation.ts",
+          "hash": "11276723282424726580"
+        },
+        {
+          "file": "web/src/utils/debugDataFlow.ts",
+          "hash": "9717482304262087213"
+        },
+        {
+          "file": "web/src/utils/marketFactors.ts",
+          "hash": "17180434846237701797"
+        },
+        {
+          "file": "web/src/utils/validation.ts",
+          "hash": "11276723282424726580"
+        },
+        {
+          "file": "web/tsconfig.json",
+          "hash": "8977347244100962680"
+        }
+      ]
+    },
+    "nonProjectFiles": []
+  }
+}

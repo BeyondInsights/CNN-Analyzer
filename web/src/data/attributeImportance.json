@@ -1,0 +1,11 @@
+[
+  { "Attribute": "Subscription Terms", "Range": 1.335, "Importance_%": 24.8, "Rank": 1 },
+  { "Attribute": "Price",              "Range": 1.2618,"Importance_%": 23.4, "Rank": 2 },
+  { "Attribute": "Base Product",       "Range": 1.2460,"Importance_%": 23.1, "Rank": 3 },
+  { "Attribute": "Content Vertical",   "Range": 0.4083, "Importance_%": 7.6,  "Rank": 4 },
+  { "Attribute": "Vertical Count",     "Range": 0.329,  "Importance_%": 6.1,  "Rank": 5 },
+  { "Attribute": "Streaming Feature Count","Range":0.252,"Importance_%":4.7,"Rank":6},
+  { "Attribute": "Streaming Feature",  "Range": 0.2412,"Importance_%":4.5, "Rank":7},
+  { "Attribute": "Reader Feature Count","Range":0.229,"Importance_%":4.3,"Rank":8},
+  { "Attribute": "Reader Feature",     "Range": 0.0851,"Importance_%":1.6, "Rank":9}
+]

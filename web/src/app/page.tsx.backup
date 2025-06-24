@@ -1,0 +1,2090 @@
+'use client';
+import React, { useEffect, useState } from 'react';
+import { auth, runSimulation } from '@/lib/firebaseClient';
+import styles from './page.module.css';
+
+// Import types
+import { 
+  CardData, 
+  ReportType, 
+  OutputType, 
+  MarketFactors,
+  ReportData,
+  ProductProfileData,
+  SensitivityPoint,
+  SimulationOptions,
+  InputConfig
+} from '@/lib/types';
+
+// Import static description files directly (no Firebase Storage needed)
+import readerFeatureDescriptionsData from '@/data/readerFeatureDescriptions.json';
+import streamingFeatureDescriptionsData from '@/data/streamingFeatureDescriptions.json';
+import verticalDescriptionsData from '@/data/verticalDescriptions.json';
+import coreProductDescriptionsData from '@/data/coreProductDescriptions.json';
+
+// Import components
+import ReportDisplay from '@/components/ReportDisplay';
+import { runServerSimulation } from '@/lib/serverSimulation';
+import { loadDataFromStorage, getRespondentData, getRespondentUtilities, getRespondentProfile } from '@/lib/simulatorClient';
+
+// Updated pricing ranges to match attached file
+const pricingRanges = {
+  'CNN Reader': {
+    0: { prices: [3.99, 6.99, 9.99, 14.99], min: 3.99, max: 14.99, default: 6.99 },
+    1: { prices: [5.49, 8.49, 11.49, 16.99], min: 5.49, max: 16.99, default: 8.49 },
+    2: { prices: [6.99, 10.99, 14.99, 19.49], min: 6.99, max: 19.49, default: 10.99 },
+    3: { prices: [8.49, 12.99, 16.99, 21.99], min: 8.49, max: 21.99, default: 12.99 }
+  },
+  'CNN Streaming': {
+    0: { prices: [4.99, 8.49, 11.99, 16.99], min: 4.99, max: 16.99, default: 8.49 },
+    1: { prices: [6.49, 9.99, 13.99, 17.99], min: 6.49, max: 17.99, default: 9.99 },
+    2: { prices: [7.99, 11.99, 15.99, 21.49], min: 7.99, max: 21.49, default: 11.99 },
+    3: { prices: [9.49, 13.99, 17.99, 24.99], min: 9.49, max: 24.99, default: 13.99 }
+  },
+  'CNN All-Access': {
+    0: { prices: [5.99, 11.99, 17.99, 24.99], min: 5.99, max: 24.99, default: 11.99 },
+    1: { prices: [7.99, 12.99, 18.99, 25.99], min: 7.99, max: 25.99, default: 12.99 },
+    2: { prices: [9.99, 14.99, 21.49, 30.49], min: 9.99, max: 30.49, default: 14.99 },
+    3: { prices: [11.99, 16.99, 23.99, 34.99], min: 11.99, max: 34.99, default: 16.99 }
+  },
+  'CNN Standalone Vertical': { prices: [1.99, 3.99, 5.99, 7.99], min: 1.99, max: 7.99, default: 3.99 }
+};
+
+// Constants
+const MAX_PRODUCTS = 8;
+const DEFAULT_MARKET_FACTORS: MarketFactors = {
+  baseConversion: 0.5,
+  awareness: 70,
+  distribution: 85,
+  competitive: 90,
+  marketing: 80,
+  yearOneAdoption: 65,
+  lowPriceMultiplier: 1.3,
+  highPriceMultiplier: 0.8,
+  priceThreshold: 12,
+  enablePriceSensitivity: false,
+  priceThresholdAdjustment: 0,
+};
+
+const Page = () => {
+  // ============ STATIC DATA (Already loaded from imports) ============
+  const AVAILABLE_FEATURES_LISTS = {
+    reader: Object.keys(readerFeatureDescriptionsData),
+    streaming: Object.keys(streamingFeatureDescriptionsData),
+    vertical: Object.keys(verticalDescriptionsData),
+  };
+
+  // ============ RESPONDENT DATA FROM FIREBASE STORAGE ============
+  const [respondentDataLoaded, setRespondentDataLoaded] = useState(false);
+  const [respondentData, setRespondentData] = useState<any>(null);
+  const [respondentUtilities, setRespondentUtilities] = useState<any>(null);
+  const [respondentProfile, setRespondentProfile] = useState<any>(null);
+
+  // Load respondent data from Firebase Storage
+  useEffect(() => {
+    const loadRespondentData = async () => {
+      try {
+        const data = await loadDataFromStorage();
+        setRespondentData(data.respondentData);
+        setRespondentUtilities(data.respondentUtilities);
+        setRespondentProfile(data.respondentProfile);
+        setRespondentDataLoaded(true);
+      } catch (error) {
+        console.error('Failed to load respondent data:', error);
+        // App can still function for configuration, just not simulation
+        alert('Warning: Could not load respondent data. Simulation features may be limited.');
+      }
+    };
+    
+    loadRespondentData();
+  }, []);
+
+  // Initialize card setup
+  const initialCardSetup = (): Record<number, CardData> => {
+    const setup: Record<number, CardData> = {};
+    for (let i = 1; i <= MAX_PRODUCTS; i++) {
+      setup[i] = {
+        product: '',
+        readerFeatures: [],
+        streamingFeatures: [],
+        verticals: [],
+        monthlyRate: 10,
+        pricingType: '',
+        discount: ''
+      };
+    }
+    return setup;
+  };
+
+  // ============ STATE DECLARATIONS ============
+  const [cardDataState, setCardDataState] = useState<Record<number, CardData>>(initialCardSetup());
+  const [activeProductsState, setActiveProductsState] = useState<Set<number>>(new Set([1, 2, 3, 4]));
+  const [currentModalDataState, setCurrentModalDataState] = useState<{ cardNum: number; type: 'reader' | 'streaming' | 'vertical' } | null>(null);
+  const [currentReportTypeState, setCurrentReportTypeState] = useState<ReportType>('tiered');
+  const [currentOutputTypeState, setCurrentOutputTypeState] = useState<OutputType>('percentage');
+  const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Modal states
+  const [featureModalVisible, setFeatureModalVisible] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [sensitivityModalVisible, setSensitivityModalVisible] = useState(false);
+  const [showAboutModel, setShowAboutModel] = useState(false);
+  const [isMarketSizingModalVisible, setIsMarketSizingModalVisible] = useState(false);
+
+  // Report display states
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [isReportOverlay, setIsReportOverlay] = useState(true);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [profileData, setProfileData] = useState<ProductProfileData[]>([]);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+  const [sensitivityData, setSensitivityData] = useState<SensitivityPoint[]>([]);
+  const [isAnalyzingSensitivity, setIsAnalyzingSensitivity] = useState(false);
+
+  // Market factors
+  const [marketFactors, setMarketFactors] = useState<MarketFactors>(DEFAULT_MARKET_FACTORS);
+
+  // Review modals states
+  const [isReviewCoreProductsModalVisible, setIsReviewCoreProductsModalVisible] = useState(false);
+  const [isReviewFeaturesModalVisible, setIsReviewFeaturesModalVisible] = useState(false);
+  const [isReviewVerticalsModalVisible, setIsReviewVerticalsModalVisible] = useState(false);
+  const [activeReviewTab, setActiveReviewTab] = useState<'reader' | 'streaming'>('reader');
+  const [selectedReviewVertical, setSelectedReviewVertical] = useState<string>('');
+  const [verticalDescription, setVerticalDescription] = useState<string>('');
+  const [verticalFeaturesForReview, setVerticalFeaturesForReview] = useState<string[]>([]);
+
+  // Market factors modal
+  const [isMarketFactorsModalVisible, setIsMarketFactorsModalVisible] = useState(false);
+
+  // Market factor weights
+  const [awarenessWeight, setAwarenessWeight] = useState(30);
+  const [distributionWeight, setDistributionWeight] = useState(25);
+  const [competitiveWeight, setCompetitiveWeight] = useState(10);
+  const [marketingWeight, setMarketingWeight] = useState(15);
+  const [yearOneWeight, setYearOneWeight] = useState(20);
+
+  // ============ HELPER FUNCTIONS ============
+  const getPricingRangeForProduct = (productType: string, verticalCount: number = 0) => {
+    if (productType === 'CNN Standalone Vertical') {
+      return pricingRanges['CNN Standalone Vertical'];
+    }
+    const ranges = pricingRanges[productType as keyof typeof pricingRanges];
+    if (!ranges || typeof ranges !== 'object') return null;
+    
+    const verticalKey = Math.min(verticalCount, 3);
+    return ranges[verticalKey as keyof typeof ranges] || ranges[0];
+  };
+
+  const toggleProduct = (productId: number) => {
+    setActiveProductsState(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCardExpansion = (cardNum: number) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardNum)) {
+        newSet.delete(cardNum);
+      } else {
+        newSet.add(cardNum);
+      }
+      return newSet;
+    });
+  };
+
+  const openFeatureModal = (cardNum: number, type: 'reader' | 'streaming' | 'vertical') => {
+    const card = cardDataState[cardNum];
+    
+    // Check vertical limit
+    if (type === 'vertical' && card.product !== 'CNN Standalone Vertical' && card.verticals.length >= 3) {
+      alert('Maximum 3 verticals allowed for this product type.');
+      return;
+    }
+    
+    setCurrentModalDataState({ cardNum, type });
+    setFeatureModalVisible(true);
+  };
+
+  const updateCardProductType = (cardNum: number, productType: string) => {
+    setCardDataState(prev => ({
+      ...prev,
+      [cardNum]: {
+        ...prev[cardNum],
+        product: productType,
+        monthlyRate: productType ? getPricingRangeForProduct(productType, prev[cardNum].verticals.length)?.default || 10 : 10,
+        pricingType: '',
+        discount: ''
+      }
+    }));
+    
+    // Expand card when product is selected
+    if (productType && !expandedCards.has(cardNum)) {
+      setExpandedCards(prev => new Set([...prev, cardNum]));
+    }
+  };
+
+  const updateCardFeatures = (cardNum: number, type: 'reader' | 'streaming' | 'vertical', features: string[]) => {
+    setCardDataState(prev => {
+      const updatedCard = { ...prev[cardNum] };
+      
+      if (type === 'reader') {
+        updatedCard.readerFeatures = features;
+      } else if (type === 'streaming') {
+        updatedCard.streamingFeatures = features;
+      } else {
+        // Enforce 3 vertical limit
+        if (updatedCard.product !== 'CNN Standalone Vertical' && features.length > 3) {
+          features = features.slice(0, 3);
+        }
+        updatedCard.verticals = features;
+        // Update pricing when verticals change
+        if (updatedCard.product) {
+          const pricingRange = getPricingRangeForProduct(updatedCard.product, features.length);
+          if (pricingRange) {
+            updatedCard.monthlyRate = pricingRange.default;
+          }
+        }
+      }
+      
+      return { ...prev, [cardNum]: updatedCard };
+    });
+  };
+
+  const updateCardPricing = (cardNum: number, pricingType: string, monthlyRate: number, discount: string) => {
+    // Clear discount if switching away from "both"
+    const finalDiscount = pricingType === 'both' ? discount : '';
+    
+    setCardDataState(prev => ({
+      ...prev,
+      [cardNum]: {
+        ...prev[cardNum],
+        pricingType,
+        monthlyRate,
+        discount: finalDiscount
+      }
+    }));
+  };
+
+  const clearAllCards = () => {
+    if (window.confirm('Are you sure you want to clear all product configurations? This cannot be undone.')) {
+      setCardDataState(initialCardSetup());
+      setActiveProductsState(new Set([1, 2, 3, 4]));
+      setExpandedCards(new Set());
+      setReportData(null);
+      setIsReportOverlay(true);
+    }
+  };
+
+  // Fixed handleSimulation function
+  const handleSimulation = async () => {
+    // Validate all active products
+    for (const productId of activeProductsState) {
+      const card = cardDataState[productId];
+      
+      // Check if product type is selected
+      if (!card.product) {
+        alert(`Product ${productId}: Product is selected for simulator but no base product type has been chosen. Please select a base product or exclude it from the simulator.`);
+        return;
+      }
+      
+      // Check feature requirements
+      if (card.product === 'CNN Reader' && card.readerFeatures.length === 0) {
+        alert(`Product ${productId}: CNN Reader must have at least 1 reader feature selected.`);
+        return;
+      }
+      
+      if (card.product === 'CNN Streaming' && card.streamingFeatures.length === 0) {
+        alert(`Product ${productId}: CNN Streaming must have at least 1 streaming feature selected.`);
+        return;
+      }
+      
+      if (card.product === 'CNN All-Access') {
+        if (card.readerFeatures.length === 0) {
+          alert(`Product ${productId}: CNN All-Access must have at least 1 reader feature selected.`);
+          return;
+        }
+        if (card.streamingFeatures.length === 0) {
+          alert(`Product ${productId}: CNN All-Access must have at least 1 streaming feature selected.`);
+          return;
+        }
+      }
+      
+      if (card.product === 'CNN Standalone Vertical' && card.verticals.length === 0) {
+        alert(`Product ${productId}: CNN Standalone Vertical must have a vertical selected.`);
+        return;
+      }
+      
+      // Check pricing configuration
+      if (!card.pricingType) {
+        alert(`Product ${productId}: Please select a pricing type (Monthly Only, Annual Only, or Both).`);
+        return;
+      }
+    }
+
+    setIsSimulating(true);
+    
+    try {
+      const activeConfigured = Array.from(activeProductsState)
+        .map((num) => ({
+          id: num.toString(),
+          product: cardDataState[num].product,
+          verticals: cardDataState[num].verticals || [],
+          readerFeatures: cardDataState[num].readerFeatures || [],
+          streamingFeatures: cardDataState[num].streamingFeatures || [],
+          monthlyRate: cardDataState[num].monthlyRate,
+          annualRate: cardDataState[num].monthlyRate * 12,
+          discount: cardDataState[num].discount || 'none',
+          isActive: true,
+          pricingType: cardDataState[num].pricingType || 'monthly'
+        }))
+        .filter((config) => config.product);
+
+      if (activeConfigured.length === 0) {
+        alert("Please configure at least one product before running simulation");
+        setIsSimulating(false);
+        return;
+      }
+
+      const simulationOptions: SimulationOptions = {
+        takeThreshold: 0.15,
+        drnFactor: 1.0,
+        allocationMethod: 'proportional' as const,
+        enablePriceTiers: false,
+        priceThreshold: 12,
+        lowPriceMultiplier: 1.3,
+        highPriceMultiplier: 0.8
+      };
+
+      const simulationInput: InputConfig = {
+        products: activeConfigured,
+        reportType: currentReportTypeState,
+        outputType: currentOutputTypeState,
+        marketFactors: marketFactors,
+        simulationOptions: simulationOptions
+      };
+
+      console.log("Calling runServerSimulation with:", simulationInput);
+
+      const result = await runServerSimulation(simulationInput);
+      
+      console.log("Raw result from server:", result);
+
+      if (!result) {
+        throw new Error("No result returned from simulation");
+      }
+
+      if (result.overallShare && result.segmentShares) {
+        setReportData(result);
+      } else {
+        console.error("Unexpected result format:", result);
+        alert("Received unexpected data format from server");
+        return;
+      }
+      
+      setIsReportOverlay(true);
+    } catch (error) {
+      console.error('Simulation error:', error);
+      alert(`Error running simulation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
+
+  // Helper functions for profiles
+  const getProductDescription = (config: any): string => {
+    const descriptions: Record<string, string> = {
+      'CNN Reader': 'Premium digital reading experience with exclusive articles and ad-free browsing',
+      'CNN Streaming': 'Live and on-demand video content with exclusive shows and documentaries',
+      'CNN All-Access': 'Complete CNN experience combining all reader and streaming benefits',
+      'CNN Standalone Vertical': `Specialized content focused on ${config.verticals[0] || 'selected topic'}`
+    };
+    return descriptions[config.product] || 'CNN subscription product';
+  };
+
+  const getTargetAudience = (config: any): string => {
+    const audiences: Record<string, string> = {
+      'CNN Reader': 'News enthusiasts who prefer reading in-depth articles and analysis',
+      'CNN Streaming': 'Viewers who want live coverage and video content on-demand',
+      'CNN All-Access': 'Power users who want the complete CNN experience across all platforms',
+      'CNN Standalone Vertical': 'Specialists and enthusiasts focused on specific topics'
+    };
+    return audiences[config.product] || 'CNN audience';
+  };
+
+  const getKeyFeatures = (config: any): string[] => {
+    const features: string[] = [];
+    
+    if (config.product === 'CNN Reader' || config.product === 'CNN All-Access') {
+      features.push(...config.readerFeatures.map((f: string) => `Reader: ${f}`));
+    }
+    
+    if (config.product === 'CNN Streaming' || config.product === 'CNN All-Access') {
+      features.push(...config.streamingFeatures.map((f: string) => `Streaming: ${f}`));
+    }
+    
+    if (config.verticals.length > 0) {
+      features.push(...config.verticals.map((v: string) => `Vertical: ${v}`));
+    }
+    
+    if (config.pricingType === 'both') {
+      features.push('Flexible monthly and annual pricing options');
+    } else if (config.pricingType === 'annual') {
+      features.push('Annual subscription for best value');
+    } else {
+      features.push('Month-to-month flexibility');
+    }
+    
+    if (config.discount && config.discount !== 'none') {
+      features.push(`Special discount: ${config.discount}`);
+    }
+    
+    return features;
+  };
+
+  // Fixed handleShowProfiles function
+  const handleShowProfiles = async () => {
+    setIsLoadingProfiles(true);
+    setProfileModalVisible(true);
+    
+    try {
+      const activeConfigs = Array.from(activeProductsState)
+        .filter(productId => cardDataState[productId].product)
+        .map(productId => {
+          const card = cardDataState[productId];
+          return {
+            id: productId.toString(),
+            product: card.product,
+            verticals: card.verticals || [],
+            readerFeatures: card.readerFeatures || [],
+            streamingFeatures: card.streamingFeatures || [],
+            monthlyRate: card.monthlyRate,
+            annualRate: card.monthlyRate * 12,
+            discount: card.discount || 'none',
+            isActive: true,
+            pricingType: card.pricingType || 'monthly'
+          };
+        });
+
+      if (activeConfigs.length === 0) {
+        alert("Please configure at least one product to view profiles");
+        setProfileModalVisible(false);
+        setIsLoadingProfiles(false);
+        return;
+      }
+
+      const profiles = activeConfigs.map(config => ({
+        productName: config.product,
+        description: getProductDescription(config),
+        targetAudience: getTargetAudience(config),
+        keyFeatures: getKeyFeatures(config),
+        pricing: {
+          monthlyRate: config.monthlyRate,
+          annualRate: config.annualRate,
+          pricingType: config.pricingType,
+          discount: config.discount
+        },
+        configuration: {
+          verticals: config.verticals,
+          readerFeatures: config.readerFeatures,
+          streamingFeatures: config.streamingFeatures
+        }
+      }));
+      
+      setProfileData(profiles);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+      alert('Error loading product profiles. Please try again.');
+      setProfileModalVisible(false);
+    } finally {
+      setIsLoadingProfiles(false);
+    }
+  };
+
+  // Fixed handleSensitivityAnalysis function
+  const handleSensitivityAnalysis = async () => {
+    setIsAnalyzingSensitivity(true);
+    setSensitivityModalVisible(true);
+    
+    try {
+      const activeConfigs = Array.from(activeProductsState)
+        .filter(productId => cardDataState[productId].product)
+        .map(productId => {
+          const card = cardDataState[productId];
+          return {
+            id: productId.toString(),
+            product: card.product,
+            basePrice: card.monthlyRate,
+            verticals: card.verticals || [],
+            readerFeatures: card.readerFeatures || [],
+            streamingFeatures: card.streamingFeatures || []
+          };
+        });
+
+      if (activeConfigs.length === 0) {
+        alert("Please configure at least one product for sensitivity analysis");
+        setSensitivityModalVisible(false);
+        setIsAnalyzingSensitivity(false);
+        return;
+      }
+
+      const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
+      const sensitivityResults = [];
+
+      for (const config of activeConfigs) {
+        const productResults = {
+          productName: config.product,
+          basePrice: config.basePrice,
+          pricePoints: priceVariations.map(variation => {
+            const adjustedPrice = config.basePrice * (1 + variation / 100);
+            const baseAdoption = 15;
+            const priceElasticity = -1.2;
+            const adoptionRate = baseAdoption * Math.pow((config.basePrice / adjustedPrice), priceElasticity);
+            
+            return {
+              priceVariation: variation,
+              price: adjustedPrice,
+              adoptionRate: Math.max(0, Math.min(100, adoptionRate))
+            };
+          })
+        };
+        sensitivityResults.push(productResults);
+      }
+      
+      setSensitivityData(sensitivityResults);
+    } catch (error) {
+      console.error('Error in sensitivity analysis:', error);
+      alert('Error running sensitivity analysis. Please try again.');
+      setSensitivityModalVisible(false);
+    } finally {
+      setIsAnalyzingSensitivity(false);
+    }
+  };
+
+  const handleVerticalChange = (vertical: string) => {
+    setSelectedReviewVertical(vertical);
+    if (vertical && verticalDescriptionsData[vertical]) {
+      const vertData = verticalDescriptionsData[vertical];
+      setVerticalDescription(vertData.description || '');
+      setVerticalFeaturesForReview(vertData.features || []);
+    } else {
+      setVerticalDescription('');
+      setVerticalFeaturesForReview([]);
+    }
+  };
+
+  const downloadReport = () => {
+    if (!reportData) {
+      alert('No report data to download.');
+      return;
+    }
+
+    let csv = 'Segment';
+    
+    const activeProducts = Array.from(activeProductsState)
+      .filter(id => cardDataState[id].product)
+      .map(id => cardDataState[id]);
+    
+    activeProducts.forEach((product, idx) => {
+      csv += `,Product ${idx + 1}: ${product.product}`;
+    });
+    csv += '\n';
+    
+    csv += 'Overall';
+    reportData.overallShare.forEach(share => {
+      csv += `,${share.toFixed(1)}%`;
+    });
+    csv += '\n';
+    
+    reportData.segmentShares.forEach(segment => {
+      csv += segment.segmentName;
+      segment.shares.forEach(share => {
+        csv += `,${share.toFixed(1)}%`;
+      });
+      csv += '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cnn_simulation_report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }; // end downloadReport
+
+  return (
+    <div className={styles.pageContainer}>
+      {/* Main Header with logos */}
+      <div className={styles.mainHeader}>
+        <div className={styles.logoContainer}>
+          <img 
+            src="https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg" 
+            alt="CNN" 
+          />
+        </div>
+        
+        <div className={styles.headerCenter}>
+          <h1 className={styles.headerTitle}>
+            Subscription Bundle Configurator & Simulator
+          </h1>
+          <p className={styles.headerSubtitle}>
+            Configure products, set pricing, and simulate market response
+          </p>
+        </div>
+        
+        <div className={styles.poweredByContainer}>
+          <span className={styles.poweredByLabel}>Powered by</span>
+          <img 
+            src="https://i.imgur.com/AdWCvzX.png" 
+            alt="BEYOND Insights" 
+            className={styles.poweredByLogo}
+          />
+        </div>
+      </div>
+
+      {/* Controls Section */}
+      <div className={styles.controlsSection}>
+        <div className={styles.controlsLeftArea}>
+          <div className={styles.headerTamInfo}>
+            <div className={styles.tamDisplay}>
+              TAM Universe = 105,624,640
+              <button className={styles.learnMoreLink} onClick={() => setIsMarketSizingModalVisible(true)}>
+                Click here to learn more
+              </button>
+            </div>
+          </div>
+          <button 
+            className={styles.headerButton}
+            onClick={() => setReportModalVisible(true)}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>📊</span> Set Report Type
+          </button>
+          <div className={styles.reportTypeDisplayControlsInfo}>
+            Report Type: {currentReportTypeState === 'tiered' ? 'Tiered Bundles' : 'Independent Products'} | 
+            Output: {currentOutputTypeState === 'percentage' ? 'Take Rates (%)' : 
+                    currentOutputTypeState === 'count' ? 'Population Counts (#)' : 'Revenue ($)'}
+          </div>
+        </div>
+        
+        <div className={styles.headerButtons}>
+          <button
+            className={`${styles.headerButton} ${styles.clearButton}`}
+            onClick={() => clearAllCards()}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>🗑️</span> Clear All Selections
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.runSimulationButton}`}
+            onClick={handleSimulation}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>▶️</span>
+            {isSimulating ? 'Simulating...' : 'Run Simulation'}
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.showProfilesButton}`}
+            onClick={handleShowProfiles}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>👥</span> Show Profiles
+          </button>
+          
+          <button
+            className={styles.headerButton}
+            onClick={handleSensitivityAnalysis}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>📊</span> Price Sensitivity Analysis
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.marketFactorsButton}`}
+            onClick={() => setIsMarketFactorsModalVisible(true)}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>⚙️</span> Market Factors
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.attributeImpactButton}`}
+            onClick={() => window.open('/attribute-impact', '_blank')}
+          >
+            <span className={styles.iconSpacing}>📈</span> Attribute Impact
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.aboutModelButton}`}
+            onClick={() => setShowAboutModel(true)}
+          >
+            <span className={styles.iconSpacing}>📊</span> About the Model
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.reviewCoreProductsButton}`}
+            onClick={() => setIsReviewCoreProductsModalVisible(true)}
+          >
+            <span className={styles.iconSpacing}>📰</span> Review Core Products
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.reviewFeaturesButton}`}
+            onClick={() => setIsReviewFeaturesModalVisible(true)}
+          >
+            <span className={styles.iconSpacing}>✨</span> Review Features
+          </button>
+          
+          <button
+            className={`${styles.headerButton} ${styles.reviewVerticalsButton}`}
+            onClick={() => setIsReviewVerticalsModalVisible(true)}
+          >
+            <span className={styles.iconSpacing}>🌿</span> Review Verticals
+          </button>
+        </div>
+        
+        <h2 className={styles.controlsSectionH2}>Select Products to Include in Simulation</h2>
+        <div className={styles.productToggles}>
+          {Array.from({ length: MAX_PRODUCTS }, (_, i) => i + 1).map(id => (
+            <button 
+              key={id}
+              className={`${styles.toggleBtn} ${activeProductsState.has(id) ? styles.active : ''}`}
+              onClick={() => toggleProduct(id)}
+              disabled={isSimulating}
+            >
+              Product {id}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cards Container */}
+      <div className={styles.cardContainer}>
+        {Array.from({ length: MAX_PRODUCTS }, (_, i) => i + 1).map(cardNum => {
+          const card = cardDataState[cardNum];
+          const isActive = activeProductsState.has(cardNum);
+          const isExpanded = expandedCards.has(cardNum) || !!card.product;
+          const pricingRange = card.product ? getPricingRangeForProduct(card.product, card.verticals.length) : null;
+          
+          return (
+            <div key={cardNum} className={`${styles.card} ${!isActive ? styles.inactive : ''}`}>
+              {!isActive && (
+                <div className={styles.inactiveOverlay}>
+                  EXCLUDED FROM
+                  <br />
+                  SIMULATOR
+                </div>
+              )}
+              
+              {isActive && !card.product && (
+                <div className={styles.incompleteOverlay}>
+                  ⚠️ INCOMPLETE<br />
+                  Select base product
+                </div>
+              )}
+              
+              <div className={styles.cardHeader} onClick={() => toggleCardExpansion(cardNum)}>
+                <span className={styles.cardHeaderText}>{card.product || `PRODUCT ${cardNum}`}</span>
+                <span className={styles.cardHeaderText}>{isExpanded ? '▼' : '▶'}</span>
+              </div>
+              
+              <select 
+                className={styles.productSelect}
+                value={card.product}
+                onChange={(e) => updateCardProductType(cardNum, e.target.value)}
+                disabled={!isActive}
+              >
+                <option value="">Select Base Product</option>
+                <option value="CNN Reader">CNN Reader</option>
+                <option value="CNN Streaming">CNN Streaming</option>
+                <option value="CNN All-Access">CNN All-Access</option>
+                <option value="CNN Standalone Vertical">CNN Standalone Vertical</option>
+              </select>
+              
+              {isActive && isExpanded && card.product && (
+                <div className={styles.content}>
+                  {/* Special handling for Standalone Vertical */}
+                  {card.product === 'CNN Standalone Vertical' ? (
+                    <div>
+                      <label className={styles.contentLabel}>Select Vertical</label>
+                      <select 
+                        className={styles.verticalSelectStandalone}
+                        value={card.verticals[0] || ''}
+                        onChange={(e) => updateCardFeatures(cardNum, 'vertical', e.target.value ? [e.target.value] : [])}
+                      >
+                        <option value="">-- Select a Vertical --</option>
+                        {AVAILABLE_FEATURES_LISTS.vertical.map(v => (
+                          <option key={v} value={v}>{v}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Reader Features */}
+                      {['CNN Reader', 'CNN All-Access'].includes(card.product) && (
+                        <div>
+                          <label className={styles.contentLabel}>
+                            Reader Features ({card.readerFeatures.length} selected)
+                          </label>
+                          <div className={styles.featureList}>
+                            {card.readerFeatures.map(feature => (
+                              <div key={feature} className={styles.featureItem}>
+                                <span>{feature}</span>
+                                <span 
+                                  className={styles.featureRemove}
+                                  onClick={() => updateCardFeatures(
+                                    cardNum, 
+                                    'reader', 
+                                    card.readerFeatures.filter(f => f !== feature)
+                                  )}
+                                >
+                                  ×
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <button 
+                            className={`${styles.addBtn} ${styles.addBtnReader}`}
+                            onClick={() => openFeatureModal(cardNum, 'reader')}
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Streaming Features */}
+                      {['CNN Streaming', 'CNN All-Access'].includes(card.product) && (
+                        <div className={styles.featureSection}>
+                          <label className={styles.contentLabel}>
+                            Streaming Features ({card.streamingFeatures.length} selected)
+                          </label>
+                          <div className={styles.featureList}>
+                            {card.streamingFeatures.map(feature => (
+                              <div key={feature} className={styles.featureItem}>
+                                <span>{feature}</span>
+                                <span 
+                                  className={styles.featureRemove}
+                                  onClick={() => updateCardFeatures(
+                                    cardNum, 
+                                    'streaming', 
+                                    card.streamingFeatures.filter(f => f !== feature)
+                                  )}
+                                >
+                                  ×
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <button 
+                            className={`${styles.addBtn} ${styles.addBtnStreaming}`}
+                            onClick={() => openFeatureModal(cardNum, 'streaming')}
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* Verticals */}
+                      <div className={styles.featureSection}>
+                        <label className={styles.contentLabel}>
+                          Verticals ({card.verticals.length} selected{card.product !== 'CNN Standalone Vertical' ? ' - Max 3' : ''})
+                        </label>
+                        <div className={styles.featureList}>
+                          {card.verticals.map(vertical => (
+                            <div key={vertical} className={styles.featureItem}>
+                              <span>{vertical}</span>
+                              <span 
+                                className={styles.featureRemove}
+                                onClick={() => updateCardFeatures(
+                                  cardNum, 
+                                  'vertical', 
+                                  card.verticals.filter(v => v !== vertical)
+                                )}
+                              >
+                                ×
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <button 
+                          className={`${styles.addBtn} ${styles.addBtnVertical}`}
+                          onClick={() => openFeatureModal(cardNum, 'vertical')}
+                          disabled={card.product !== 'CNN Standalone Vertical' && card.verticals.length >= 3}
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  
+                  {/* Pricing Section */}
+                  <div className={styles.pricingSection}>
+                    <label className={styles.contentLabel}>Configure Pricing (choose Terms + Price)</label>
+                    
+                    <div className={styles.btnGroup}>
+                      <button 
+                        className={card.pricingType === 'monthly' ? styles.active : ''}
+                        onClick={() => updateCardPricing(cardNum, 'monthly', card.monthlyRate, card.discount)}
+                      >
+                        Monthly Only
+                      </button>
+                      <button 
+                        className={card.pricingType === 'annual' ? styles.active : ''}
+                        onClick={() => updateCardPricing(cardNum, 'annual', card.monthlyRate, card.discount)}
+                      >
+                        Annual Only
+                      </button>
+                      <button 
+                        className={card.pricingType === 'both' ? styles.active : ''}
+                        onClick={() => updateCardPricing(cardNum, 'both', card.monthlyRate, card.discount)}
+                      >
+                        Both
+                      </button>
+                    </div>
+                    
+                    {card.pricingType === 'both' && (
+                      <div className={styles.discountSection}>
+                        <div className={styles.discountOptions}>
+                          <h4>Select Discount (for Annual Term)</h4>
+                          <hr />
+                          <div className={styles.discountOption}>
+                            <label>
+                              <input 
+                                type="radio"
+                                name={`discount-${cardNum}`}
+                                value="free"
+                                checked={card.discount === 'free'}
+                                onChange={() => updateCardPricing(cardNum, card.pricingType, card.monthlyRate, 'free')}
+                              />
+                              1 Mo or 3 Mos Free (Annual)
+                            </label>
+                          </div>
+                          <div className={styles.discountOption}>
+                            <label>
+                              <input 
+                                type="radio"
+                                name={`discount-${cardNum}`}
+                                value="30"
+                                checked={card.discount === '30'}
+                                onChange={() => updateCardPricing(cardNum, card.pricingType, card.monthlyRate, '30')}
+                              />
+                              30% off (Annual)
+                            </label>
+                          </div>
+                          <div className={styles.discountOption}>
+                            <label>
+                              <input 
+                                type="radio"
+                                name={`discount-${cardNum}`}
+                                value="50"
+                                checked={card.discount === '50'}
+                                onChange={() => updateCardPricing(cardNum, card.pricingType, card.monthlyRate, '50')}
+                              />
+                              50% off (Annual)
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {pricingRange && (
+                      <div className={styles.priceSliderContainer}>
+                        <div className={styles.priceRangeLabels}>
+                          <span>${pricingRange.min.toFixed(2)}</span>
+                          <span>${pricingRange.max.toFixed(2)}</span>
+                        </div>
+                        <input 
+                          type="range"
+                          className={styles.priceSlider}
+                          min={pricingRange.min}
+                          max={pricingRange.max}
+                          step="0.01"
+                          value={card.monthlyRate}
+                          onChange={(e) => updateCardPricing(cardNum, card.pricingType, parseFloat(e.target.value), card.discount)}
+                          onInput={(e) => {
+                            const value = parseFloat((e.target as HTMLInputElement).value);
+                            updateCardPricing(cardNum, card.pricingType, value, card.discount);
+                          }}
+                        />
+                        <label className={styles.priceLabel}>
+                          Selected Monthly Price: <span className={styles.priceValue}>${card.monthlyRate.toFixed(2)}</span>
+                        </label>
+                      </div>
+                    )}
+                    
+                    {card.pricingType && (
+                      <div className={styles.pricingDisplay}>
+                        <table className={styles.pricingTable}>
+                          <tbody>
+                            <tr className={styles.pricingTableRow}>
+                              <td className={styles.pricingTableCell}>Monthly</td>
+                              <td className={styles.pricingTableCellRight}>
+                                ${card.monthlyRate.toFixed(2)}
+                              </td>
+                            </tr>
+                            {(card.pricingType === 'annual' || card.pricingType === 'both') && (
+                              <>
+                                <tr className={styles.pricingTableRow}>
+                                  <td className={styles.pricingTableCell}>Year 1 (Annual)</td>
+                                  <td className={styles.pricingTableCellRight}>
+                                    ${card.discount === '30' 
+                                      ? (card.monthlyRate * 12 * 0.7).toFixed(2)
+                                      : card.discount === '50'
+                                      ? (card.monthlyRate * 12 * 0.5).toFixed(2)
+                                      : card.discount === 'free'
+                                      ? (card.monthlyRate * 11).toFixed(2)
+                                      : (card.monthlyRate * 12).toFixed(2)
+                                    }
+                                    {card.discount && card.discount !== '' && (
+                                      <div className={styles.discountText}>
+                                        {card.discount === '30' ? '(30% discount)' : 
+                                          card.discount === '50' ? '(50% discount)' : 
+                                          card.discount === 'free' ? '(1 month free)' : ''}
+                                      </div>
+                                    )}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className={styles.pricingTableCell}>Year 2+ (Annual)</td>
+                                  <td className={styles.pricingTableCellRight}>
+                                    ${(card.monthlyRate * 12).toFixed(2)}
+                                  </td>
+                                </tr>
+                              </>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Feature Selection Modal */}
+      {featureModalVisible && currentModalDataState && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2>
+                Select {currentModalDataState.type === 'reader' ? 'Reader Features' : 
+                       currentModalDataState.type === 'streaming' ? 'Streaming Features' : 
+                       'Verticals'}
+              </h2>
+              <button className={styles.closeModal} onClick={() => setFeatureModalVisible(false)}>×</button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              {AVAILABLE_FEATURES_LISTS[currentModalDataState.type].map(feature => {
+                const isChecked = cardDataState[currentModalDataState.cardNum][
+                  currentModalDataState.type === 'reader' ? 'readerFeatures' :
+                  currentModalDataState.type === 'streaming' ? 'streamingFeatures' : 
+                  'verticals'
+                ].includes(feature);
+
+                return (
+                  <label key={feature} className={styles.featureCheckbox}>
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked}
+                      onChange={(e) => {
+                        const featureKey = currentModalDataState.type === 'reader' ? 'readerFeatures' :
+                                         currentModalDataState.type === 'streaming' ? 'streamingFeatures' : 
+                                         'verticals';
+                        const currentFeatures = cardDataState[currentModalDataState.cardNum][featureKey];
+                        const newFeatures = e.target.checked 
+                          ? [...currentFeatures, feature]
+                          : currentFeatures.filter(f => f !== feature);
+                        
+                        updateCardFeatures(currentModalDataState.cardNum, currentModalDataState.type, newFeatures);
+                      }}
+                    />
+                    {feature}
+                  </label>
+                );
+              })}
+            </div>
+            
+            <div className={styles.modalButtons}>
+              <button 
+                className={styles.btnPrimary}
+                onClick={() => setFeatureModalVisible(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {reportModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <div className={styles.modalHeader}>
+              <h2>Configure Report</h2>
+              <button className={styles.closeModal} onClick={() => setReportModalVisible(false)}>×</button>
+            </div>
+            <div>
+              <div className={styles.reportTypeSection}>
+                <h3>Report Type:</h3>
+                <label className={styles.radioOption}>
+                  <input 
+                    type="radio" 
+                    name="reportType" 
+                    value="tiered" 
+                    checked={currentReportTypeState === 'tiered'}
+                    onChange={(e) => setCurrentReportTypeState(e.target.value as ReportType)}
+                  />
+                  Tiered Bundles
+                </label>
+                <label className={styles.radioOption}>
+                  <input 
+                    type="radio" 
+                    name="reportType" 
+                    value="independent"
+                    checked={currentReportTypeState === 'independent'}
+                    onChange={(e) => setCurrentReportTypeState(e.target.value as ReportType)}
+                  />
+                  Independent Products
+                </label>
+              </div>
+              
+              <div className={styles.reportTypeSection}>
+                <h3>Output Type:</h3>
+                <label className={styles.radioOption}>
+                  <input 
+                    type="radio" 
+                    name="outputType" 
+                    value="percentage"
+                    checked={currentOutputTypeState === 'percentage'}
+                    onChange={(e) => setCurrentOutputTypeState(e.target.value as OutputType)}
+                  />
+                  Take Rates (%)
+                </label>
+                <label className={styles.radioOption}>
+                  <input 
+                    type="radio" 
+                    name="outputType" 
+                    value="count"
+                    checked={currentOutputTypeState === 'count'}
+                    onChange={(e) => setCurrentOutputTypeState(e.target.value as OutputType)}
+                  />
+                  Population Counts (#)
+                </label>
+                <label className={styles.radioOption}>
+                  <input 
+                    type="radio" 
+                    name="outputType" 
+                    value="revenue"
+                    checked={currentOutputTypeState === 'revenue'}
+                    onChange={(e) => setCurrentOutputTypeState(e.target.value as OutputType)}
+                  />
+                  Revenue ($)
+                </label>
+              </div>
+            </div>
+            <div className={styles.modalButtons}>
+              <button className={styles.btnSecondary} onClick={() => setReportModalVisible(false)}>Cancel</button>
+              <button className={styles.btnPrimary} onClick={() => setReportModalVisible(false)}>Generate Report</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Display - Overlay Mode */}
+      {reportData && isReportOverlay && (
+        <div className={styles.reportOverlay}>
+          <div className={styles.reportContainer}>
+            <div className={styles.reportHeader}>
+              <h2>Simulation Results</h2>
+              <div className={styles.reportButtons}>
+                <button 
+                  className={styles.headerButton}
+                  onClick={downloadReport}
+                >
+                  <span className={styles.iconSpacing}>💾</span> Download Report
+                </button>
+                <button 
+                  className={`${styles.headerButton} ${styles.aboutModelButton}`}
+                  onClick={() => setIsReportOverlay(false)}
+                >
+                  <span className={styles.iconSpacing}>↓</span> Minimize
+                </button>
+                <button 
+                  onClick={() => {
+                    setReportData(null);
+                    setIsReportOverlay(true);
+                  }}
+                  className={styles.closeModal}
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            <div className={styles.reportContent}>
+              <ReportDisplay 
+                reportData={reportData} 
+                activeProducts={
+                  currentReportTypeState === 'tiered'
+                    ? [
+                        {
+                          product: 'Any Product',
+                          monthlyRate: 0,
+                          annualRate: 0,
+                          verticals: [],
+                          readerFeatures: [],
+                          streamingFeatures: [],
+                          features: { reader: [], streaming: [] },
+                          pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                        },
+                        ...Array.from(activeProductsState)
+                          .filter(id => cardDataState[id].product)
+                          .map(id => ({
+                            product: cardDataState[id].product,
+                            monthlyRate: cardDataState[id].monthlyRate,
+                            annualRate: cardDataState[id].monthlyRate * 12,
+                            verticals: cardDataState[id].verticals || [],
+                            readerFeatures: cardDataState[id].readerFeatures || [],
+                            streamingFeatures: cardDataState[id].streamingFeatures || [],
+                            features: {
+                              reader: cardDataState[id].readerFeatures || [],
+                              streaming: cardDataState[id].streamingFeatures || []
+                            },
+                            pricing: {
+                              monthlyRate: cardDataState[id].monthlyRate,
+                              pricingType: cardDataState[id].pricingType as any,
+                              discount: cardDataState[id].discount || ''
+                            }
+                          }))
+                      ]
+                    : Array.from(activeProductsState)
+                        .filter(id => cardDataState[id].product)
+                        .map(id => ({
+                          product: cardDataState[id].product,
+                          monthlyRate: cardDataState[id].monthlyRate,
+                          annualRate: cardDataState[id].monthlyRate * 12,
+                          verticals: cardDataState[id].verticals || [],
+                          readerFeatures: cardDataState[id].readerFeatures || [],
+                          streamingFeatures: cardDataState[id].streamingFeatures || [],
+                          features: {
+                            reader: cardDataState[id].readerFeatures || [],
+                            streaming: cardDataState[id].streamingFeatures || []
+                          },
+                          pricing: {
+                            monthlyRate: cardDataState[id].monthlyRate,
+                            pricingType: cardDataState[id].pricingType as any,
+                            discount: cardDataState[id].discount || ''
+                          }
+                        }))
+                }
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Display - Minimized/Inline Mode */}
+      {reportData && !isReportOverlay && (
+        <div className={styles.minimizedReport}>
+          <div className={styles.minimizedReportHeader}>
+            <h2>Simulation Results</h2>
+            <div className={styles.reportButtons}>
+              <button 
+                className={styles.headerButton}
+                onClick={downloadReport}
+              >
+                <span className={styles.iconSpacing}>💾</span> Download Report
+              </button>
+              <button 
+                className={`${styles.headerButton} ${styles.aboutModelButton}`}
+                onClick={() => setIsReportOverlay(true)}
+              >
+                <span className={styles.iconSpacing}>↑</span> Expand
+              </button>
+            </div>
+          </div>
+          <ReportDisplay 
+            reportData={reportData} 
+            activeProducts={
+              currentReportTypeState === 'tiered'
+                ? [
+                    {
+                      product: 'Any Product',
+                      monthlyRate: 0,
+                      annualRate: 0,
+                      verticals: [],
+                      readerFeatures: [],
+                      streamingFeatures: [],
+                      features: { reader: [], streaming: [] },
+                      pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                    },
+                    ...Array.from(activeProductsState)
+                      .filter(id => cardDataState[id].product)
+                      .map(id => ({
+                        product: cardDataState[id].product,
+                        monthlyRate: cardDataState[id].monthlyRate,
+                        annualRate: cardDataState[id].monthlyRate * 12,
+                        verticals: cardDataState[id].verticals || [],
+                        readerFeatures: cardDataState[id].readerFeatures || [],
+                        streamingFeatures: cardDataState[id].streamingFeatures || [],
+                        features: {
+                          reader: cardDataState[id].readerFeatures || [],
+                          streaming: cardDataState[id].streamingFeatures || []
+                        },
+                        pricing: {
+                          monthlyRate: cardDataState[id].monthlyRate,
+                          pricingType: cardDataState[id].pricingType as any,
+                          discount: cardDataState[id].discount || ''
+                        }
+                      }))
+                  ]
+                : Array.from(activeProductsState)
+                    .filter(id => cardDataState[id].product)
+                    .map(id => ({
+                      product: cardDataState[id].product,
+                      monthlyRate: cardDataState[id].monthlyRate,
+                      annualRate: cardDataState[id].monthlyRate * 12,
+                      verticals: cardDataState[id].verticals || [],
+                      readerFeatures: cardDataState[id].readerFeatures || [],
+                      streamingFeatures: cardDataState[id].streamingFeatures || [],
+                      features: {
+                        reader: cardDataState[id].readerFeatures || [],
+                        streaming: cardDataState[id].streamingFeatures || []
+                      },
+                      pricing: {
+                        monthlyRate: cardDataState[id].monthlyRate,
+                        pricingType: cardDataState[id].pricingType as any,
+                        discount: cardDataState[id].discount || ''
+                      }
+                    }))
+            }
+          />
+          <div className={styles.downloadButtonContainer}>
+            <button 
+              className={styles.headerButton}
+              onClick={downloadReport}
+            >
+              <span className={styles.iconSpacing}>💾</span> Download Report
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Fixed Profile Modal */}
+      {profileModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalLarge}`}>
+            <div className={styles.modalHeader}>
+              <h2>Product Profiles Analysis</h2>
+              <button className={styles.closeModal} onClick={() => setProfileModalVisible(false)}>×</button>
+            </div>
+            <div>
+              {isLoadingProfiles ? (
+                <div className={styles.profileLoadingState}>
+                  <p>Analyzing product configurations...</p>
+                </div>
+              ) : (
+                <div className={styles.profileContainer}>
+                  {profileData.length === 0 ? (
+                    <p>No product profiles to display.</p>
+                  ) : (
+                    profileData.map((profile, index) => (
+                      <div key={index} className={styles.profileCard}>
+                        <h3>{profile.productName}</h3>
+                        
+                        <div className={styles.profileSection}>
+                          <strong>Description:</strong>
+                          <p>{profile.description}</p>
+                        </div>
+                        
+                        <div className={styles.profileSection}>
+                          <strong>Target Audience:</strong>
+                          <p>{profile.targetAudience}</p>
+                        </div>
+                        
+                        <div className={styles.profileSection}>
+                          <strong>Pricing Strategy:</strong>
+                          <div className={styles.profilePricing}>
+                            <p>• Monthly Rate: <span className={styles.profilePriceHighlight}>
+                              ${profile.pricing.monthlyRate.toFixed(2)}
+                            </span></p>
+                            {profile.pricing.pricingType !== 'monthly' && (
+                              <p>• Annual Rate: <span className={styles.profilePriceHighlight}>
+                                ${profile.pricing.annualRate.toFixed(2)}
+                                {profile.pricing.discount && profile.pricing.discount !== 'none' && 
+                                  ` (with ${profile.pricing.discount} discount)`}
+                              </span></p>
+                            )}
+                            <p>• Pricing Type: {profile.pricing.pricingType}</p>
+                          </div>
+                        </div>
+                        
+                        <div className={styles.profileSection}>
+                          <strong>Key Features & Benefits:</strong>
+                          {profile.keyFeatures.length > 0 ? (
+                            <ul className={styles.profileFeatures}>
+                              {profile.keyFeatures.map((feature, idx) => (
+                                <li key={idx}>{feature}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className={styles.emptyState}>No features configured</p>
+                          )}
+                        </div>
+                        
+                        {profile.configuration && (
+                          <div className={styles.profileConfigSummary}>
+                            <strong>Configuration Summary:</strong>
+                            <div>
+                              {profile.configuration.readerFeatures?.length > 0 && (
+                                <p>• Reader Features: {profile.configuration.readerFeatures.length}</p>
+                              )}
+                              {profile.configuration.streamingFeatures?.length > 0 && (
+                                <p>• Streaming Features: {profile.configuration.streamingFeatures.length}</p>
+                              )}
+                              {profile.configuration.verticals?.length > 0 && (
+                                <p>• Verticals: {profile.configuration.verticals.join(', ')}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  
+                  {profileData.length > 1 && (
+                    <div className={styles.portfolioAnalysis}>
+                      <h4>Portfolio Analysis</h4>
+                      <p><strong>Total Products:</strong> {profileData.length}</p>
+                      <p><strong>Price Range:</strong> ${Math.min(...profileData.map(p => p.pricing.monthlyRate)).toFixed(2)} - 
+                         ${Math.max(...profileData.map(p => p.pricing.monthlyRate)).toFixed(2)}/month</p>
+                      <p><strong>Coverage:</strong> {
+                        profileData.some(p => p.productName.includes('Reader')) && 
+                        profileData.some(p => p.productName.includes('Streaming')) 
+                          ? 'Full spectrum (Reader + Streaming)' 
+                          : 'Partial coverage'
+                      }</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
+              <button 
+                className={styles.btnPrimary}
+                onClick={() => setProfileModalVisible(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Fixed Sensitivity Modal */}
+      {sensitivityModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalLarge}`}>
+            <div className={styles.modalHeader}>
+              <h2>Price Sensitivity Analysis</h2>
+              <button className={styles.closeModal} onClick={() => setSensitivityModalVisible(false)}>×</button>
+            </div>
+            <div>
+              {isAnalyzingSensitivity ? (
+                <div className={styles.profileLoadingState}>
+                  <p>Running price sensitivity analysis...</p>
+                </div>
+              ) : (
+                <div className={styles.profileContainer}>
+                  <p className={styles.marketFactorNote}>
+                    This analysis shows how adoption rates change with price variations.
+                    Negative percentages represent price decreases, positive represent increases.
+                  </p>
+                  
+                  {sensitivityData.map((product, index) => (
+                    <div key={index} className={styles.sensitivityCard}>
+                      <h3>{product.productName}</h3>
+                      <p>
+                        Base Price: <strong>${product.basePrice.toFixed(2)}</strong>
+                      </p>
+                      
+                      <table className={styles.sensitivityTable}>
+                        <thead>
+                          <tr>
+                            <th>Price Change</th>
+                            <th>New Price</th>
+                            <th>Adoption Rate</th>
+                            <th>Change vs Base</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {product.pricePoints.map((point, idx) => {
+                            const baseAdoption = product.pricePoints.find(p => p.priceVariation === 0)?.adoptionRate || 0;
+                            const changeVsBase = ((point.adoptionRate - baseAdoption) / baseAdoption * 100).toFixed(1);
+                            
+                            return (
+                              <tr key={idx} className={`${styles.sensitivityTableRow} ${point.priceVariation === 0 ? styles.current : ''}`}>
+                                <td className={styles.sensitivityTableCell}>
+                                  {point.priceVariation > 0 ? '+' : ''}{point.priceVariation}%
+                                  {point.priceVariation === 0 && ' (Current)'}
+                                </td>
+                                <td className={styles.sensitivityTableCellRight}>
+                                  ${point.price.toFixed(2)}
+                                </td>
+                                <td className={styles.sensitivityTableCellRight}>
+                                  {point.adoptionRate.toFixed(1)}%
+                                </td>
+                                <td className={`${styles.sensitivityTableCellRight} ${
+                                  parseFloat(changeVsBase) > 0 ? styles.sensitivityPositive : 
+                                  parseFloat(changeVsBase) < 0 ? styles.sensitivityNegative : ''
+                                }`}>
+                                  {parseFloat(changeVsBase) > 0 ? '+' : ''}{changeVsBase}%
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      
+                      <div className={styles.sensitivityInsights}>
+                        <p><strong>Key Insights:</strong></p>
+                        <ul>
+                          <li>A 10% price decrease could increase adoption by ~{((1.2 * 10)).toFixed(0)}%</li>
+                          <li>A 10% price increase could decrease adoption by ~{((1.2 * 10)).toFixed(0)}%</li>
+                          <li>Price elasticity coefficient: -1.2 (elastic demand)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className={styles.sensitivityNote}>
+                    <strong>Note:</strong> This is a simplified elasticity model. 
+                    For more accurate results, consider running full simulations at each price point 
+                    with actual market factors and consumer segments.
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
+              <button 
+                className={styles.btnPrimary}
+                onClick={() => setSensitivityModalVisible(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Market Factors Modal */}
+      {isMarketFactorsModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalSmall}`}>
+            <div className={styles.modalHeader}>
+              <h2>Market Factors Configuration</h2>
+              <button className={styles.closeModal} onClick={() => setIsMarketFactorsModalVisible(false)}>×</button>
+            </div>
+            <div className={styles.profileContainer}>
+              <div className={styles.marketFactorSection}>
+                <h3>Market Factor Weights</h3>
+                <p>Adjust how much each factor impacts the final take rate:</p>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Awareness Weight: {awarenessWeight}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={awarenessWeight}
+                    onChange={(e) => setAwarenessWeight(parseInt(e.target.value))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Distribution Weight: {distributionWeight}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={distributionWeight}
+                    onChange={(e) => setDistributionWeight(parseInt(e.target.value))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Competitive Weight: {competitiveWeight}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={competitiveWeight}
+                    onChange={(e) => setCompetitiveWeight(parseInt(e.target.value))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Marketing Weight: {marketingWeight}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketingWeight}
+                    onChange={(e) => setMarketingWeight(parseInt(e.target.value))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Year One Adoption Weight: {yearOneWeight}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={yearOneWeight}
+                    onChange={(e) => setYearOneWeight(parseInt(e.target.value))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <p className={styles.marketFactorNote}>
+                  Total weight: {awarenessWeight + distributionWeight + competitiveWeight + marketingWeight + yearOneWeight}%
+                  (should equal 100%)
+                </p>
+              </div>
+              
+              <div className={styles.marketFactorSection}>
+                <h3>Market Factors</h3>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Awareness Reach: {marketFactors.awareness}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketFactors.awareness}
+                    onChange={(e) => setMarketFactors(prev => ({
+                      ...prev,
+                      awareness: parseInt(e.target.value)
+                    }))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Distribution Coverage: {marketFactors.distribution}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketFactors.distribution}
+                    onChange={(e) => setMarketFactors(prev => ({
+                      ...prev,
+                      distribution: parseInt(e.target.value)
+                    }))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Competitive Factors: {marketFactors.competitive}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketFactors.competitive}
+                    onChange={(e) => setMarketFactors(prev => ({
+                      ...prev,
+                      competitive: parseInt(e.target.value)
+                    }))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Marketing Efficiency: {marketFactors.marketing}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketFactors.marketing}
+                    onChange={(e) => setMarketFactors(prev => ({
+                      ...prev,
+                      marketing: parseInt(e.target.value)
+                    }))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+                
+                <div className={styles.marketFactorGroup}>
+                  <label className={styles.marketFactorLabel}>
+                    Year One Adoption: {marketFactors.yearOneAdoption}%
+                  </label>
+                  <input 
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={marketFactors.yearOneAdoption}
+                    onChange={(e) => setMarketFactors(prev => ({
+                      ...prev,
+                      yearOneAdoption: parseInt(e.target.value)
+                    }))}
+                    className={styles.marketFactorSlider}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.marketFactorSection}>
+                <h3>Price Sensitivity Options</h3>
+                
+                <div className={styles.marketFactorCheckbox}>
+                  <label>
+                    <input 
+                      type="checkbox"
+                      checked={marketFactors.enablePriceSensitivity}
+                      onChange={(e) => setMarketFactors(prev => ({
+                        ...prev,
+                        enablePriceSensitivity: e.target.checked
+                      }))}
+                    />
+                    Enable Price Sensitivity
+                  </label>
+                </div>
+                
+                {marketFactors.enablePriceSensitivity && (
+                  <>
+                    <div className={styles.marketFactorGroup}>
+                      <label className={styles.marketFactorLabel}>
+                        Price Threshold: ${marketFactors.priceThreshold}
+                      </label>
+                      <input 
+                        type="range"
+                        min="5"
+                        max="25"
+                        step="0.5"
+                        value={marketFactors.priceThreshold}
+                        onChange={(e) => setMarketFactors(prev => ({
+                          ...prev,
+                          priceThreshold: parseFloat(e.target.value)
+                        }))}
+                        className={styles.marketFactorSlider}
+                      />
+                    </div>
+                    
+                    <div className={styles.marketFactorGroup}>
+                      <label className={styles.marketFactorLabel}>
+                        Low Price Multiplier: {marketFactors.lowPriceMultiplier}x
+                      </label>
+                      <input 
+                        type="range"
+                        min="1"
+                        max="2"
+                        step="0.1"
+                        value={marketFactors.lowPriceMultiplier}
+                        onChange={(e) => setMarketFactors(prev => ({
+                          ...prev,
+                          lowPriceMultiplier: parseFloat(e.target.value)
+                        }))}
+                        className={styles.marketFactorSlider}
+                      />
+                    </div>
+                    
+                    <div className={styles.marketFactorGroup}>
+                      <label className={styles.marketFactorLabel}>
+                        High Price Multiplier: {marketFactors.highPriceMultiplier}x
+                      </label>
+                      <input 
+                        type="range"
+                        min="0.5"
+                        max="1"
+                        step="0.05"
+                        value={marketFactors.highPriceMultiplier}
+                        onChange={(e) => setMarketFactors(prev => ({
+                          ...prev,
+                          highPriceMultiplier: parseFloat(e.target.value)
+                        }))}
+                        className={styles.marketFactorSlider}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              <div className={styles.modalButtons}>
+                <button 
+                  className={styles.btnPrimary}
+                  onClick={() => setIsMarketFactorsModalVisible(false)}
+                >
+                  Apply Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Market Sizing Modal */}
+      {isMarketSizingModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalSmall}`}>
+            <div className={styles.modalHeader}>
+              <h2>Market Sizing Model</h2>
+              <button className={styles.closeModal} onClick={() => setIsMarketSizingModalVisible(false)}>×</button>
+            </div>
+            <div className={styles.profileContainer}>
+              <h3>Total Addressable Market Analysis</h3>
+              <p>The TAM Universe represents the total potential market for CNN's subscription products.</p>
+              
+              <table className={styles.marketSizingTable}>
+                <thead>
+                  <tr>
+                    <th>Segment</th>
+                    <th>Households</th>
+                    <th>% of Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Core News Consumers</td>
+                    <td>42,249,856</td>
+                    <td>40%</td>
+                  </tr>
+                  <tr>
+                    <td>Casual News Viewers</td>
+                    <td>31,687,392</td>
+                    <td>30%</td>
+                  </tr>
+                  <tr>
+                    <td>Digital-First Audiences</td>
+                    <td>21,124,928</td>
+                    <td>20%</td>
+                  </tr>
+                  <tr>
+                    <td>Specialty Content Seekers</td>
+                    <td>10,562,464</td>
+                    <td>10%</td>
+                  </tr>
+                  <tr className={styles.marketSizingTotal}>
+                    <td>Total TAM</td>
+                    <td>105,624,640</td>
+                    <td>100%</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <div className={styles.marketSizingAssumptions}>
+                <h4>Key Assumptions:</h4>
+                <ul>
+                  <li>Based on US household data and media consumption patterns</li>
+                  <li>Includes only households with broadband internet access</li>
+                  <li>Excludes households already subscribed to cable news packages</li>
+                  <li>Adjusted for demographic and psychographic targeting</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Core Products Modal */}
+      {isReviewCoreProductsModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalMedium}`}>
+            <div className={styles.modalHeader}>
+              <h2>Core Product Descriptions</h2>
+              <button className={styles.closeModal} onClick={() => setIsReviewCoreProductsModalVisible(false)}>×</button>
+            </div>
+            <div className={styles.reviewSection}>
+              {Object.entries(coreProductDescriptionsData).map(([product, description]) => (
+                <div key={product} className={styles.reviewItem}>
+                  <h3>{product}</h3>
+                  <p>{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Features Modal */}
+      {isReviewFeaturesModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalMedium}`}>
+            <div className={styles.modalHeader}>
+              <h2>Feature Descriptions</h2>
+              <button className={styles.closeModal} onClick={() => setIsReviewFeaturesModalVisible(false)}>×</button>
+            </div>
+            <div className={styles.reviewSection}>
+              {/* Tab Navigation */}
+              <div className={styles.reviewTabs}>
+                <button 
+                  onClick={() => setActiveReviewTab('reader')}
+                  className={`${styles.reviewTab} ${activeReviewTab === 'reader' ? styles.active : ''}`}
+                >
+                  Reader Features
+                </button>
+                <button 
+                  onClick={() => setActiveReviewTab('streaming')}
+                  className={`${styles.reviewTab} ${activeReviewTab === 'streaming' ? styles.active : ''}`}
+                >
+                  Streaming Features
+                </button>
+              </div>
+              
+              {/* Tab Content */}
+              {activeReviewTab === 'reader' && (
+                <div>
+                  {Object.entries(readerFeatureDescriptionsData).map(([feature, description]) => (
+                    <div key={feature} className={styles.featureReviewItem}>
+                      <h4>{feature}</h4>
+                      <p>{description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {activeReviewTab === 'streaming' && (
+                <div>
+                  {Object.entries(streamingFeatureDescriptionsData).map(([feature, description]) => (
+                    <div key={feature} className={styles.featureReviewItem}>
+                      <h4>{feature}</h4>
+                      <p>{description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Verticals Modal */}
+      {isReviewVerticalsModalVisible && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalMedium}`}>
+            <div className={styles.modalHeader}>
+              <h2>Vertical Descriptions</h2>
+              <button className={styles.closeModal} onClick={() => setIsReviewVerticalsModalVisible(false)}>×</button>
+            </div>
+            <div className={styles.reviewSection}>
+              <div>
+                <label className={styles.marketFactorLabel}>
+                  Select a Vertical to Review:
+                </label>
+                <select 
+                  value={selectedReviewVertical}
+                  onChange={(e) => handleVerticalChange(e.target.value)}
+                  className={styles.verticalSelect}
+                >
+                  <option value="">-- Select a Vertical --</option>
+                  {Object.keys(verticalDescriptionsData).map(vertical => (
+                    <option key={vertical} value={vertical}>{vertical}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {selectedReviewVertical && (
+                <div className={styles.verticalDetails}>
+                  <h3>{selectedReviewVertical}</h3>
+                  <p>{verticalDescription}</p>
+                  
+                  {verticalFeaturesForReview.length > 0 && (
+                    <div>
+                      <h4 className={styles.verticalFeatures}>Features:</h4>
+                      <ul className={styles.verticalFeaturesList}>
+                        {verticalFeaturesForReview.map((feature, idx) => (
+                          <li key={idx}>{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* About Model Modal */}
+      {showAboutModel && (
+        <div className={styles.modalOverlay}>
+          <div className={`${styles.modal} ${styles.modalMedium}`}>
+            <div className={styles.modalHeader}>
+              <h2>About the Model</h2>
+              <button className={styles.closeModal} onClick={() => setShowAboutModel(false)}>×</button>
+            </div>
+            <div className={styles.aboutContent}>
+              <h3>Hierarchical Bayesian Choice Model</h3>
+              <p>This simulator uses a state-of-the-art hierarchical Bayesian choice model to predict subscription preferences.</p>
+              
+              <h4>Key Features:</h4>
+              <ul>
+                <li><strong>Individual-Level Estimates:</strong> Unlike traditional aggregate models, we estimate preferences for each respondent</li>
+                <li><strong>Heterogeneity Modeling:</strong> Captures how preferences vary across different customer segments</li>
+                <li><strong>Bayesian Shrinkage:</strong> Borrows strength across respondents for more stable estimates</li>
+                <li><strong>Market Calibration:</strong> Adjusts academic estimates to real-world take rates</li>
+              </ul>
+              
+              <h4>Model Performance:</h4>
+              <ul>
+                <li>MAPE (Mean Absolute Percentage Error): <strong>3.37%</strong></li>
+                <li>Hit Rate: <strong>90.33%</strong> correct predictions</li>
+                <li>Sample Size: 2,158 respondents × 14 choice tasks = 30,212 observations</li>
+              </ul>
+              
+              <h4>Why This Approach?</h4>
+              <p>Traditional conjoint models often overestimate market share. Our approach applies multiple calibration layers:</p>
+              <ol>
+                <li>Individual utility calculation with proven covariates</li>
+                <li>Softmax probability transformation</li>
+                <li>DRN (Down-weight Recent Non-takers) adjustment</li>
+                <li>Market realization factors (awareness, distribution, etc.)</li>
+              </ol>
+              
+              <p>This methodology exceeds industry standards by providing transparent, adjustable calibration rather than black-box corrections.</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Page;

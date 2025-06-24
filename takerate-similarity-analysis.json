@@ -1,0 +1,207 @@
+{
+  "timestamp": "2025-06-16T20:18:56.907Z",
+  "sampleProduct": {
+    "product": "CNN Reader",
+    "monthlyRate": 9.99,
+    "readerFeatures": [
+      "Article Comments",
+      "Personalized Feed"
+    ],
+    "streamingFeatures": [],
+    "verticals": [
+      "Politics",
+      "Business"
+    ]
+  },
+  "analysis": {
+    "overallStats": {
+      "avgTakeRate": 8.911288215510949,
+      "takeRateRange": 1.2722381447076945,
+      "minTakeRate": 8.387696179113895,
+      "maxTakeRate": 9.65993432382159
+    },
+    "groupResults": [
+      {
+        "group": "Digital News Sub",
+        "count": 567,
+        "avgUtility": -2.287744402189102,
+        "avgProbability": 0.0965993432382159,
+        "takeRate": 9.65993432382159,
+        "utilityStdDev": 0.35415701828817314,
+        "components": {
+          "baseUtility": 0.011677888888888889,
+          "priceLinear": -2.3944700885819916,
+          "priceSquared": -0.038135202496001136,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000127
+        }
+      },
+      {
+        "group": "Regular CNN User",
+        "count": 730,
+        "avgUtility": -2.3306808514436548,
+        "avgProbability": 0.09277391317875307,
+        "takeRate": 9.277391317875306,
+        "utilityStdDev": 0.3457476148575894,
+        "components": {
+          "baseUtility": 0.009929908219178071,
+          "priceLinear": -2.4356585571668337,
+          "priceSquared": -0.03813520249600108,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000155
+        }
+      },
+      {
+        "group": "18-34",
+        "count": 435,
+        "avgUtility": -2.329436777756943,
+        "avgProbability": 0.0925945478335513,
+        "takeRate": 9.25945478335513,
+        "utilityStdDev": 0.3347092716524383,
+        "components": {
+          "baseUtility": 0.010065554022988508,
+          "priceLinear": -2.434550129283928,
+          "priceSquared": -0.03813520249600121,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.1331830000000009
+        }
+      },
+      {
+        "group": "Male",
+        "count": 986,
+        "avgUtility": -2.344333022130932,
+        "avgProbability": 0.09129990524887646,
+        "takeRate": 9.129990524887646,
+        "utilityStdDev": 0.3317295509228071,
+        "components": {
+          "baseUtility": 0.009523249492900617,
+          "priceLinear": -2.4489040691278254,
+          "priceSquared": -0.03813520249600103,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000177
+        }
+      },
+      {
+        "group": "High Income",
+        "count": 1091,
+        "avgUtility": -2.3507072045653015,
+        "avgProbability": 0.09097294450077704,
+        "takeRate": 9.097294450077705,
+        "utilityStdDev": 0.33942092526660056,
+        "components": {
+          "baseUtility": 0.009383002749770851,
+          "priceLinear": -2.455138004819065,
+          "priceSquared": -0.03813520249600102,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000186
+        }
+      },
+      {
+        "group": "35-54",
+        "count": 1026,
+        "avgUtility": -2.368988965170748,
+        "avgProbability": 0.0893009514022899,
+        "takeRate": 8.93009514022899,
+        "utilityStdDev": 0.3311230812550704,
+        "components": {
+          "baseUtility": 0.008617548732943486,
+          "priceLinear": -2.4726543114076827,
+          "priceSquared": -0.038135202496001025,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.1331830000000018
+        }
+      },
+      {
+        "group": "Female",
+        "count": 1172,
+        "avgUtility": -2.406498810591532,
+        "avgProbability": 0.08621710061983366,
+        "takeRate": 8.621710061983366,
+        "utilityStdDev": 0.32459838037251865,
+        "components": {
+          "baseUtility": 0.007340167235494884,
+          "priceLinear": -2.508886775331023,
+          "priceSquared": -0.038135202496001004,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000188
+        }
+      },
+      {
+        "group": "Low Income",
+        "count": 1067,
+        "avgUtility": -2.406098786929361,
+        "avgProbability": 0.08605123341282987,
+        "takeRate": 8.605123341282987,
+        "utilityStdDev": 0.31624939498066784,
+        "components": {
+          "baseUtility": 0.007268738519212748,
+          "priceLinear": -2.5084153229525734,
+          "priceSquared": -0.03813520249600102,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000183
+        }
+      },
+      {
+        "group": "No Digital News Sub",
+        "count": 1591,
+        "avgUtility": -2.4102940853508192,
+        "avgProbability": 0.08566707786660513,
+        "takeRate": 8.566707786660514,
+        "utilityStdDev": 0.31379830041500945,
+        "components": {
+          "baseUtility": 0.007147226272784416,
+          "priceLinear": -2.5124891091276007,
+          "priceSquared": -0.038135202496000976,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.13318300000000205
+        }
+      },
+      {
+        "group": "55-74",
+        "count": 697,
+        "avgUtility": -2.4218669860041877,
+        "avgProbability": 0.08488772461333298,
+        "takeRate": 8.488772461333298,
+        "utilityStdDev": 0.31777393092980727,
+        "components": {
+          "baseUtility": 0.006847172166427545,
+          "priceLinear": -2.523761955674615,
+          "priceSquared": -0.03813520249600109,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.1331830000000015
+        }
+      },
+      {
+        "group": "Rare CNN User",
+        "count": 584,
+        "avgUtility": -2.4315363146198496,
+        "avgProbability": 0.08387696179113895,
+        "takeRate": 8.387696179113895,
+        "utilityStdDev": 0.3063178470603602,
+        "components": {
+          "baseUtility": 0.006364832191780826,
+          "priceLinear": -2.5329489443156294,
+          "priceSquared": -0.03813520249600113,
+          "readerFeatures": 0,
+          "verticals": 0,
+          "verticalCount": 0.1331830000000013
+        }
+      }
+    ],
+    "componentAnalysis": {
+      "avgPriceEffect": 2.51339677229498,
+      "avgNonPriceEffect": 0.1417434807720353,
+      "priceToNonPriceRatio": 17.732009674132755
+    }
+  }
+}

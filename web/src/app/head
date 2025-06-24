@@ -1,0 +1,9 @@
+// File: src/app/head.tsx
+export default function Head() {
+  return (
+    <>
+      {/* Your other <meta> tags, title, etc. */}
+      <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    </>
+  )
+}

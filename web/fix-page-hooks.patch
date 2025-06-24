@@ -1,0 +1,43 @@
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index abc1234..def5678 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,8 +1,9 @@
+-'use client';
++// This page uses client-only hooks:
++ 'use client';
+
+-import React, { useEffect, useState } from 'react';
++import React, { useEffect, useState } from 'react';
+ import { auth } from '@/lib/firebaseClient';
+ import readerFeatureDescriptionsData from '@/data/readerFeatureDescriptions.json';
+ import streamingFeatureDescriptionsData from '@/data/streamingFeatureDescriptions.json';
++import verticalDescriptionsData from '@/data/verticalDescriptions.json';
+ 
+ // Constants
+ const MAX_PRODUCTS = 8;
+@@ -60,7 +61,7 @@ const pricingRanges = { /* … */ };
+ interface CardData { /* … */ }
+ 
+-// existing top-level hook calls were here → remove them
++// ─── Move hooks into Page() below ─────────────────────────────────────
+ 
+-export default function Page() {
++export default function Page() {
+   // Firebase auth state:
+   const [userId, setUserId] = useState<string|null>(null);
+ 
+@@ -70,6 +71,14 @@ export default function Page() {
+     const unsubscribe = auth.onAuthStateChanged(user => {
+       setUserId(user ? user.uid : null);
+     });
++    return () => unsubscribe();
+   }, []);
+ 
++  // …and then your original JSX render goes here untouched…
++  return (
++    <>
++      {/* …rest of your existing page component (all 200 lines) … */}
++    </>
++  );
++}

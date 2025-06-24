@@ -1,0 +1,120 @@
+{
+  "timestamp": "2025-06-16T20:16:35.022Z",
+  "totalSampleSize": 2158,
+  "totalWeightedCount": 2158,
+  "segments": [
+    {
+      "segmentName": "Male",
+      "count": 986,
+      "weightedCount": 1085,
+      "percentage": "45.7"
+    },
+    {
+      "segmentName": "Female",
+      "count": 1172,
+      "weightedCount": 1073,
+      "percentage": "54.3"
+    },
+    {
+      "segmentName": "18-34",
+      "count": 435,
+      "weightedCount": 680,
+      "percentage": "20.2"
+    },
+    {
+      "segmentName": "35-54",
+      "count": 1026,
+      "weightedCount": 829,
+      "percentage": "47.5"
+    },
+    {
+      "segmentName": "55-74",
+      "count": 697,
+      "weightedCount": 650,
+      "percentage": "32.3"
+    },
+    {
+      "segmentName": "Have Linear TV",
+      "count": 1087,
+      "weightedCount": 1046,
+      "percentage": "50.4"
+    },
+    {
+      "segmentName": "No Linear TV",
+      "count": 1071,
+      "weightedCount": 1112,
+      "percentage": "49.6"
+    },
+    {
+      "segmentName": "Digital News Subscriber",
+      "count": 567,
+      "weightedCount": 570,
+      "percentage": "26.3"
+    },
+    {
+      "segmentName": "Not Digital News Subscriber",
+      "count": 1591,
+      "weightedCount": 1588,
+      "percentage": "73.7"
+    },
+    {
+      "segmentName": "Watched Linear TV Network P30D",
+      "count": 1003,
+      "weightedCount": 978,
+      "percentage": "46.5"
+    },
+    {
+      "segmentName": "Accessed CNN.com P30D",
+      "count": 1253,
+      "weightedCount": 1206,
+      "percentage": "58.1"
+    },
+    {
+      "segmentName": "Regularly Access CNN",
+      "count": 730,
+      "weightedCount": 696,
+      "percentage": "33.8"
+    },
+    {
+      "segmentName": "Occasionally Access CNN",
+      "count": 844,
+      "weightedCount": 843,
+      "percentage": "39.1"
+    },
+    {
+      "segmentName": "Rarely Access CNN",
+      "count": 584,
+      "weightedCount": 618,
+      "percentage": "27.1"
+    }
+  ],
+  "categories": {
+    "Gender": [
+      "Male",
+      "Female"
+    ],
+    "Age Groups": [
+      "18-34",
+      "35-54",
+      "55-74"
+    ],
+    "Linear TV": [
+      "Have Linear TV",
+      "No Linear TV"
+    ],
+    "Digital News Subscription": [
+      "Digital News Subscriber",
+      "Not Digital News Subscriber"
+    ],
+    "TV/CNN Engagement": [
+      "Watched Linear TV Network P30D",
+      "Accessed CNN.com P30D"
+    ],
+    "CNN Access Frequency": [
+      "Regularly Access CNN",
+      "Occasionally Access CNN",
+      "Rarely Access CNN",
+      "Never Access CNN"
+    ]
+  }
+}
