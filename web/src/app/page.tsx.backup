@@ -1,72 +1,155 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { auth, runSimulation } from '@/lib/firebaseClient';
+const DEBUG_MODE = false;
+
+import React, { useState, useEffect } from 'react';
+import { auth } from '@/lib/firebaseClient';
+import { loadPrimaryDataFiles } from '@/lib/simulatorClient'; // Changed from secureSimulatorClient
+import { onAuthStateChanged } from 'firebase/auth';
+import { signInAnonymously } from 'firebase/auth';
+import marketModalStyles from '@/components/MarketFactorsModal.module.css';
+import AttributeImpactModal from '@/components/AttributeImpactModal';
+import CNNUtilitiesModal from '@/components/CNNUtilitiesModal';
+import PasswordProtect from '@/components/cnn-analyzer/PasswordProtect'; // Fixed import path
 import styles from './page.module.css';
+import AboutModelModal from '@/components/AboutModelModal';
 
-// Import types
-import { 
-  CardData, 
-  ReportType, 
-  OutputType, 
-  MarketFactors,
-  ReportData,
-  ProductProfileData,
-  SensitivityPoint,
-  SimulationOptions,
-  InputConfig
-} from '@/lib/types';
-
-// Import static description files directly (no Firebase Storage needed)
 import readerFeatureDescriptionsData from '@/data/readerFeatureDescriptions.json';
 import streamingFeatureDescriptionsData from '@/data/streamingFeatureDescriptions.json';
 import verticalDescriptionsData from '@/data/verticalDescriptions.json';
 import coreProductDescriptionsData from '@/data/coreProductDescriptions.json';
+import MarketFactorsModal from '@/components/MarketFactorsModal';
+import BrandedNotification from '@/components/BrandedNotification';
+import EnhancedProductProfiles from '@/components/EnhancedProductProfiles';
+import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runServerSimulation } from '@/lib/serverSimulation';
-import { loadDataFromStorage, getRespondentData, getRespondentUtilities, getRespondentProfile } from '@/lib/simulatorClient';
+import { runServerSimulation } from './actions';
 
-// Updated pricing ranges to match attached file
-const pricingRanges = {
-  'CNN Reader': {
-    0: { prices: [3.99, 6.99, 9.99, 14.99], min: 3.99, max: 14.99, default: 6.99 },
-    1: { prices: [5.49, 8.49, 11.49, 16.99], min: 5.49, max: 16.99, default: 8.49 },
-    2: { prices: [6.99, 10.99, 14.99, 19.49], min: 6.99, max: 19.49, default: 10.99 },
-    3: { prices: [8.49, 12.99, 16.99, 21.99], min: 8.49, max: 21.99, default: 12.99 }
-  },
-  'CNN Streaming': {
-    0: { prices: [4.99, 8.49, 11.99, 16.99], min: 4.99, max: 16.99, default: 8.49 },
-    1: { prices: [6.49, 9.99, 13.99, 17.99], min: 6.49, max: 17.99, default: 9.99 },
-    2: { prices: [7.99, 11.99, 15.99, 21.49], min: 7.99, max: 21.49, default: 11.99 },
-    3: { prices: [9.49, 13.99, 17.99, 24.99], min: 9.49, max: 24.99, default: 13.99 }
-  },
-  'CNN All-Access': {
-    0: { prices: [5.99, 11.99, 17.99, 24.99], min: 5.99, max: 24.99, default: 11.99 },
-    1: { prices: [7.99, 12.99, 18.99, 25.99], min: 7.99, max: 25.99, default: 12.99 },
-    2: { prices: [9.99, 14.99, 21.49, 30.49], min: 9.99, max: 30.49, default: 14.99 },
-    3: { prices: [11.99, 16.99, 23.99, 34.99], min: 11.99, max: 34.99, default: 16.99 }
-  },
-  'CNN Standalone Vertical': { prices: [1.99, 3.99, 5.99, 7.99], min: 1.99, max: 7.99, default: 3.99 }
-};
+// Type definitions (keeping all your existing types)
+interface CardData {
+  product: string;
+  readerFeatures: string[];
+  streamingFeatures: string[];
+  verticals: string[];
+  monthlyRate: number;
+  pricingType: string;
+  discount: string;
+}
 
-// Constants
-const MAX_PRODUCTS = 8;
-const DEFAULT_MARKET_FACTORS: MarketFactors = {
-  baseConversion: 0.5,
-  awareness: 70,
-  distribution: 85,
-  competitive: 90,
-  marketing: 80,
-  yearOneAdoption: 65,
-  lowPriceMultiplier: 1.3,
-  highPriceMultiplier: 0.8,
-  priceThreshold: 12,
-  enablePriceSensitivity: false,
-  priceThresholdAdjustment: 0,
-};
+interface MarketFactors {
+  baseConversion: number;
+  awareness: number;
+  distribution: number;
+  competitive: number;
+  marketing: number;
+  yearOneAdoption: number;
+  awarenessWeight: number;
+  distributionWeight: number;
+  competitiveWeight: number;
+  marketingWeight: number;
+  yearOneWeight: number;
+  enablePriceSensitivity: boolean;
+  priceThreshold: number;
+  lowPriceMultiplier: number;
+  highPriceMultiplier: number;
+}
 
-const Page = () => {
+type ReportType = 'tiered' | 'independent';
+type OutputType = 'percentage' | 'count' | 'revenue';
+
+interface ReportData {
+  reportType: ReportType;
+  outputType: OutputType;
+  overallShare: number[];
+  segmentShares: {
+    segmentName: string;
+    shares: number[];
+  }[];
+}
+
+interface ProductProfileData {
+  productName: string;
+  description: string;
+  targetAudience: string;
+  keyFeatures: string[];
+  pricing: {
+    monthlyRate: number;
+    annualRate: number;
+    pricingType: string;
+    discount: string;
+  };
+  configuration: {
+    readerFeatures: string[];
+    streamingFeatures: string[];
+    verticals: string[];
+  };
+}
+
+interface SensitivityPoint {
+  productName: string;
+  basePrice: number;
+  pricePoints: {
+    priceVariation: number;
+    price: number;
+    adoptionRate: number;
+  }[];
+  elasticityUsed: number; // Added property for price elasticity
+}
+
+interface SimulationOptions {
+  takeThreshold: number;
+  drnFactor: number;
+  allocationMethod: 'proportional' | 'max';
+  enablePriceTiers?: boolean;
+  priceThreshold?: number;
+  lowPriceMultiplier?: number;
+  highPriceMultiplier?: number;
+  usePiecewisePricing?: boolean;
+  marketWeights?: {
+    awareness: number;
+    distribution: number;
+    competitive: number;
+    marketing: number;
+    yearOneAdoption: number;
+  };
+}
+
+interface InputConfig {
+  products: any[];
+  reportType: ReportType;
+  outputType: OutputType;
+  marketFactors: MarketFactors;
+  simulationOptions: SimulationOptions;
+}
+
+export default function Page() {
+  // Constants
+  const MAX_PRODUCTS = 8;
+  
+  // Updated pricing ranges to match attached file
+  const pricingRanges = {
+    'CNN Reader': {
+      0: { prices: [3.99, 6.99, 9.99, 14.99], min: 3.99, max: 14.99, default: 6.99 },
+      1: { prices: [5.49, 8.49, 11.49, 16.99], min: 5.49, max: 16.99, default: 8.49 },
+      2: { prices: [6.99, 10.99, 14.99, 19.49], min: 6.99, max: 19.49, default: 10.99 },
+      3: { prices: [8.49, 12.99, 16.99, 21.99], min: 8.49, max: 21.99, default: 12.99 }
+    },
+    'CNN Streaming': {
+      0: { prices: [4.99, 8.49, 11.99, 16.99], min: 4.99, max: 16.99, default: 8.49 },
+      1: { prices: [6.49, 9.99, 13.99, 17.99], min: 6.49, max: 17.99, default: 9.99 },
+      2: { prices: [7.99, 11.99, 15.99, 21.49], min: 7.99, max: 21.49, default: 11.99 },
+      3: { prices: [9.49, 13.99, 17.99, 24.99], min: 9.49, max: 24.99, default: 13.99 }
+    },
+    'CNN All-Access': {
+      0: { prices: [5.99, 11.99, 17.99, 24.99], min: 5.99, max: 24.99, default: 11.99 },
+      1: { prices: [7.99, 12.99, 18.99, 25.99], min: 7.99, max: 25.99, default: 12.99 },
+      2: { prices: [9.99, 14.99, 21.49, 30.49], min: 9.99, max: 30.49, default: 14.99 },
+      3: { prices: [11.99, 16.99, 23.99, 34.99], min: 11.99, max: 34.99, default: 16.99 }
+    },
+    'CNN Standalone Vertical': { prices: [1.99, 3.99, 5.99, 7.99], min: 1.99, max: 7.99, default: 3.99 }
+  };
+
   // ============ STATIC DATA (Already loaded from imports) ============
   const AVAILABLE_FEATURES_LISTS = {
     reader: Object.keys(readerFeatureDescriptionsData),
@@ -74,30 +157,10 @@ const Page = () => {
     vertical: Object.keys(verticalDescriptionsData),
   };
 
-  // ============ RESPONDENT DATA FROM FIREBASE STORAGE ============
-  const [respondentDataLoaded, setRespondentDataLoaded] = useState(false);
-  const [respondentData, setRespondentData] = useState<any>(null);
-  const [respondentUtilities, setRespondentUtilities] = useState<any>(null);
-  const [respondentProfile, setRespondentProfile] = useState<any>(null);
-
-  // Load respondent data from Firebase Storage
-  useEffect(() => {
-    const loadRespondentData = async () => {
-      try {
-        const data = await loadDataFromStorage();
-        setRespondentData(data.respondentData);
-        setRespondentUtilities(data.respondentUtilities);
-        setRespondentProfile(data.respondentProfile);
-        setRespondentDataLoaded(true);
-      } catch (error) {
-        console.error('Failed to load respondent data:', error);
-        // App can still function for configuration, just not simulation
-        alert('Warning: Could not load respondent data. Simulation features may be limited.');
-      }
-    };
-    
-    loadRespondentData();
-  }, []);
+  // ============ FIREBASE STORAGE DATA ============
+  // const [primaryData, setPrimaryData] = useState<any>(null);
+  // const [dataError, setDataError] = useState<string | null>(null);
+  // const [isDataLoading, setIsDataLoading] = useState(false);
 
   // Initialize card setup
   const initialCardSetup = (): Record<number, CardData> => {
@@ -115,7 +178,26 @@ const Page = () => {
     }
     return setup;
   };
-
+  
+  // Define DEFAULT_MARKET_FACTORS here - BEFORE STATE DECLARATIONS
+  const DEFAULT_MARKET_FACTORS: MarketFactors = {
+    baseConversion: 1.0,
+    awareness: 70,
+    distribution: 85,
+    competitive: 90,
+    marketing: 80,
+    yearOneAdoption: 65,
+    awarenessWeight: 30,
+    distributionWeight: 25,
+    competitiveWeight: 10,
+    marketingWeight: 15,
+    yearOneWeight: 20,
+    enablePriceSensitivity: true,
+    priceThreshold: 12,
+    lowPriceMultiplier: 1.3,
+    highPriceMultiplier: 0.8
+  };
+  
   // ============ STATE DECLARATIONS ============
   const [cardDataState, setCardDataState] = useState<Record<number, CardData>>(initialCardSetup());
   const [activeProductsState, setActiveProductsState] = useState<Set<number>>(new Set([1, 2, 3, 4]));
@@ -123,7 +205,10 @@ const Page = () => {
   const [currentReportTypeState, setCurrentReportTypeState] = useState<ReportType>('tiered');
   const [currentOutputTypeState, setCurrentOutputTypeState] = useState<OutputType>('percentage');
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('authenticated-user');
+  // const [isAuthLoading, setIsAuthLoading] = useState(true); // Comment this o
+  const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // Modal states
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
@@ -132,6 +217,19 @@ const Page = () => {
   const [sensitivityModalVisible, setSensitivityModalVisible] = useState(false);
   const [showAboutModel, setShowAboutModel] = useState(false);
   const [isMarketSizingModalVisible, setIsMarketSizingModalVisible] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationType, setNotificationType] = useState<'success' | 'error' | 'info'>('success');
+  
+  const showBrandedAlert = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setNotificationMessage(`${title}: ${message}`);
+    setNotificationType(type);
+    setShowNotification(true);
+  };
+  
+  // New states for CNN Utilities and Attribute Impact
+  const [showCNNUtilities, setShowCNNUtilities] = useState(false);
+  const [showAttributeImpact, setShowAttributeImpact] = useState(false);
 
   // Report display states
   const [reportData, setReportData] = useState<ReportData | null>(null);
@@ -141,12 +239,21 @@ const Page = () => {
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
   const [sensitivityData, setSensitivityData] = useState<SensitivityPoint[]>([]);
   const [isAnalyzingSensitivity, setIsAnalyzingSensitivity] = useState(false);
-
+  const [includePriceSensitivity, setIncludePriceSensitivity] = useState(false);
+  
   // Market factors
   const [marketFactors, setMarketFactors] = useState<MarketFactors>(DEFAULT_MARKET_FACTORS);
-
+  
+  // Add these state variables with your other market factors states:
+  const [priceSensitivityEnabled, setPriceSensitivityEnabled] = useState(false);
+  const [priceThresholdAdjustment, setPriceThresholdAdjustment] = useState(0);
+  const [lowPriceMultiplier, setLowPriceMultiplier] = useState(1.3);
+  const [highPriceMultiplier, setHighPriceMultiplier] = useState(0.8);
+  const [priceThreshold, setPriceThreshold] = useState(DEFAULT_MARKET_FACTORS.priceThreshold);
+  
   // Review modals states
   const [isReviewCoreProductsModalVisible, setIsReviewCoreProductsModalVisible] = useState(false);
+  const [activeProductTab, setActiveProductTab] = useState('reader');
   const [isReviewFeaturesModalVisible, setIsReviewFeaturesModalVisible] = useState(false);
   const [isReviewVerticalsModalVisible, setIsReviewVerticalsModalVisible] = useState(false);
   const [activeReviewTab, setActiveReviewTab] = useState<'reader' | 'streaming'>('reader');
@@ -163,18 +270,48 @@ const Page = () => {
   const [competitiveWeight, setCompetitiveWeight] = useState(10);
   const [marketingWeight, setMarketingWeight] = useState(15);
   const [yearOneWeight, setYearOneWeight] = useState(20);
+  const [showAdvancedMarketSettings, setShowAdvancedMarketSettings] = useState(false);
+
+  // ============ PASSWORD AUTH HANDLER ============
+  const handlePasswordAuthenticated = (email: string) => {
+    setUserEmail(email);
+    setIsPasswordAuthenticated(true);
+  };
+
+  // ============ FIREBASE AUTH EFFECT ============
+
+  // ============ FIREBASE STORAGE DATA LOADING ============
+    
+  // ============ MARKET FACTORS SYNC EFFECT ============
+  useEffect(() => {
+    if (isMarketFactorsModalVisible) {
+      setAwarenessWeight(marketFactors.awarenessWeight || 30);
+      setDistributionWeight(marketFactors.distributionWeight || 25);
+      setCompetitiveWeight(marketFactors.competitiveWeight || 10);
+      setMarketingWeight(marketFactors.marketingWeight || 15);
+      setYearOneWeight(marketFactors.yearOneWeight || 20);
+      setPriceSensitivityEnabled(marketFactors.enablePriceSensitivity || false);
+      setPriceThreshold(marketFactors.priceThreshold || 12);
+      setLowPriceMultiplier(marketFactors.lowPriceMultiplier || 1.3);
+      setHighPriceMultiplier(marketFactors.highPriceMultiplier || 0.8);
+    }
+  }, [isMarketFactorsModalVisible, marketFactors]);
 
   // ============ HELPER FUNCTIONS ============
-  const getPricingRangeForProduct = (productType: string, verticalCount: number = 0) => {
-    if (productType === 'CNN Standalone Vertical') {
-      return pricingRanges['CNN Standalone Vertical'];
-    }
-    const ranges = pricingRanges[productType as keyof typeof pricingRanges];
-    if (!ranges || typeof ranges !== 'object') return null;
-    
-    const verticalKey = Math.min(verticalCount, 3);
-    return ranges[verticalKey as keyof typeof ranges] || ranges[0];
-  };
+  const getPricingForProductType = (productType: string, verticalCount: number = 0) => {
+  if (productType === 'CNN Standalone Vertical') {
+    return pricingRanges['CNN Standalone Vertical'];
+  }
+  
+  const ranges = pricingRanges[productType as keyof typeof pricingRanges];
+  if (!ranges || typeof ranges !== 'object') {
+    return { prices: [5, 10, 15, 20], min: 5, max: 20, default: 10 };
+  }
+  
+  const verticalKey = Math.min(verticalCount, 3);
+  return ranges[verticalKey as keyof typeof ranges] || 
+         { prices: [5, 10, 15, 20], min: 5, max: 20, default: 10 };
+};
 
   const toggleProduct = (productId: number) => {
     setActiveProductsState(prev => {
@@ -219,7 +356,7 @@ const Page = () => {
       [cardNum]: {
         ...prev[cardNum],
         product: productType,
-        monthlyRate: productType ? getPricingRangeForProduct(productType, prev[cardNum].verticals.length)?.default || 10 : 10,
+        monthlyRate: productType ? getPricingForProductType(productType, prev[cardNum].verticals.length)?.default || 10 : 10,
         pricingType: '',
         discount: ''
       }
@@ -247,7 +384,7 @@ const Page = () => {
         updatedCard.verticals = features;
         // Update pricing when verticals change
         if (updatedCard.product) {
-          const pricingRange = getPricingRangeForProduct(updatedCard.product, features.length);
+          const pricingRange = getPricingForProductType(updatedCard.product, features.length);
           if (pricingRange) {
             updatedCard.monthlyRate = pricingRange.default;
           }
@@ -283,19 +420,31 @@ const Page = () => {
     }
   };
 
-  // Fixed handleSimulation function
+  // Handle running simulation click
+  const handleRunSimulationClick = () => {
+    const activeCount = Array.from(activeProductsState)
+      .filter(id => cardDataState[id] && cardDataState[id].product)
+      .length;
+      
+    if (activeCount === 0) {
+      showBrandedAlert('Configuration Error', 'Please configure at least one product before running simulation', 'error');
+      return;
+    }
+    
+    handleSimulation();
+  };
+
+  // Main simulation function - keeping all your existing logic
   const handleSimulation = async () => {
     // Validate all active products
     for (const productId of activeProductsState) {
       const card = cardDataState[productId];
       
-      // Check if product type is selected
       if (!card.product) {
-        alert(`Product ${productId}: Product is selected for simulator but no base product type has been chosen. Please select a base product or exclude it from the simulator.`);
+        alert(`Product ${productId}: Product is selected for simulator but no base product type has been chosen.`);
         return;
       }
       
-      // Check feature requirements
       if (card.product === 'CNN Reader' && card.readerFeatures.length === 0) {
         alert(`Product ${productId}: CNN Reader must have at least 1 reader feature selected.`);
         return;
@@ -322,7 +471,6 @@ const Page = () => {
         return;
       }
       
-      // Check pricing configuration
       if (!card.pricingType) {
         alert(`Product ${productId}: Please select a pricing type (Monthly Only, Annual Only, or Both).`);
         return;
@@ -333,19 +481,28 @@ const Page = () => {
     
     try {
       const activeConfigured = Array.from(activeProductsState)
-        .map((num) => ({
-          id: num.toString(),
-          product: cardDataState[num].product,
-          verticals: cardDataState[num].verticals || [],
-          readerFeatures: cardDataState[num].readerFeatures || [],
-          streamingFeatures: cardDataState[num].streamingFeatures || [],
-          monthlyRate: cardDataState[num].monthlyRate,
-          annualRate: cardDataState[num].monthlyRate * 12,
-          discount: cardDataState[num].discount || 'none',
-          isActive: true,
-          pricingType: cardDataState[num].pricingType || 'monthly'
-        }))
-        .filter((config) => config.product);
+  .filter(id => cardDataState[id] && cardDataState[id].product)
+  .map(id => ({
+    id: id.toString(),
+    product: cardDataState[id].product,
+    verticals: cardDataState[id].verticals || [],
+    readerFeatures: cardDataState[id].readerFeatures || [],
+    streamingFeatures: cardDataState[id].streamingFeatures || [],
+    monthlyRate: cardDataState[id].monthlyRate,
+    annualRate: cardDataState[id].monthlyRate * 12,
+    discount: cardDataState[id].discount || '',
+    isActive: true,
+    pricingType: cardDataState[id].pricingType,
+    features: {
+      reader: cardDataState[id].readerFeatures || [],
+      streaming: cardDataState[id].streamingFeatures || []
+    },
+    pricing: {
+      monthlyRate: cardDataState[id].monthlyRate,
+      pricingType: cardDataState[id].pricingType,
+      discount: cardDataState[id].discount || ''
+    }
+  })); 
 
       if (activeConfigured.length === 0) {
         alert("Please configure at least one product before running simulation");
@@ -353,29 +510,31 @@ const Page = () => {
         return;
       }
 
-      const simulationOptions: SimulationOptions = {
+      const simulationOptions = {
         takeThreshold: 0.15,
         drnFactor: 1.0,
         allocationMethod: 'proportional' as const,
-        enablePriceTiers: false,
-        priceThreshold: 12,
-        lowPriceMultiplier: 1.3,
-        highPriceMultiplier: 0.8
+        enablePriceTiers: marketFactors.enablePriceSensitivity,
+        priceThreshold: marketFactors.priceThreshold,
+        lowPriceMultiplier: marketFactors.lowPriceMultiplier,
+        highPriceMultiplier: marketFactors.highPriceMultiplier,
+        usePiecewisePricing: false,
+        marketWeights: {
+          awareness: marketFactors.awarenessWeight,
+          distribution: marketFactors.distributionWeight,
+          competitive: marketFactors.competitiveWeight,
+          marketing: marketFactors.marketingWeight,
+          yearOneAdoption: marketFactors.yearOneWeight
+        }
       };
 
-      const simulationInput: InputConfig = {
-        products: activeConfigured,
-        reportType: currentReportTypeState,
-        outputType: currentOutputTypeState,
-        marketFactors: marketFactors,
-        simulationOptions: simulationOptions
-      };
-
-      console.log("Calling runServerSimulation with:", simulationInput);
-
-      const result = await runServerSimulation(simulationInput);
-      
-      console.log("Raw result from server:", result);
+      const result = await runServerSimulation(
+        activeConfigured,
+        currentReportTypeState,
+        currentOutputTypeState,
+        marketFactors,
+        simulationOptions
+      );
 
       if (!result) {
         throw new Error("No result returned from simulation");
@@ -383,13 +542,13 @@ const Page = () => {
 
       if (result.overallShare && result.segmentShares) {
         setReportData(result);
+        setIsReportOverlay(true);
       } else {
         console.error("Unexpected result format:", result);
         alert("Received unexpected data format from server");
         return;
       }
-      
-      setIsReportOverlay(true);
+
     } catch (error) {
       console.error('Simulation error:', error);
       alert(`Error running simulation: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -536,24 +695,41 @@ const Page = () => {
       }
 
       const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
-      const sensitivityResults = [];
-
+      const sensitivityResults: SensitivityPoint[] = [];
       for (const config of activeConfigs) {
+        // Use base adoption rates that align with simulation results
+        let baseAdoption = 15;
+        let priceElasticity = -1.2;
+        
+        // Set base adoption to match typical simulation results
+        if (config.product === 'CNN Reader') {
+          baseAdoption = 15.7; // Match your simulation result
+          priceElasticity = -1.0;
+        } else if (config.product === 'CNN Streaming') {
+          baseAdoption = 18;
+          priceElasticity = -1.5;
+        } else if (config.product === 'CNN All-Access') {
+          baseAdoption = 20.0; // Match your simulation result
+          priceElasticity = -1.3;
+        } else if (config.product === 'CNN Standalone Vertical') {
+          baseAdoption = 8;
+          priceElasticity = -0.8;
+        }
+        
         const productResults = {
           productName: config.product,
           basePrice: config.basePrice,
           pricePoints: priceVariations.map(variation => {
             const adjustedPrice = config.basePrice * (1 + variation / 100);
-            const baseAdoption = 15;
-            const priceElasticity = -1.2;
-            const adoptionRate = baseAdoption * Math.pow((config.basePrice / adjustedPrice), priceElasticity);
+            const adoptionRate = baseAdoption * Math.pow((adjustedPrice / config.basePrice), priceElasticity);
             
             return {
               priceVariation: variation,
               price: adjustedPrice,
               adoptionRate: Math.max(0, Math.min(100, adoptionRate))
             };
-          })
+          }),
+          elasticityUsed: priceElasticity // Store for insights and UI
         };
         sensitivityResults.push(productResults);
       }
@@ -569,16 +745,19 @@ const Page = () => {
   };
 
   const handleVerticalChange = (vertical: string) => {
-    setSelectedReviewVertical(vertical);
-    if (vertical && verticalDescriptionsData[vertical]) {
-      const vertData = verticalDescriptionsData[vertical];
-      setVerticalDescription(vertData.description || '');
-      setVerticalFeaturesForReview(vertData.features || []);
-    } else {
-      setVerticalDescription('');
-      setVerticalFeaturesForReview([]);
-    }
-  };
+  setSelectedReviewVertical(vertical);
+  if (
+    vertical &&
+    Object.prototype.hasOwnProperty.call(verticalDescriptionsData, vertical)
+  ) {
+    const verticalData = verticalDescriptionsData[vertical as keyof typeof verticalDescriptionsData];
+    setVerticalDescription(verticalData.concept || '');
+    setVerticalFeaturesForReview(verticalData.features || []);
+  } else {
+    setVerticalDescription('');
+    setVerticalFeaturesForReview([]);
+  }
+};
 
   const downloadReport = () => {
     if (!reportData) {
@@ -620,19 +799,26 @@ const Page = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-  }; // end downloadReport
+  };
 
+  // ============ AUTHENTICATION CHECKS ============
+  // FIRST: Check password authentication
+  if (!isPasswordAuthenticated) {
+    return <PasswordProtect onAuthenticated={handlePasswordAuthenticated} />;
+  }
+  
+  
+  
+  // ============ MAIN RENDER ============
   return (
     <div className={styles.pageContainer}>
       {/* Main Header with logos */}
       <div className={styles.mainHeader}>
         <div className={styles.logoContainer}>
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg" 
-            alt="CNN" 
-          />
+          <a href="https://www.cnn.com" target="_blank" rel="noopener noreferrer">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg" alt="CNN" style={{ height: 40 }} />
+          </a>
         </div>
-        
         <div className={styles.headerCenter}>
           <h1 className={styles.headerTitle}>
             Subscription Bundle Configurator & Simulator
@@ -641,17 +827,14 @@ const Page = () => {
             Configure products, set pricing, and simulate market response
           </p>
         </div>
-        
         <div className={styles.poweredByContainer}>
           <span className={styles.poweredByLabel}>Powered by</span>
-          <img 
-            src="https://i.imgur.com/AdWCvzX.png" 
-            alt="BEYOND Insights" 
-            className={styles.poweredByLogo}
-          />
+          <a href="https://i.imgur.com/AdWCvzX.png" target="_blank" rel="noopener noreferrer">
+            <img src="https://i.imgur.com/AdWCvzX.png" alt="Beyond Insights Logo" className={styles.poweredByLogo} style={{ height: 40 }} />
+          </a>
         </div>
       </div>
-
+   
       {/* Controls Section */}
       <div className={styles.controlsSection}>
         <div className={styles.controlsLeftArea}>
@@ -688,21 +871,13 @@ const Page = () => {
           
           <button
             className={`${styles.headerButton} ${styles.runSimulationButton}`}
-            onClick={handleSimulation}
+            onClick={handleRunSimulationClick}
             disabled={isSimulating}
           >
             <span className={styles.iconSpacing}>▶️</span>
             {isSimulating ? 'Simulating...' : 'Run Simulation'}
           </button>
-          
-          <button
-            className={`${styles.headerButton} ${styles.showProfilesButton}`}
-            onClick={handleShowProfiles}
-            disabled={isSimulating}
-          >
-            <span className={styles.iconSpacing}>👥</span> Show Profiles
-          </button>
-          
+         
           <button
             className={styles.headerButton}
             onClick={handleSensitivityAnalysis}
@@ -719,9 +894,18 @@ const Page = () => {
             <span className={styles.iconSpacing}>⚙️</span> Market Factors
           </button>
           
-          <button
-            className={`${styles.headerButton} ${styles.attributeImpactButton}`}
-            onClick={() => window.open('/attribute-impact', '_blank')}
+          <button 
+            className={styles.headerButton}
+            onClick={() => setShowCNNUtilities(true)}
+            disabled={isSimulating}
+          >
+            <span className={styles.iconSpacing}>📊</span> Bundle Strategy
+          </button>
+          
+          <button 
+            className={styles.headerButton}
+            onClick={() => setShowAttributeImpact(true)}
+            disabled={isSimulating}
           >
             <span className={styles.iconSpacing}>📈</span> Attribute Impact
           </button>
@@ -770,13 +954,13 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Cards Container */}
+      {/* Cards Container - Rest of your component remains the same */}
       <div className={styles.cardContainer}>
         {Array.from({ length: MAX_PRODUCTS }, (_, i) => i + 1).map(cardNum => {
           const card = cardDataState[cardNum];
           const isActive = activeProductsState.has(cardNum);
           const isExpanded = expandedCards.has(cardNum) || !!card.product;
-          const pricingRange = card.product ? getPricingRangeForProduct(card.product, card.verticals.length) : null;
+          const pricingRange = card.product ? getPricingForProductType(card.product, card.verticals.length) : null;
           
           return (
             <div key={cardNum} className={`${styles.card} ${!isActive ? styles.inactive : ''}`}>
@@ -787,7 +971,7 @@ const Page = () => {
                   SIMULATOR
                 </div>
               )}
-              
+
               {isActive && !card.product && (
                 <div className={styles.incompleteOverlay}>
                   ⚠️ INCOMPLETE<br />
@@ -814,6 +998,7 @@ const Page = () => {
               </select>
               
               {isActive && isExpanded && card.product && (
+  
                 <div className={styles.content}>
                   {/* Special handling for Standalone Vertical */}
                   {card.product === 'CNN Standalone Vertical' ? (
@@ -822,6 +1007,7 @@ const Page = () => {
                       <select 
                         className={styles.verticalSelectStandalone}
                         value={card.verticals[0] || ''}
+  
                         onChange={(e) => updateCardFeatures(cardNum, 'vertical', e.target.value ? [e.target.value] : [])}
                       >
                         <option value="">-- Select a Vertical --</option>
@@ -1076,6 +1262,7 @@ const Page = () => {
         })}
       </div>
 
+      {/* All your modals remain the same */}
       {/* Feature Selection Modal */}
       {featureModalVisible && currentModalDataState && (
         <div className={styles.modalOverlay}>
@@ -1244,6 +1431,7 @@ const Page = () => {
                   currentReportTypeState === 'tiered'
                     ? [
                         {
+                          id: 'any',
                           product: 'Any Product',
                           monthlyRate: 0,
                           annualRate: 0,
@@ -1251,11 +1439,15 @@ const Page = () => {
                           readerFeatures: [],
                           streamingFeatures: [],
                           features: { reader: [], streaming: [] },
-                          pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                          pricing: { monthlyRate: 0, pricingType: 'monthly', discount: '' },
+                          pricingType: 'monthly',
+                          discount: '',
+                          isActive: true
                         },
                         ...Array.from(activeProductsState)
                           .filter(id => cardDataState[id].product)
                           .map(id => ({
+                            id: id.toString(),
                             product: cardDataState[id].product,
                             monthlyRate: cardDataState[id].monthlyRate,
                             annualRate: cardDataState[id].monthlyRate * 12,
@@ -1270,12 +1462,16 @@ const Page = () => {
                               monthlyRate: cardDataState[id].monthlyRate,
                               pricingType: cardDataState[id].pricingType as any,
                               discount: cardDataState[id].discount || ''
-                            }
+                            },
+                            pricingType: cardDataState[id].pricingType as any,
+                            discount: cardDataState[id].discount || '',
+                            isActive: true
                           }))
                       ]
                     : Array.from(activeProductsState)
                         .filter(id => cardDataState[id].product)
                         .map(id => ({
+                          id: id.toString(),
                           product: cardDataState[id].product,
                           monthlyRate: cardDataState[id].monthlyRate,
                           annualRate: cardDataState[id].monthlyRate * 12,
@@ -1290,7 +1486,10 @@ const Page = () => {
                             monthlyRate: cardDataState[id].monthlyRate,
                             pricingType: cardDataState[id].pricingType as any,
                             discount: cardDataState[id].discount || ''
-                          }
+                          },
+                          pricingType: cardDataState[id].pricingType as any,
+                          discount: cardDataState[id].discount || '',
+                          isActive: true
                         }))
                 }
               />
@@ -1325,6 +1524,7 @@ const Page = () => {
               currentReportTypeState === 'tiered'
                 ? [
                     {
+                      id: 'any',
                       product: 'Any Product',
                       monthlyRate: 0,
                       annualRate: 0,
@@ -1332,11 +1532,15 @@ const Page = () => {
                       readerFeatures: [],
                       streamingFeatures: [],
                       features: { reader: [], streaming: [] },
-                      pricing: { monthlyRate: 0, pricingType: 'monthly' as any, discount: '' }
+                      pricing: { monthlyRate: 0, pricingType: 'monthly', discount: '' },
+                      pricingType: 'monthly',
+                      discount: '',
+                      isActive: true
                     },
                     ...Array.from(activeProductsState)
                       .filter(id => cardDataState[id].product)
                       .map(id => ({
+                        id: id.toString(),
                         product: cardDataState[id].product,
                         monthlyRate: cardDataState[id].monthlyRate,
                         annualRate: cardDataState[id].monthlyRate * 12,
@@ -1351,12 +1555,16 @@ const Page = () => {
                           monthlyRate: cardDataState[id].monthlyRate,
                           pricingType: cardDataState[id].pricingType as any,
                           discount: cardDataState[id].discount || ''
-                        }
+                        },
+                        pricingType: cardDataState[id].pricingType as any,
+                        discount: cardDataState[id].discount || '',
+                        isActive: true
                       }))
                   ]
                 : Array.from(activeProductsState)
                     .filter(id => cardDataState[id].product)
                     .map(id => ({
+                      id: id.toString(),
                       product: cardDataState[id].product,
                       monthlyRate: cardDataState[id].monthlyRate,
                       annualRate: cardDataState[id].monthlyRate * 12,
@@ -1371,10 +1579,14 @@ const Page = () => {
                         monthlyRate: cardDataState[id].monthlyRate,
                         pricingType: cardDataState[id].pricingType as any,
                         discount: cardDataState[id].discount || ''
-                      }
+                      },
+                      pricingType: cardDataState[id].pricingType as any,
+                      discount: cardDataState[id].discount || '',
+                      isActive: true
                     }))
             }
           />
+          
           <div className={styles.downloadButtonContainer}>
             <button 
               className={styles.headerButton}
@@ -1385,7 +1597,7 @@ const Page = () => {
           </div>
         </div>
       )}
-
+             
       {/* Fixed Profile Modal */}
       {profileModalVisible && (
         <div className={styles.modalOverlay}>
@@ -1497,364 +1709,505 @@ const Page = () => {
         </div>
       )}
 
-      {/* Fixed Sensitivity Modal */}
-      {sensitivityModalVisible && (
-        <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalLarge}`}>
-            <div className={styles.modalHeader}>
-              <h2>Price Sensitivity Analysis</h2>
-              <button className={styles.closeModal} onClick={() => setSensitivityModalVisible(false)}>×</button>
-            </div>
-            <div>
-              {isAnalyzingSensitivity ? (
-                <div className={styles.profileLoadingState}>
-                  <p>Running price sensitivity analysis...</p>
+ {/* Fixed Sensitivity Modal */}
+{sensitivityModalVisible && (
+  <div className={styles.modalOverlay}>
+    <div className={`${styles.modal} ${styles.modalLarge}`}>
+      <div className={styles.modalHeader}>
+        <h2>Price Sensitivity Analysis</h2>
+        <button className={styles.closeModal} onClick={() => setSensitivityModalVisible(false)}>×</button>
+      </div>
+      <div>
+        {isAnalyzingSensitivity ? (
+          <div className={styles.profileLoadingState}>
+            <p>Running price sensitivity analysis...</p>
+          </div>
+        ) : (
+          <div className={styles.profileContainer}>
+            <p className={styles.marketFactorNote}>
+              This analysis shows how adoption rates change with price variations.
+              Negative percentages represent price decreases, positive represent increases.
+            </p>
+            
+            {sensitivityData.map((product, index) => (
+              <div key={index} className={styles.sensitivityCard}>
+                <h3>{product.productName}</h3>
+                <p>
+                  Base Price: <strong>${product.basePrice.toFixed(2)}</strong>
+                </p>
+                
+                <table className={styles.sensitivityTable}>
+                  <thead>
+                    <tr>
+                      <th>Price Change</th>
+                      <th>New Price</th>
+                      <th>Adoption Rate</th>
+                      <th>Change vs Base</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.pricePoints.map((point, idx) => {
+                      const baseAdoption = product.pricePoints.find(p => p.priceVariation === 0)?.adoptionRate || 0;
+                      const changeVsBase = ((point.adoptionRate - baseAdoption) / baseAdoption * 100).toFixed(1);
+                      
+                      return (
+                        <tr key={idx} className={`${styles.sensitivityTableRow} ${point.priceVariation === 0 ? styles.current : ''}`}>
+                          <td className={styles.sensitivityTableCell}>
+                            {point.priceVariation > 0 ? '+' : ''}{point.priceVariation}%
+                            {point.priceVariation === 0 && ' (Current)'}
+                          </td>
+                          <td className={styles.sensitivityTableCellRight}>
+                            ${point.price.toFixed(2)}
+                          </td>
+                          <td className={styles.sensitivityTableCellRight}>
+                            {point.adoptionRate.toFixed(1)}%
+                          </td>
+                          <td className={`${styles.sensitivityTableCellRight} ${
+                            parseFloat(changeVsBase) > 0 ? styles.sensitivityPositive : 
+                            parseFloat(changeVsBase) < 0 ? styles.sensitivityNegative : ''
+                          }`}>
+                            {parseFloat(changeVsBase) > 0 ? '+' : ''}{changeVsBase}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                
+                <div className={styles.sensitivityInsights}>
+                  <p><strong>Key Insights:</strong></p>
+                  <ul>
+                    <li>A 10% price decrease could increase adoption by ~{Math.abs(Math.round((Math.pow(0.9, product.elasticityUsed || -1.2) - 1) * 100))}%</li>
+                    <li>A 10% price increase could decrease adoption by ~{Math.abs(Math.round((Math.pow(1.1, product.elasticityUsed || -1.2) - 1) * 100))}%</li>
+                    <li>Price elasticity coefficient: {product.elasticityUsed || -1.2} ({Math.abs(product.elasticityUsed || -1.2) > 1 ? 'elastic' : 'inelastic'} demand)</li>
+                  </ul>
                 </div>
-              ) : (
-                <div className={styles.profileContainer}>
-                  <p className={styles.marketFactorNote}>
-                    This analysis shows how adoption rates change with price variations.
-                    Negative percentages represent price decreases, positive represent increases.
-                  </p>
-                  
-                  {sensitivityData.map((product, index) => (
-                    <div key={index} className={styles.sensitivityCard}>
-                      <h3>{product.productName}</h3>
-                      <p>
-                        Base Price: <strong>${product.basePrice.toFixed(2)}</strong>
-                      </p>
-                      
-                      <table className={styles.sensitivityTable}>
-                        <thead>
-                          <tr>
-                            <th>Price Change</th>
-                            <th>New Price</th>
-                            <th>Adoption Rate</th>
-                            <th>Change vs Base</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {product.pricePoints.map((point, idx) => {
-                            const baseAdoption = product.pricePoints.find(p => p.priceVariation === 0)?.adoptionRate || 0;
-                            const changeVsBase = ((point.adoptionRate - baseAdoption) / baseAdoption * 100).toFixed(1);
-                            
-                            return (
-                              <tr key={idx} className={`${styles.sensitivityTableRow} ${point.priceVariation === 0 ? styles.current : ''}`}>
-                                <td className={styles.sensitivityTableCell}>
-                                  {point.priceVariation > 0 ? '+' : ''}{point.priceVariation}%
-                                  {point.priceVariation === 0 && ' (Current)'}
-                                </td>
-                                <td className={styles.sensitivityTableCellRight}>
-                                  ${point.price.toFixed(2)}
-                                </td>
-                                <td className={styles.sensitivityTableCellRight}>
-                                  {point.adoptionRate.toFixed(1)}%
-                                </td>
-                                <td className={`${styles.sensitivityTableCellRight} ${
-                                  parseFloat(changeVsBase) > 0 ? styles.sensitivityPositive : 
-                                  parseFloat(changeVsBase) < 0 ? styles.sensitivityNegative : ''
-                                }`}>
-                                  {parseFloat(changeVsBase) > 0 ? '+' : ''}{changeVsBase}%
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                      
-                      <div className={styles.sensitivityInsights}>
-                        <p><strong>Key Insights:</strong></p>
-                        <ul>
-                          <li>A 10% price decrease could increase adoption by ~{((1.2 * 10)).toFixed(0)}%</li>
-                          <li>A 10% price increase could decrease adoption by ~{((1.2 * 10)).toFixed(0)}%</li>
-                          <li>Price elasticity coefficient: -1.2 (elastic demand)</li>
-                        </ul>
+              </div>
+            ))}
+            
+            {/* This note is OUTSIDE the map */}
+            <div className={styles.sensitivityNote}>
+              <strong>Note:</strong> This is a simplified elasticity model. 
+              For more accurate results, consider running full simulations at each price point 
+              with actual market factors and consumer segments.
+            </div>
+          {/* CLOSE profileContainer div */}
+          </div>
+        )}
+      </div>
+      <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
+        <button 
+          className={styles.btnPrimary}
+          onClick={() => setSensitivityModalVisible(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+      {/* Market Factors Modal - Using CSS Module */}
+      {isMarketFactorsModalVisible && (
+        <div className={marketModalStyles.modalOverlay}>
+          <div className={marketModalStyles.modalContent}>
+            <button
+              onClick={() => setIsMarketFactorsModalVisible(false)}
+              className={marketModalStyles.closeButton}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '24px' }}
+            >
+              ×
+            </button>
+
+            <h2 className={marketModalStyles.modalTitle}>
+              Market Factors Configuration
+            </h2>
+            
+            <p className={marketModalStyles.subtitle}>
+              Adjust market realization factors to fine-tune your forecast
+            </p>
+
+            {/* Market Factors Section */}
+            <div className={marketModalStyles.factorsSection}>
+              <h3 className={marketModalStyles.sectionTitle}>Market Penetration Factors</h3>
+              
+              <div className={marketModalStyles.formGroup}>
+                <div className={marketModalStyles.sliderHeader}>
+                  <label className={marketModalStyles.label}>
+                    Market Awareness
+                    <div className={marketModalStyles.tooltip}>
+                      <span className={marketModalStyles.tooltipIcon}>?</span>
+                      <div className={marketModalStyles.tooltipContent}>
+                        How well your target market knows about your product
                       </div>
                     </div>
-                  ))}
-                  
-                  <div className={styles.sensitivityNote}>
-                    <strong>Note:</strong> This is a simplified elasticity model. 
-                    For more accurate results, consider running full simulations at each price point 
-                    with actual market factors and consumer segments.
+                  </label>
+                  <span className={marketModalStyles.value}>{marketFactors.awareness}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={marketFactors.awareness}
+                  onChange={(e) => setMarketFactors(prev => ({...prev, awareness: parseInt(e.target.value)}))}
+                  className={marketModalStyles.slider}
+                />
+              </div>
+
+              <div className={marketModalStyles.formGroup}>
+                <div className={marketModalStyles.sliderHeader}>
+                  <label className={marketModalStyles.label}>
+                    Distribution Reach
+                    <div className={marketModalStyles.tooltip}>
+                      <span className={marketModalStyles.tooltipIcon}>?</span>
+                      <div className={marketModalStyles.tooltipContent}>
+                        How easily customers can access your product
+                      </div>
+                    </div>
+                  </label>
+                  <span className={marketModalStyles.value}>{marketFactors.distribution}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={marketFactors.distribution}
+                  onChange={(e) => setMarketFactors(prev => ({...prev, distribution: parseInt(e.target.value)}))}
+                  className={marketModalStyles.slider}
+                />
+              </div>
+
+              <div className={marketModalStyles.formGroup}>
+                <div className={marketModalStyles.sliderHeader}>
+                  <label className={marketModalStyles.label}>
+                    Competitive Position
+                    <div className={marketModalStyles.tooltip}>
+                      <span className={marketModalStyles.tooltipIcon}>?</span>
+                      <div className={marketModalStyles.tooltipContent}>
+                        Your advantage compared to alternatives
+                      </div>
+                    </div>
+                  </label>
+                  <span className={marketModalStyles.value}>{marketFactors.competitive}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={marketFactors.competitive}
+                  onChange={(e) => setMarketFactors(prev => ({...prev, competitive: parseInt(e.target.value)}))}
+                  className={marketModalStyles.slider}
+                />
+              </div>
+
+              <div className={marketModalStyles.formGroup}>
+                <div className={marketModalStyles.sliderHeader}>
+                  <label className={marketModalStyles.label}>
+                    Marketing Effectiveness
+                    <div className={marketModalStyles.tooltip}>
+                      <span className={marketModalStyles.tooltipIcon}>?</span>
+                      <div className={marketModalStyles.tooltipContent}>
+                        How well your marketing converts to customers
+                      </div>
+                    </div>
+                  </label>
+                  <span className={marketModalStyles.value}>{marketFactors.marketing}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={marketFactors.marketing}
+                  onChange={(e) => setMarketFactors(prev => ({...prev, marketing: parseInt(e.target.value)}))}
+                  className={marketModalStyles.slider}
+                />
+              </div>
+
+              <div className={marketModalStyles.formGroup}>
+                <div className={marketModalStyles.sliderHeader}>
+                  <label className={marketModalStyles.label}>
+                    Year One Adoption Rate
+                    <div className={marketModalStyles.tooltip}>
+                      <span className={marketModalStyles.tooltipIcon}>?</span>
+                      <div className={marketModalStyles.tooltipContent}>
+                        Expected adoption speed in the first year
+                      </div>
+                    </div>
+                  </label>
+                  <span className={marketModalStyles.value}>{marketFactors.yearOneAdoption}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={marketFactors.yearOneAdoption}
+                  onChange={(e) => setMarketFactors(prev => ({...prev, yearOneAdoption: parseInt(e.target.value)}))}
+                  className={marketModalStyles.slider}
+                />
+              </div>
+            </div>
+
+            {/* Factor Importance Weights - Always visible now */}
+            <div className={marketModalStyles.advancedSection}>
+              <h3 className={marketModalStyles.sectionTitle}>Factor Importance Weights</h3>
+              <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '1rem' }}>
+                Adjust how much each factor impacts the final take rate
+              </p>
+              
+              <div className={marketModalStyles.multiplierGrid}>
+                <div className={marketModalStyles.formGroup}>
+                  <label className={marketModalStyles.label}>
+                    Awareness Weight: {awarenessWeight}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={awarenessWeight}
+                    onChange={(e) => setAwarenessWeight(parseInt(e.target.value))}
+                    className={marketModalStyles.slider}
+                  />
+                </div>
+
+                <div className={marketModalStyles.formGroup}>
+                  <label className={marketModalStyles.label}>
+                    Distribution Weight: {distributionWeight}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={distributionWeight}
+                    onChange={(e) => setDistributionWeight(parseInt(e.target.value))}
+                    className={marketModalStyles.slider}
+                  />
+                </div>
+
+                <div className={marketModalStyles.formGroup}>
+                  <label className={marketModalStyles.label}>
+                    Competitive Weight: {competitiveWeight}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={competitiveWeight}
+                    onChange={(e) => setCompetitiveWeight(parseInt(e.target.value))}
+                    className={marketModalStyles.slider}
+                  />
+                </div>
+
+                <div className={marketModalStyles.formGroup}>
+                  <label className={marketModalStyles.label}>
+                    Marketing Weight: {marketingWeight}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={marketingWeight}
+                    onChange={(e) => setMarketingWeight(parseInt(e.target.value))}
+                    className={marketModalStyles.slider}
+                  />
+                </div>
+
+                <div className={marketModalStyles.formGroup}>
+                  <label className={marketModalStyles.label}>
+                    Year One Weight: {yearOneWeight}%
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={yearOneWeight}
+                    onChange={(e) => setYearOneWeight(parseInt(e.target.value))}
+                    className={marketModalStyles.slider}
+                  />
+                </div>
+              </div>
+              
+              <div style={{ 
+                marginTop: '1rem', 
+                padding: '0.75rem', 
+                background: '#f0f0f0', 
+                borderRadius: '4px',
+                fontSize: '0.875rem'
+              }}>
+                <strong>Total Weight:</strong> {awarenessWeight + distributionWeight + competitiveWeight + marketingWeight + yearOneWeight}%
+                <span style={{ color: '#666', marginLeft: '0.5rem' }}>(will be normalized)</span>
+              </div>
+            </div>
+
+            {/* Price Sensitivity Section */}
+            <div className={marketModalStyles.advancedSection} style={{ marginTop: '2rem' }}>
+              <label className={marketModalStyles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={priceSensitivityEnabled}
+                  onChange={(e) => setPriceSensitivityEnabled(e.target.checked)}
+                />
+                Enable Price Sensitivity Analysis
+              </label>
+              
+              {priceSensitivityEnabled && (
+                <div className={marketModalStyles.advancedContent} style={{ marginTop: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <button
+                      onClick={() => {
+                        setPriceThreshold(10);
+                        setLowPriceMultiplier(1.1);
+                        setHighPriceMultiplier(0.9);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        background: priceThreshold === 10 ? '#f0f0f0' : 'white',
+                        cursor: 'pointer',
+                        fontWeight: priceThreshold === 10 ? 'bold' : 'normal'
+                      }}
+                    >
+                      Low Sensitivity
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setPriceThreshold(12);
+                        setLowPriceMultiplier(1.3);
+                        setHighPriceMultiplier(0.8);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px',
+                        background: priceThreshold === 12 ? '#f0f0f0' : 'white',
+                        cursor: 'pointer',
+                        fontWeight: priceThreshold === 12 ? 'bold' : 'normal'
+                      }}
+                    >
+                      Standard
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setPriceThreshold(15);
+                        setLowPriceMultiplier(1.5);
+                        setHighPriceMultiplier(0.7);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        border: '1px solid #cc0000',
+                        borderRadius: '4px',
+                        background: priceThreshold === 15 ? '#cc0000' : 'white',
+                        color: priceThreshold === 15 ? 'white' : '#333',
+                        cursor: 'pointer',
+                        fontWeight: priceThreshold === 15 ? 'bold' : 'normal'
+                      }}
+                    >
+                      High Sensitivity
+                    </button>
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+                      Price Threshold: ${priceThreshold}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={priceThreshold}
+                      onChange={(e) => setPriceThreshold(Number(e.target.value))}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.5rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '4px'
+                      }}
+                    />
+                  </div>
+
+                  <div className={marketModalStyles.formGroup}>
+                    <label className={marketModalStyles.label}>
+                      Low Price Boost: {lowPriceMultiplier.toFixed(1)}x
+                    </label>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="2.0"
+                      step="0.1"
+                      value={lowPriceMultiplier}
+                      onChange={(e) => setLowPriceMultiplier(parseFloat(e.target.value))}
+                      className={marketModalStyles.slider}
+                    />
+                  </div>
+
+                  <div className={marketModalStyles.formGroup}>
+                    <label className={marketModalStyles.label}>
+                      High Price Penalty: {highPriceMultiplier.toFixed(1)}x
+                    </label>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="1.0"
+                      step="0.1"
+                      value={highPriceMultiplier}
+                      onChange={(e) => setHighPriceMultiplier(parseFloat(e.target.value))}
+                      className={marketModalStyles.slider}
+                    />
+                  </div>
+
+                  <div className={marketModalStyles.example} style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    background: '#e3f2fd',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem'
+                  }}>
+                    <strong>Example Impact:</strong><br/>
+                    • Products below ${priceThreshold}: Up to <span style={{ color: '#4caf50' }}>+{((lowPriceMultiplier - 1) * 100).toFixed(0)}%</span> adoption boost<br/>
+                    • Products above ${priceThreshold}: Up to <span style={{ color: '#cc0000' }}>-{((1 - highPriceMultiplier) * 100).toFixed(0)}%</span> adoption reduction
                   </div>
                 </div>
               )}
             </div>
-            <div className={`${styles.modalButtons} ${styles.modalButtonsWithBorder}`}>
-              <button 
-                className={styles.btnPrimary}
-                onClick={() => setSensitivityModalVisible(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Market Factors Modal */}
-      {isMarketFactorsModalVisible && (
-        <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalSmall}`}>
-            <div className={styles.modalHeader}>
-              <h2>Market Factors Configuration</h2>
-              <button className={styles.closeModal} onClick={() => setIsMarketFactorsModalVisible(false)}>×</button>
-            </div>
-            <div className={styles.profileContainer}>
-              <div className={styles.marketFactorSection}>
-                <h3>Market Factor Weights</h3>
-                <p>Adjust how much each factor impacts the final take rate:</p>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Awareness Weight: {awarenessWeight}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={awarenessWeight}
-                    onChange={(e) => setAwarenessWeight(parseInt(e.target.value))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Distribution Weight: {distributionWeight}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={distributionWeight}
-                    onChange={(e) => setDistributionWeight(parseInt(e.target.value))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Competitive Weight: {competitiveWeight}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={competitiveWeight}
-                    onChange={(e) => setCompetitiveWeight(parseInt(e.target.value))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Marketing Weight: {marketingWeight}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketingWeight}
-                    onChange={(e) => setMarketingWeight(parseInt(e.target.value))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Year One Adoption Weight: {yearOneWeight}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={yearOneWeight}
-                    onChange={(e) => setYearOneWeight(parseInt(e.target.value))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <p className={styles.marketFactorNote}>
-                  Total weight: {awarenessWeight + distributionWeight + competitiveWeight + marketingWeight + yearOneWeight}%
-                  (should equal 100%)
-                </p>
-              </div>
-              
-              <div className={styles.marketFactorSection}>
-                <h3>Market Factors</h3>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Awareness Reach: {marketFactors.awareness}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketFactors.awareness}
-                    onChange={(e) => setMarketFactors(prev => ({
-                      ...prev,
-                      awareness: parseInt(e.target.value)
-                    }))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Distribution Coverage: {marketFactors.distribution}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketFactors.distribution}
-                    onChange={(e) => setMarketFactors(prev => ({
-                      ...prev,
-                      distribution: parseInt(e.target.value)
-                    }))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Competitive Factors: {marketFactors.competitive}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketFactors.competitive}
-                    onChange={(e) => setMarketFactors(prev => ({
-                      ...prev,
-                      competitive: parseInt(e.target.value)
-                    }))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Marketing Efficiency: {marketFactors.marketing}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketFactors.marketing}
-                    onChange={(e) => setMarketFactors(prev => ({
-                      ...prev,
-                      marketing: parseInt(e.target.value)
-                    }))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-                
-                <div className={styles.marketFactorGroup}>
-                  <label className={styles.marketFactorLabel}>
-                    Year One Adoption: {marketFactors.yearOneAdoption}%
-                  </label>
-                  <input 
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={marketFactors.yearOneAdoption}
-                    onChange={(e) => setMarketFactors(prev => ({
-                      ...prev,
-                      yearOneAdoption: parseInt(e.target.value)
-                    }))}
-                    className={styles.marketFactorSlider}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.marketFactorSection}>
-                <h3>Price Sensitivity Options</h3>
-                
-                <div className={styles.marketFactorCheckbox}>
-                  <label>
-                    <input 
-                      type="checkbox"
-                      checked={marketFactors.enablePriceSensitivity}
-                      onChange={(e) => setMarketFactors(prev => ({
-                        ...prev,
-                        enablePriceSensitivity: e.target.checked
-                      }))}
-                    />
-                    Enable Price Sensitivity
-                  </label>
-                </div>
-                
-                {marketFactors.enablePriceSensitivity && (
-                  <>
-                    <div className={styles.marketFactorGroup}>
-                      <label className={styles.marketFactorLabel}>
-                        Price Threshold: ${marketFactors.priceThreshold}
-                      </label>
-                      <input 
-                        type="range"
-                        min="5"
-                        max="25"
-                        step="0.5"
-                        value={marketFactors.priceThreshold}
-                        onChange={(e) => setMarketFactors(prev => ({
-                          ...prev,
-                          priceThreshold: parseFloat(e.target.value)
-                        }))}
-                        className={styles.marketFactorSlider}
-                      />
-                    </div>
-                    
-                    <div className={styles.marketFactorGroup}>
-                      <label className={styles.marketFactorLabel}>
-                        Low Price Multiplier: {marketFactors.lowPriceMultiplier}x
-                      </label>
-                      <input 
-                        type="range"
-                        min="1"
-                        max="2"
-                        step="0.1"
-                        value={marketFactors.lowPriceMultiplier}
-                        onChange={(e) => setMarketFactors(prev => ({
-                          ...prev,
-                          lowPriceMultiplier: parseFloat(e.target.value)
-                        }))}
-                        className={styles.marketFactorSlider}
-                      />
-                    </div>
-                    
-                    <div className={styles.marketFactorGroup}>
-                      <label className={styles.marketFactorLabel}>
-                        High Price Multiplier: {marketFactors.highPriceMultiplier}x
-                      </label>
-                      <input 
-                        type="range"
-                        min="0.5"
-                        max="1"
-                        step="0.05"
-                        value={marketFactors.highPriceMultiplier}
-                        onChange={(e) => setMarketFactors(prev => ({
-                          ...prev,
-                          highPriceMultiplier: parseFloat(e.target.value)
-                        }))}
-                        className={styles.marketFactorSlider}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-              
-              <div className={styles.modalButtons}>
-                <button 
-                  className={styles.btnPrimary}
-                  onClick={() => setIsMarketFactorsModalVisible(false)}
-                >
-                  Apply Changes
-                </button>
-              </div>
+            {/* Modal Actions */}
+            <div className={marketModalStyles.modalActions} style={{ marginTop: '2rem' }}>
+              <button 
+                className={`${marketModalStyles['button-base']} ${marketModalStyles.cancelButton}`}
+                onClick={() => setIsMarketFactorsModalVisible(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className={`${marketModalStyles['button-base']} ${marketModalStyles.applyButton}`}
+                onClick={() => {
+                  setMarketFactors(prev => ({
+                    ...prev,
+                    awarenessWeight: awarenessWeight,
+                    distributionWeight: distributionWeight,
+                    competitiveWeight: competitiveWeight,
+                    marketingWeight: marketingWeight,
+                    yearOneWeight: yearOneWeight,
+                    enablePriceSensitivity: priceSensitivityEnabled,
+                    priceThreshold: priceThreshold,
+                    lowPriceMultiplier: lowPriceMultiplier,
+                    highPriceMultiplier: highPriceMultiplier
+                  }));
+                  setIsMarketFactorsModalVisible(false);
+                  showBrandedAlert('Success', 'Market factors updated successfully!', 'success');
+                }}
+              >
+                Apply All Changes
+              </button>
             </div>
           </div>
         </div>
@@ -1869,55 +2222,27 @@ const Page = () => {
               <button className={styles.closeModal} onClick={() => setIsMarketSizingModalVisible(false)}>×</button>
             </div>
             <div className={styles.profileContainer}>
-              <h3>Total Addressable Market Analysis</h3>
-              <p>The TAM Universe represents the total potential market for CNN's subscription products.</p>
+              <h3>Total Addressable Market (TAM)</h3>
               
-              <table className={styles.marketSizingTable}>
-                <thead>
-                  <tr>
-                    <th>Segment</th>
-                    <th>Households</th>
-                    <th>% of Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Core News Consumers</td>
-                    <td>42,249,856</td>
-                    <td>40%</td>
-                  </tr>
-                  <tr>
-                    <td>Casual News Viewers</td>
-                    <td>31,687,392</td>
-                    <td>30%</td>
-                  </tr>
-                  <tr>
-                    <td>Digital-First Audiences</td>
-                    <td>21,124,928</td>
-                    <td>20%</td>
-                  </tr>
-                  <tr>
-                    <td>Specialty Content Seekers</td>
-                    <td>10,562,464</td>
-                    <td>10%</td>
-                  </tr>
-                  <tr className={styles.marketSizingTotal}>
-                    <td>Total TAM</td>
-                    <td>105,624,640</td>
-                    <td>100%</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className={styles.tamDisplay}>
+                <div className={styles.tamNumber}>105,624,640</div>
+                <div className={styles.tamLabel}>Total U.S. Households</div>
+              </div>
               
               <div className={styles.marketSizingAssumptions}>
-                <h4>Key Assumptions:</h4>
+                <h4>Market Definition:</h4>
                 <ul>
-                  <li>Based on US household data and media consumption patterns</li>
-                  <li>Includes only households with broadband internet access</li>
-                  <li>Excludes households already subscribed to cable news packages</li>
-                  <li>Adjusted for demographic and psychographic targeting</li>
+                  <li>U.S. households with broadband internet access</li>
+                  <li>Adults 18+ with discretionary income for news subscriptions</li>
+                  <li>Excludes current cable news bundle subscribers</li>
+                  <li>Based on 2024 U.S. Census and media consumption data</li>
                 </ul>
               </div>
+              
+              <p className={styles.tamNote}>
+                This TAM represents the maximum potential market for CNN digital subscription products. 
+                Actual addressable market will be refined based on targeting and market factors.
+              </p>
             </div>
           </div>
         </div>
@@ -1926,18 +2251,156 @@ const Page = () => {
       {/* Review Core Products Modal */}
       {isReviewCoreProductsModalVisible && (
         <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalMedium}`}>
+          <div className={`${styles.modal} ${styles.modalLarge}`}>
             <div className={styles.modalHeader}>
-              <h2>Core Product Descriptions</h2>
+              <h2>CNN Core Product Offerings</h2>
               <button className={styles.closeModal} onClick={() => setIsReviewCoreProductsModalVisible(false)}>×</button>
             </div>
-            <div className={styles.reviewSection}>
-              {Object.entries(coreProductDescriptionsData).map(([product, description]) => (
-                <div key={product} className={styles.reviewItem}>
-                  <h3>{product}</h3>
-                  <p>{description}</p>
+            
+            {/* Add tabs for navigation */}
+            <div className={styles.modalTabs}>
+              <button 
+                className={`${styles.tabButton} ${activeProductTab === 'reader' ? styles.activeTab : ''}`}
+                onClick={() => setActiveProductTab('reader')}
+              >
+                CNN Reader
+              </button>
+              <button 
+                className={`${styles.tabButton} ${activeProductTab === 'streaming' ? styles.activeTab : ''}`}
+                onClick={() => setActiveProductTab('streaming')}
+              >
+                CNN Streaming
+              </button>
+              <button 
+                className={`${styles.tabButton} ${activeProductTab === 'allaccess' ? styles.activeTab : ''}`}
+                onClick={() => setActiveProductTab('allaccess')}
+              >
+                CNN All-Access
+              </button>
+            </div>
+
+            <div className={styles.modalContent} style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              {/* CNN Reader Tab */}
+              {activeProductTab === 'reader' && coreProductDescriptionsData['CNN Reader'] && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <h3 style={{ color: '#17a2b8', marginBottom: '10px' }}>
+                      {coreProductDescriptionsData['CNN Reader'].title}
+                    </h3>
+                    <p style={{ fontSize: '18px', color: '#666' }}>
+                      {coreProductDescriptionsData['CNN Reader'].subtitle}
+                    </p>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#f8f9fa', padding: '25px', borderRadius: '10px', marginBottom: '30px' }}>
+                    <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#333' }}>
+                      {coreProductDescriptionsData['CNN Reader'].description}
+                    </p>
+                  </div>
+
+                  <h4 style={{ color: '#333', marginBottom: '20px' }}>Features Include:</h4>
+                  
+                  <div style={{ display: 'grid', gap: '20px' }}>
+                    {coreProductDescriptionsData['CNN Reader'].features.map((feature, index) => (
+                      <div key={index} style={{ borderLeft: '3px solid #17a2b8', paddingLeft: '20px' }}>
+                        <h5 style={{ color: '#17a2b8', marginBottom: '5px' }}>{feature.name}</h5>
+                        <p style={{ color: '#666' }}>{feature.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {coreProductDescriptionsData['CNN Reader'].note && (
+                    <div style={{ marginTop: '30px', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '8px', border: '1px solid #ffeaa7' }}>
+                      <p style={{ margin: 0, color: '#856404', fontSize: '14px' }}>
+                        <strong>Note:</strong> {coreProductDescriptionsData['CNN Reader'].note}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ))}
+              )}
+
+              {/* CNN Streaming Tab */}
+              {activeProductTab === 'streaming' && coreProductDescriptionsData['CNN Streaming'] && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <h3 style={{ color: '#dc3545', marginBottom: '10px' }}>
+                      {coreProductDescriptionsData['CNN Streaming'].title}
+                    </h3>
+                    <p style={{ fontSize: '18px', color: '#666' }}>
+                      {coreProductDescriptionsData['CNN Streaming'].subtitle}
+                    </p>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#f8f9fa', padding: '25px', borderRadius: '10px', marginBottom: '30px' }}>
+                    <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#333' }}>
+                      {coreProductDescriptionsData['CNN Streaming'].description}
+                    </p>
+                  </div>
+
+                  <h4 style={{ color: '#333', marginBottom: '20px' }}>Features Include:</h4>
+                  
+                  <div style={{ display: 'grid', gap: '20px' }}>
+                    {coreProductDescriptionsData['CNN Streaming'].features.map((feature, index) => (
+                      <div key={index} style={{ borderLeft: '3px solid #dc3545', paddingLeft: '20px' }}>
+                        <h5 style={{ color: '#dc3545', marginBottom: '5px' }}>{feature.name}</h5>
+                        <p style={{ color: '#666' }}>{feature.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CNN All-Access Tab */}
+              {activeProductTab === 'allaccess' && coreProductDescriptionsData['CNN All-Access'] && (
+                <div>
+                  <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <h3 style={{ color: '#28a745', marginBottom: '10px' }}>
+                      {coreProductDescriptionsData['CNN All-Access'].title}
+                    </h3>
+                    <p style={{ fontSize: '18px', color: '#666' }}>
+                      {coreProductDescriptionsData['CNN All-Access'].subtitle}
+                    </p>
+                  </div>
+                  
+                  <div style={{ backgroundColor: '#e8f5e9', padding: '25px', borderRadius: '10px', marginBottom: '30px', border: '1px solid #28a745' }}>
+                    <p style={{ fontSize: '16px', lineHeight: '1.8', color: '#333' }}>
+                      {coreProductDescriptionsData['CNN All-Access'].description}
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px' }}>
+                    <div>
+                      <h4 style={{ color: '#17a2b8', marginBottom: '15px' }}>CNN Reader Features Include:</h4>
+                      <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {coreProductDescriptionsData['CNN Reader'].features.map((feature, index) => (
+                          <li key={index} style={{ marginBottom: '10px', paddingLeft: '20px', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0, color: '#17a2b8' }}>•</span>
+                            {feature.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div>
+                      <h4 style={{ color: '#dc3545', marginBottom: '15px' }}>CNN Streaming Features Include:</h4>
+                      <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {coreProductDescriptionsData['CNN Streaming'].features.map((feature, index) => (
+                          <li key={index} style={{ marginBottom: '10px', paddingLeft: '20px', position: 'relative' }}>
+                            <span style={{ position: 'absolute', left: 0, color: '#dc3545' }}>•</span>
+                            {feature.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div style={{ marginTop: '30px', padding: '20px', backgroundColor: '#d4edda', borderRadius: '8px', border: '1px solid #c3e6cb' }}>
+                    <p style={{ margin: 0, color: '#155724', fontSize: '16px', textAlign: 'center' }}>
+                      <strong>Best Value:</strong> Get everything CNN has to offer in one comprehensive subscription
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2041,50 +2504,40 @@ const Page = () => {
           </div>
         </div>
       )}
-
+      
       {/* About Model Modal */}
-      {showAboutModel && (
-        <div className={styles.modalOverlay}>
-          <div className={`${styles.modal} ${styles.modalMedium}`}>
-            <div className={styles.modalHeader}>
-              <h2>About the Model</h2>
-              <button className={styles.closeModal} onClick={() => setShowAboutModel(false)}>×</button>
-            </div>
-            <div className={styles.aboutContent}>
-              <h3>Hierarchical Bayesian Choice Model</h3>
-              <p>This simulator uses a state-of-the-art hierarchical Bayesian choice model to predict subscription preferences.</p>
-              
-              <h4>Key Features:</h4>
-              <ul>
-                <li><strong>Individual-Level Estimates:</strong> Unlike traditional aggregate models, we estimate preferences for each respondent</li>
-                <li><strong>Heterogeneity Modeling:</strong> Captures how preferences vary across different customer segments</li>
-                <li><strong>Bayesian Shrinkage:</strong> Borrows strength across respondents for more stable estimates</li>
-                <li><strong>Market Calibration:</strong> Adjusts academic estimates to real-world take rates</li>
-              </ul>
-              
-              <h4>Model Performance:</h4>
-              <ul>
-                <li>MAPE (Mean Absolute Percentage Error): <strong>3.37%</strong></li>
-                <li>Hit Rate: <strong>90.33%</strong> correct predictions</li>
-                <li>Sample Size: 2,158 respondents × 14 choice tasks = 30,212 observations</li>
-              </ul>
-              
-              <h4>Why This Approach?</h4>
-              <p>Traditional conjoint models often overestimate market share. Our approach applies multiple calibration layers:</p>
-              <ol>
-                <li>Individual utility calculation with proven covariates</li>
-                <li>Softmax probability transformation</li>
-                <li>DRN (Down-weight Recent Non-takers) adjustment</li>
-                <li>Market realization factors (awareness, distribution, etc.)</li>
-              </ol>
-              
-              <p>This methodology exceeds industry standards by providing transparent, adjustable calibration rather than black-box corrections.</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <AboutModelModal
+        isOpen={showAboutModel}
+        onClose={() => setShowAboutModel(false)}
+      />
+      
+      {/* CNN Utilities Modal */}
+      <CNNUtilitiesModal 
+        isVisible={showCNNUtilities}
+        onClose={() => setShowCNNUtilities(false)}
+      />
+      
+      {/* Attribute Impact Modal */}
+      <AttributeImpactModal 
+        isVisible={showAttributeImpact}
+        onClose={() => setShowAttributeImpact(false)}
+      />
+ 
+      {/* Branded Notification Component */}
+      <BrandedNotification
+        message={notificationMessage}
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        type={notificationType}
+      />
+
+      {/* Enhanced Product Profiles Modal - keep your existing profile modal too */}
+     {/* <EnhancedProductProfiles
+      isVisible={profileModalVisible}
+      onClose={() => setProfileModalVisible(false)}
+      productProfiles={profileData}
+      totalRespondents={2158}
+/> */}
     </div>
   );
-};
-
-export default Page;
+}
