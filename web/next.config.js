@@ -1,8 +1,13 @@
-module.exports = {
-  typescript: {
-    ignoreBuildErrors: true,
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    serverComponentsExternalPackages: ['@firebase/firestore']
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Temporarily show errors in production for debugging
+  productionBrowserSourceMaps: true,
+  env: {
+    SHOW_ERRORS: 'true'
+  }
 }
+
+module.exports = nextConfig
