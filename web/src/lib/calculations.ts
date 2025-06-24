@@ -285,7 +285,8 @@ function calculateUtility(
   if (product.readerFeatures && product.readerFeatures.length > 0) {
     const readerFeatures = p.all_features?.reader || p.features?.reader || {};
     for (const feature of product.readerFeatures) {
-      const featureKey = feature.replace(/\s+/g, '_').replace(/-/g, '');
+      if (!feature || typeof feature !== 'string') continue;
+      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
       if (readerFeatures[featureKey]) {
         featureUtility += readerFeatures[featureKey];
       }
@@ -296,7 +297,8 @@ function calculateUtility(
   if (product.streamingFeatures && product.streamingFeatures.length > 0) {
     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
     for (const feature of product.streamingFeatures) {
-      const featureKey = feature.replace(/\s+/g, '_').replace(/-/g, '');
+      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
+      if (!feature || typeof feature !== 'string') continue;
       if (streamingFeatures[featureKey]) {
         featureUtility += streamingFeatures[featureKey];
       }
