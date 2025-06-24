@@ -3,11 +3,9 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@firebase/firestore']
   },
-  // Temporarily show errors in production for debugging
+  // Temporarily show full errors
   productionBrowserSourceMaps: true,
-  env: {
-    SHOW_ERRORS: 'true'
-  }
+  reactStrictMode: false
 }
 
 module.exports = nextConfig
