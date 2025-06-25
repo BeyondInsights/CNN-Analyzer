@@ -1,3 +1,5 @@
+import { ProductSetupConfig } from '../lib/types';
+
 export const VALID_VERTICALS = [
   'D1_1', 'D1_2', 'D1_3', 'D1_4',
   'D2_1', 'D2_2', 'D2_3', 'D2_4',
@@ -24,7 +26,7 @@ export function validateProductData(products: ProductSetupConfig[]): string[] {
     }
     
     if (product.verticals) {
-      product.verticals.forEach(v => {
+      product.verticals.forEach((v: string) => {
         if (!VALID_VERTICALS.includes(v)) {
           errors.push(`${product.product || 'Unknown product'}: Invalid vertical "${v}"`);
         }

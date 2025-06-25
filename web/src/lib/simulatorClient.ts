@@ -58,16 +58,3 @@ function getDefaultData() {
     coreProducts: {}
   };
 }
-
-export async function runSimulation(params: any) {
-  // For now, return mock data to test deployment
-  return {
-    success: true,
-    timestamp: new Date().toISOString(),
-    summary: {
-      totalRespondents: 1000,
-      activeProducts: params.products?.length || 0,
-      marketFactors: params.marketFactors
-    }
-  };
-}

@@ -26,7 +26,12 @@
         "./src/*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2017",
+    // Better error reporting
+    "pretty": true,
+    "listFiles": false,
+    "noErrorTruncation": true,
+    "preserveWatchOutput": true
   },
   "include": [
     "next-env.d.ts",

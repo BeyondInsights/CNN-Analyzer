@@ -1,3 +1,5 @@
+import { MarketFactors } from '../lib/types';
+
 export function applyMarketFactors(baseRate: number, factors: MarketFactors): number {
   const safeFactors = {
     awareness: Math.max(0, Math.min(100, factors.awareness || 70)),

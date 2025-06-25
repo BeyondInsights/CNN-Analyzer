@@ -1,0 +1,26 @@
+--- a/src/lib/calculations.ts
++++ b/src/lib/calculations.ts
+@@ -285,7 +285,9 @@
+   if (product.readerFeatures && product.readerFeatures.length > 0) {
+     const readerFeatures = p.all_features?.reader || p.features?.reader || {};
+     for (const feature of product.readerFeatures) {
+-      const featureKey = feature.replace(/\s+/g, '_').replace(/-/g, '');
++      if (!feature) continue;  // Skip null/undefined features
++      const featureKey = typeof feature === 'string' 
++        ? feature.replace(/\s+/g, '_').replace(/-/g, '') 
++        : '';
+       if (readerFeatures[featureKey]) {
+         featureUtility += readerFeatures[featureKey];
+       }
+@@ -296,7 +298,9 @@
+   if (product.streamingFeatures && product.streamingFeatures.length > 0) {
+     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
+     for (const feature of product.streamingFeatures) {
+-      const featureKey = feature.replace(/\s+/g, '_').replace(/-/g, '');
++      if (!feature) continue;  // Skip null/undefined features
++      const featureKey = typeof feature === 'string' 
++        ? feature.replace(/\s+/g, '_').replace(/-/g, '') 
++        : '';
+       if (streamingFeatures[featureKey]) {
+         featureUtility += streamingFeatures[featureKey];
+       }

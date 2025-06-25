@@ -12,7 +12,7 @@ const _0x7c9e = httpsCallable(functions, 'verifyPassword');
 export async function verifyUserPassword(email: string, password: string): Promise<boolean> {
   try {
     const result = await _0x7c9e({ email, password });
-    return result.data.success;
+    return (result.data as { success: boolean }).success;
   } catch (error) {
     console.error('Verification failed');
     return false;
@@ -41,9 +41,9 @@ export async function loadPrimaryDataFiles(): Promise<any> {
     ]);
 
     const data = {
-      utilities: utilities.data.data,
-      data: respondent.data.data,
-      profile: profile.data.data
+      utilities: (utilities.data as { data: any }).data,
+      data: (respondent.data as { data: any }).data,
+      profile: (profile.data as { data: any }).data
     };
 
     // Cache for 30 minutes

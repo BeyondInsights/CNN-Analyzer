@@ -35,8 +35,14 @@ const pricingTable = {
     1: { min: 18.0, max: 40.0, default: 29.0 },
     2: { min: 22.0, max: 45.0, default: 33.0 },
     3: { min: 25.0, max: 50.0, default: 37.0 }
+  },
+  'CNN Standalone Vertical': {
+    0: { min: 2.0, max: 8.0, default: 4.0 },
+    1: { min: 2.0, max: 8.0, default: 4.0 },
+    2: { min: 2.0, max: 8.0, default: 4.0 },
+    3: { min: 2.0, max: 8.0, default: 4.0 }
   }
-};
+} as const;
 
 const toBaseProductName = (productType: string): BaseProductName => productType as BaseProductName;
 const toProductSetupConfigName = (baseProduct: BaseProductName | ""): string => baseProduct || "";
@@ -49,31 +55,23 @@ export default function ProductCard({ productConfig }: ProductCardProps) {
   );
   const [currentRate, setCurrentRate] = useState(productConfig.monthlyRate || 10.0);
   const [currentPricingType, setCurrentPricingType] = useState<ProductPricingType>(
-    productConfig.pricingType || 'monthly'
+    (productConfig.pricingType || 'monthly') as ProductPricingType
   );
   const [currentDiscount, setCurrentDiscount] = useState<ProductDiscountType>(
-    productConfig.discount || ''
+    (productConfig.discount || 'none') as ProductDiscountType
   );
   const [isExcluded, setIsExcluded] = useState(productConfig.excluded || false);
   const [currentPricingRange, setCurrentPricingRange] = useState({ min: 5.0, max: 50.0, default: 10.0 });
 
   // Effect to initialize pricing range based on product configuration
   useEffect(() => {
-    if (productConfig?.dynamicPricing && pricingConfig) {
-      if (pricingConfig.tieredPricing) {
-        const tier = pricingConfig.tiers?.[0];
-        if (tier) {
-          setCurrentPricingRange({ min: tier.minPrice, max: tier.maxPrice, default: tier.minPrice });
-        } else {
-          setCurrentPricingRange({ min: pricingConfig.minPrice, max: pricingConfig.maxPrice, default: pricingConfig.minPrice });
-        }
-      } else {
-        setCurrentPricingRange({ min: pricingConfig.minPrice, max: pricingConfig.maxPrice, default: pricingConfig.minPrice });
-      }
-    } else if (pricingConfig) {
-      setCurrentPricingRange({ min: pricingConfig.minPrice, max: pricingConfig.maxPrice, default: pricingConfig.minPrice });
-    }
-  }, [productConfig, pricingConfig]);
+    // Set default pricing range
+    setCurrentPricingRange({ 
+      min: 5.0, 
+      max: 50.0, 
+      default: currentRate || 10.0 
+    });
+  }, [productConfig, pricingConfig, currentRate]);
 
   const handleBaseProductChange = (value: BaseProductName | "") => {
     setCurrentBaseProduct(value);

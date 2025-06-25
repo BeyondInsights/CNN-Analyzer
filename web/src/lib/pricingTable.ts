@@ -4,7 +4,7 @@ export type BaseProductName =
   | "CNN Reader"
   | "CNN Streaming"
   | "CNN All-Access"
-  | "Standalone Vertical";
+  | "CNN Standalone Vertical";
 
 export interface PriceRange {
   min: number;
@@ -34,7 +34,7 @@ export const pricingTable: Record<BaseProductName, Record<0 | 1 | 2 | 3, PriceRa
     3: { min: 11.99, max: 34.99, default: 16.99 },
   },
 
-  "Standalone Vertical": {
+  "CNN Standalone Vertical": {
     0: { min: 1.99,  max: 7.99,  default: 3.99  },
     1: { min: 1.99,  max: 7.99,  default: 3.99  },
     2: { min: 1.99,  max: 7.99,  default: 3.99  },

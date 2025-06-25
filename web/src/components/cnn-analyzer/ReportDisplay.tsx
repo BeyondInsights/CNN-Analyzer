@@ -36,7 +36,7 @@ export default function ReportDisplay({ reportData, reportType, outputType }: Re
     annualPercentages = []
   } = reportData;
   
-  const productNames = products.map(p => p.product || p.name) || ['CNN Reader', 'CNN All-Access'];
+  const productNames = products.map((p: any) => p.product || p.name) || ['CNN Reader', 'CNN All-Access'];
   const isTiered = reportType === 'tiered';
   
   // Calculate Any Product from individual products
@@ -140,7 +140,7 @@ export default function ReportDisplay({ reportData, reportType, outputType }: Re
                 Any Product
               </TableHead>
             )}
-            {productNames.map((name, i) => (
+            {productNames.map((name: string, i: number) => (
               <TableHead key={i} className="min-w-[200px] text-center font-bold text-gray-900 text-base uppercase tracking-wider py-6">
                 {name}
               </TableHead>
@@ -183,7 +183,7 @@ export default function ReportDisplay({ reportData, reportType, outputType }: Re
           <TableRow className="bg-gray-50">
             <TableCell className="font-semibold sticky left-0 bg-gray-50 z-10 py-5 px-8">Chose Monthly</TableCell>
             {isTiered && <TableCell className="text-center py-5">--</TableCell>}
-            {monthlyPcts.map((pct, i) => (
+            {monthlyPcts.map((pct: number, i: number) => (
               <TableCell key={i} className="text-center py-5">{formatValue(pct)}</TableCell>
             ))}
           </TableRow>
@@ -191,7 +191,7 @@ export default function ReportDisplay({ reportData, reportType, outputType }: Re
           <TableRow className="bg-gray-50 border-b-4 border-gray-300">
             <TableCell className="font-semibold sticky left-0 bg-gray-50 z-10 py-5 px-8">Chose Annual (50% off)</TableCell>
             {isTiered && <TableCell className="text-center py-5">--</TableCell>}
-            {annualPcts.map((pct, i) => (
+            {annualPcts.map((pct: number, i: number) => (
               <TableCell key={i} className="text-center py-5">{formatValue(pct)}</TableCell>
             ))}
           </TableRow>

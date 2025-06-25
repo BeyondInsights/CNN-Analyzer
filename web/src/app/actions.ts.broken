@@ -1,5 +1,7 @@
 'use server';
 
+import fs from 'fs/promises';
+import path from 'path';
 import type { 
   ProductSetupConfig, 
   ReportData, 
@@ -11,11 +13,13 @@ import type {
   MarketFactors,
   SimulationOptions 
 } from '@/lib/types';
+import { adminStorage } from '@/lib/firebaseAdmin';
 import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
-import fs from 'fs/promises';
-import path from 'path';
+import { performSimulation } from '@/lib/calculations';
 
-// Interface definitions
+// Copy all the interfaces from backup (lines 20-73)
+
+// Interface definitions moved to top
 interface RespondentUtility {
   Respondent_ID: string;
   Weight: number;
@@ -69,9 +73,8 @@ const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; wi
   '9': { name: "$300,000 or more", lower: 300000, upper: Infinity, width: Infinity }
 };
 
+// Helper function to load JSON data files
 async function loadJsonData<T>(filename: string): Promise<T> {
-  // For testing: load from local data directory
-  // TODO: In production, load from Firebase Storage using loadDataFromStorage()
   const filePath = path.join(process.cwd(), 'src', 'data', filename);
   try {
     const fileContents = await fs.readFile(filePath, 'utf8');
@@ -82,33 +85,28 @@ async function loadJsonData<T>(filename: string): Promise<T> {
   }
 }
 
-// REAL IMPLEMENTATION
-export async function runServerSimulation(
+// Main function - renamed to match what page.tsx expects
+export async function runSimulation(
   activeProducts: ProductSetupConfig[],
   reportType: ReportType,
   outputType: OutputType,
   marketFactors: MarketFactors,
   simulationOptions: SimulationOptions
-): Promise<ReportData | null> {
-  console.log(
-    '[actions.ts] Real runServerSimulation called with:',
-    activeProducts.length,
-    reportType,
-    outputType,
-    marketFactors,
-    simulationOptions
-  );
+): Promise<ReportData> {
+  
+  const bucket = adminStorage.bucket();
   
   try {
-    if (!activeProducts || activeProducts.length === 0) {
-      console.error('No active products provided');
-      return null;
-    }
-
-    // Load the actual respondent data
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
-    const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
-    const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
+    // Load all data from Firebase Storage
+    const [respondentUtilities] = await bucket.file('data/c9d4e7f1.json').download();
+    const [modelParams] = await bucket.file('data/modelParameters.json').download();
+    const [demographics] = await bucket.file('data/demographics.json').download();
+    
+    const respondentUtilitiesData = JSON.parse(respondentUtilities.toString());
+    const modelParametersList = JSON.parse(modelParams.toString());
+    const demographicsData = JSON.parse(demographics.toString());
+    
+    // Copy the rest of the logic from backup starting around line 115
     
     // Convert model parameters to a map
     const modelParams: Record<string, number> = {};
@@ -212,10 +210,9 @@ export async function runServerSimulation(
         const prob = probs.get(product.product) || 0;
         const weight = respondent.Weight || 1;
         
-        // Apply DRN factor from drnRates data
-        const drnData = await loadJsonData<any[]>('drnRates.json');
-        const drnRecord = drnData.find((d: any) => d.Respondent_ID === respondent.Respondent_ID);
-        const drnFactor = drnRecord?.DRN_Composite || drnRecord?.DRN_Base || 0.85;
+        // Apply DRN factor from drnRates
+        const drnData = drnRates.find((d: any) => d.Respondent_ID === respondent.Respondent_ID);
+        const drnFactor = drnData?.DRN_Composite || drnData?.DRN_Base || 0.85;
         
         const adjustedProb = prob * drnFactor;
         totalWeightedProb += adjustedProb * weight;
@@ -333,8 +330,8 @@ export async function runServerSimulation(
     };
     
   } catch (error) {
-    console.error('[actions.ts] Error in runServerSimulation:', error);
-    throw error;
+    console.error('Simulation error:', error);
+    throw new Error(`Simulation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -509,7 +506,8 @@ export async function getProductProfile(productConfig: ProductSetupConfig): Prom
         annualRate: productConfig.annualRate,
         pricingType: productConfig.pricingType,
         discount: productConfig.discount
-      }
+      },
+      profileMetrics: profileMetrics
     };
     
     return productProfileData;
@@ -576,26 +574,23 @@ export async function runPriceSensitivityAnalysis(
 
     const sim = await runServerSimulation(
       [tempConfig],
-      'tiered',
+      'bundle',
       'percentage',
       marketFactors,
       simulationOptions
     );
 
-    const adoptionRate = sim ? sim.overallShare[0] : 0;
-    const priceVariation = ((price - baseRate) / baseRate) * 100;
-
     results.push({
-      priceVariation: priceVariation,
-      testPrice: Number(price.toFixed(2)),
-      adoptionRate: Number(Math.max(0, Math.min(100, adoptionRate)).toFixed(1)),
-      adoptionImpact: `${priceVariation > 0 ? '+' : ''}${priceVariation.toFixed(1)}%`,
-      sharePercentage: Number(Math.max(0, Math.min(100, adoptionRate)).toFixed(1)),
-      estimatedRevenue: Math.round(Math.max(0, Math.min(100, adoptionRate)) / 100 * 105624640 * price * 12),
-      elasticityUsed: -1.2 // Default elasticity
+      productName: productConfig.product,
+      basePrice: baseRate,
+      pricePoints: [{
+        priceVariation: ((price - baseRate) / baseRate) * 100,
+        price: price,
+        adoptionRate: sim ? sim.overallShare[0] : 0
+      }]
     });
   }
-  return results.sort((a, b) => a.priceVariation - b.priceVariation);
+  return results;
 }
 
 export async function testServerAction(): Promise<{ message: string }> {

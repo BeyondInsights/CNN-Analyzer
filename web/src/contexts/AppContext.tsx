@@ -2,8 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { ProductSetupConfig, MarketFactors, SimulationOptions, ReportData, PricingConfig } from '@/lib/types';
-import componentsJson from '../../components.json'; // Adjusted path
+import type { ProductSetupConfig, MarketFactors, SimulationOptions, ReportData, PricingConfig as LibPricingConfig, ReportType, OutputType } from '@/lib/types';
 import { INITIAL_PRODUCT_CONFIG } from '@/lib/constants'; // Import for default config
 
 // Types for clarity
@@ -139,8 +138,13 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
 
   const updateProductSetupConfig = (slot: number, data: Partial<ProductSetupConfig>) => {
     setProductSetupConfigsActual(prev => {
-      const currentConfig = prev[slot] || INITIAL_PRODUCT_CONFIG(slot);
-      const updatedConfig = { ...currentConfig, ...data, id: slot };
+      const currentConfig = prev[slot] || { 
+        ...INITIAL_PRODUCT_CONFIG, 
+        id: slot.toString(),
+        features: { reader: [], streaming: [] },
+        pricing: { monthlyRate: 10, pricingType: 'monthly', discount: 'none' }
+      };
+      const updatedConfig = { ...currentConfig, ...data, id: slot.toString() };
       if (data.product === '') {
         updatedConfig.selectedReaderFeatures = [];
         updatedConfig.selectedStreamingFeatures = [];
@@ -155,8 +159,13 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
 
   const appContextAddSelectedFeaturesToProduct = (productId: number, featureType: 'reader' | 'streaming' | 'vertical', features: string[]) => {
     setProductSetupConfigsActual(prev => {
-      const currentConfig = prev[productId] || INITIAL_PRODUCT_CONFIG(productId);
-      const updatedConfig = { ...currentConfig, id: productId };
+      const currentConfig = prev[productId] || { 
+        ...INITIAL_PRODUCT_CONFIG, 
+        id: productId.toString(),
+        features: { reader: [], streaming: [] },
+        pricing: { monthlyRate: 10, pricingType: 'monthly', discount: 'none' }
+      };
+      const updatedConfig = { ...currentConfig, id: productId.toString() };
 
       if (featureType === 'reader') {
         updatedConfig.selectedReaderFeatures = features;
@@ -174,25 +183,20 @@ export function AppContextProvider({ children }: AppContextProviderProps) {
   };
 
   useEffect(() => {
-    if (componentsJson && typeof componentsJson === 'object') {
-      if (componentsJson.pricingConfig) {
-        setPricingConfig(componentsJson.pricingConfig as PricingConfig);
-      }
-      if (componentsJson.featuresList) {
-        setFeaturesList(componentsJson.featuresList as FeaturesList);
-      }
-      if (componentsJson.uiTemplates) {
-        setUiTemplates(componentsJson.uiTemplates as UiTemplates);
-      }
-    } else {
-      if (DEBUG_MODE) console.warn("components.json is missing or not an object. Using default context values.");
-    }
+    // Initialize default config values
+    if (DEBUG_MODE) console.log("Initializing default context values.");
+    
     setProductSetupConfigsActual(prev => {
         const newConfigs = {...prev};
         let changed = false;
         for (let i = 1; i <= 8; i++) {
             if (!newConfigs[i]) {
-                newConfigs[i] = INITIAL_PRODUCT_CONFIG(i);
+                newConfigs[i] = { 
+                  ...INITIAL_PRODUCT_CONFIG, 
+                  id: i.toString(),
+                  features: { reader: [], streaming: [] },
+                  pricing: { monthlyRate: 10, pricingType: 'monthly', discount: 'none' }
+                };
                 changed = true;
             }
         }

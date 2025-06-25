@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebaseClient';
 import { onAuthStateChanged } from 'firebase/auth';
 import { signInAnonymously } from 'firebase/auth';
+import { ReportType, OutputType, ReportData, ProductProfileData, SensitivityPoint, ProductSensitivityData, SimulationOptions, MarketFactors } from '@/lib/types';
 import marketModalStyles from '@/components/MarketFactorsModal.module.css';
 import AttributeImpactModal from '@/components/AttributeImpactModal';
 import CNNUtilitiesModal from '@/components/CNNUtilitiesModal';
@@ -23,7 +24,7 @@ import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runSimulation } from './actions';
+import { runServerSimulation } from './actions';
 
 // Type definitions (keeping all your existing types)
 interface CardData {
@@ -34,84 +35,6 @@ interface CardData {
   monthlyRate: number;
   pricingType: string;
   discount: string;
-}
-
-interface MarketFactors {
-  baseConversion: number;
-  awareness: number;
-  distribution: number;
-  competitive: number;
-  marketing: number;
-  yearOneAdoption: number;
-  awarenessWeight: number;
-  distributionWeight: number;
-  competitiveWeight: number;
-  marketingWeight: number;
-  yearOneWeight: number;
-  enablePriceSensitivity: boolean;
-  priceThreshold: number;
-  lowPriceMultiplier: number;
-  highPriceMultiplier: number;
-}
-
-type ReportType = 'tiered' | 'independent';
-type OutputType = 'percentage' | 'count' | 'revenue';
-
-interface ReportData {
-  reportType: ReportType;
-  outputType: OutputType;
-  overallShare: number[];
-  segmentShares: {
-    segmentName: string;
-    shares: number[];
-  }[];
-}
-
-interface ProductProfileData {
-  productName: string;
-  description: string;
-  targetAudience: string;
-  keyFeatures: string[];
-  pricing: {
-    monthlyRate: number;
-    annualRate: number;
-    pricingType: string;
-    discount: string;
-  };
-  configuration: {
-    readerFeatures: string[];
-    streamingFeatures: string[];
-    verticals: string[];
-  };
-}
-
-interface SensitivityPoint {
-  productName: string;
-  basePrice: number;
-  pricePoints: {
-    priceVariation: number;
-    price: number;
-    adoptionRate: number;
-  }[];
-  elasticityUsed: number; // Added property for price elasticity
-}
-
-interface SimulationOptions {
-  takeThreshold: number;
-  drnFactor: number;
-  allocationMethod: 'proportional' | 'max';
-  enablePriceTiers?: boolean;
-  priceThreshold?: number;
-  lowPriceMultiplier?: number;
-  highPriceMultiplier?: number;
-  usePiecewisePricing?: boolean;
-  marketWeights?: {
-    awareness: number;
-    distribution: number;
-    competitive: number;
-    marketing: number;
-    yearOneAdoption: number;
-  };
 }
 
 interface InputConfig {
@@ -236,7 +159,7 @@ export default function Page() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [profileData, setProfileData] = useState<ProductProfileData[]>([]);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
-  const [sensitivityData, setSensitivityData] = useState<SensitivityPoint[]>([]);
+  const [sensitivityData, setSensitivityData] = useState<ProductSensitivityData[]>([]);
   const [isAnalyzingSensitivity, setIsAnalyzingSensitivity] = useState(false);
   const [includePriceSensitivity, setIncludePriceSensitivity] = useState(false);
   
@@ -519,37 +442,30 @@ export default function Page() {
         highPriceMultiplier: marketFactors.highPriceMultiplier,
         usePiecewisePricing: false,
         marketWeights: {
-          awareness: marketFactors.awarenessWeight,
-          distribution: marketFactors.distributionWeight,
-          competitive: marketFactors.competitiveWeight,
-          marketing: marketFactors.marketingWeight,
-          yearOneAdoption: marketFactors.yearOneWeight
+          awareness: marketFactors.awarenessWeight || 30,
+          distribution: marketFactors.distributionWeight || 25,
+          competitive: marketFactors.competitiveWeight || 10,
+          marketing: marketFactors.marketingWeight || 15,
+          yearOneAdoption: marketFactors.yearOneWeight || 20
         }
       };
 
-      const result = await runSimulation({
-        products: activeConfigured,
-        reportType: currentReportTypeState,
-        outputType: currentOutputTypeState,
-        marketFactors: marketFactors,
-        simulationOptions: simulationOptions
-      });
+      const result = await runServerSimulation(
+        activeConfigured,
+        currentReportTypeState,
+        currentOutputTypeState,
+        marketFactors,
+        simulationOptions
+      );
 
       if (!result) {
         throw new Error("No result returned from simulation");
       }
 
-      if (result && result.takeRates) {
-        const mappedResult = {
-          overallShare: result.takeRates.map(tr => tr.adjustedTakeRate),
-          segmentShares: Object.entries(result.segmentResults || {}).map(([name, data]) => ({
-            segmentName: name,
-            shares: data.takeRates.map(tr => tr.adjustedTakeRate)
-          }))
-        };
-        setReportData(mappedResult);
+      if (result) {
+        setReportData(result);
         setIsReportOverlay(true);
-      } else {
+      }
     } catch (error) {
       console.error('Simulation error:', error);
       alert(`Error running simulation: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -696,7 +612,7 @@ export default function Page() {
       }
 
       const priceVariations = [-30, -20, -10, 0, 10, 20, 30];
-      const sensitivityResults: SensitivityPoint[] = [];
+      const sensitivityResults: ProductSensitivityData[] = [];
       for (const config of activeConfigs) {
         // Use base adoption rates that align with simulation results
         let baseAdoption = 15;

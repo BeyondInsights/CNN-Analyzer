@@ -31,10 +31,15 @@ export interface ProductSetupConfig {
   pricingType: string;
   discount: string;
   isActive: boolean;
+  excluded?: boolean;
+  selectedReaderFeatures?: string[];
+  selectedStreamingFeatures?: string[];
+  selectedVerticals?: string[];
+  dynamicPricing?: boolean;
 }
 
 // Report Types
-export type ReportType = 'tiered' | 'independent' | 'bundle';
+export type ReportType = 'tiered' | 'independent' | 'bundle' | 'matrix';
 export type OutputType = 'percentage' | 'count' | 'revenue';
 
 export interface ReportDataSegment {
@@ -47,6 +52,10 @@ export interface ReportData {
   outputType: OutputType;
   overallShare: number[];
   segmentShares: ReportDataSegment[];
+  products?: any[];
+  anyProductShare?: number;
+  monthlyPercentages?: number[];
+  annualPercentages?: number[];
   metadata?: {
     runDate: string;
     products: number;
@@ -220,7 +229,18 @@ export interface SensitivityPoint {
   adoptionImpact: string;
   sharePercentage: number;
   estimatedRevenue: number;
-  elasticityUsed?: number;  // Add this if it's not there
+  elasticityUsed: number;
+}
+
+export interface ProductSensitivityData {
+  productName: string;
+  basePrice: number;
+  pricePoints: {
+    priceVariation: number;
+    price: number;
+    adoptionRate: number;
+  }[];
+  elasticityUsed: number;
 }
 
 // Report Results
@@ -279,30 +299,10 @@ export interface RespondentWithParams {
     };
   };
 }
-// Auto-added types
-export type PricingType = "monthly" | "annual" | "both";
-export type DiscountType = "none" | "student" | "senior" | "bundle";
-export type BaseProductName = "CNN Reader" | "CNN Streaming" | "CNN All-Access" | "CNN Standalone Vertical";
-export type ProductPricingType = PricingType;
-export type ProductDiscountType = DiscountType;
-export type PricingConfig = { monthlyRate: number; annualRate: number; pricingType: PricingType; discount: DiscountType; };
 
-// Auto-added types
+// Type definitions
 export type PricingType = 'monthly' | 'annual' | 'both';
-export type DiscountType = 'none' | 'student' | 'senior' | 'bundle';
-export type BaseProductName = 'CNN Reader' | 'CNN Streaming' | 'CNN All-Access' | 'CNN Standalone Vertical';
-export type ProductPricingType = PricingType;
-export type ProductDiscountType = DiscountType;
-export type PricingConfig = {
-  monthlyRate: number;
-  annualRate: number;
-  pricingType: PricingType;
-  discount: DiscountType;
-};
-
-// Auto-added missing type exports
-export type PricingType = 'monthly' | 'annual' | 'both';
-export type DiscountType = 'none' | 'student' | 'senior' | 'bundle';
+export type DiscountType = 'none' | 'student' | 'senior' | 'bundle' | 'free' | '30' | '50' | '';
 export type BaseProductName = 'CNN Reader' | 'CNN Streaming' | 'CNN All-Access' | 'CNN Standalone Vertical';
 export type ProductPricingType = PricingType;
 export type ProductDiscountType = DiscountType;

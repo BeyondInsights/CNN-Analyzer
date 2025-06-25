@@ -26,14 +26,18 @@ export default function PricingConfig({ productConfig, onUpdate }: PricingConfig
     if (product) {
       let productSpecificRangeData;
       if (product === 'CNN Standalone Vertical') {
-        productSpecificRangeData = PRICING_RANGES[product];
+        // For standalone vertical, all vertical counts use the same range
+        productSpecificRangeData = PRICING_RANGES[product][0];
       } else {
         // Use verticals here
         const verticalCount = verticals.length;
-        productSpecificRangeData = PRICING_RANGES[product]?.[verticalCount] || PRICING_RANGES[product]?.[0];
+        const productRanges = PRICING_RANGES[product as keyof typeof PRICING_RANGES];
+        if (productRanges && typeof productRanges === 'object' && !Array.isArray(productRanges)) {
+          productSpecificRangeData = (productRanges as any)[verticalCount] || (productRanges as any)[0];
+        }
       }
 
-      if (typeof productSpecificRangeData === 'object' && productSpecificRangeData !== null) {
+      if (productSpecificRangeData && typeof productSpecificRangeData === 'object' && 'min' in productSpecificRangeData) {
         if (typeof productSpecificRangeData.min === 'number') {
           calculatedRange.min = productSpecificRangeData.min;
         }
@@ -43,7 +47,7 @@ export default function PricingConfig({ productConfig, onUpdate }: PricingConfig
         if (typeof productSpecificRangeData.default === 'number') {
           calculatedRange.default = productSpecificRangeData.default;
         }
-        if (Array.isArray(productSpecificRangeData.prices)) {
+        if ('prices' in productSpecificRangeData && Array.isArray(productSpecificRangeData.prices)) {
           calculatedRange.prices = productSpecificRangeData.prices;
         }
       }
