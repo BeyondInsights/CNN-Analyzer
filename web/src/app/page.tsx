@@ -3,8 +3,6 @@ const DEBUG_MODE = false;
 
 import React, { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebaseClient';
-import { onAuthStateChanged } from 'firebase/auth';
-import { signInAnonymously } from 'firebase/auth';
 import { ReportType, OutputType, ReportData, ProductProfileData, SensitivityPoint, ProductSensitivityData, SimulationOptions, MarketFactors } from '@/lib/types';
 import marketModalStyles from '@/components/MarketFactorsModal.module.css';
 import AttributeImpactModal from '@/components/AttributeImpactModal';
@@ -24,7 +22,7 @@ import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runServerSimulation } from './actions';
+import { runSecureSimulation } from '@/lib/secureSimulationHttp';
 
 // Type definitions (keeping all your existing types)
 interface CardData {
@@ -128,9 +126,10 @@ export default function Page() {
   const [currentOutputTypeState, setCurrentOutputTypeState] = useState<OutputType>('percentage');
   const [expandedCards, setExpandedCards] = useState<Set<number>>(new Set());
   const [userId, setUserId] = useState<string>('authenticated-user');
-  // const [isAuthLoading, setIsAuthLoading] = useState(true); // Comment this o
   const [isPasswordAuthenticated, setIsPasswordAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [primaryData, setPrimaryData] = useState<any>(null);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // Modal states
   const [featureModalVisible, setFeatureModalVisible] = useState(false);
@@ -200,9 +199,16 @@ export default function Page() {
     setIsPasswordAuthenticated(true);
   };
 
-  // ============ FIREBASE AUTH EFFECT ============
+  // ============ DATA LOADING HANDLERS ============
+  const handleDataLoaded = (data: any) => {
+    setPrimaryData(data);
+    setDataError(null);
+  };
 
-  // ============ FIREBASE STORAGE DATA LOADING ============
+  const handleDataError = (error: string) => {
+    setDataError(error);
+    setPrimaryData(null);
+  };
     
   // ============ MARKET FACTORS SYNC EFFECT ============
   useEffect(() => {
@@ -450,7 +456,7 @@ export default function Page() {
         }
       };
 
-      const result = await runServerSimulation(
+      const result = await runSecureSimulation(
         activeConfigured,
         currentReportTypeState,
         currentOutputTypeState,
@@ -722,6 +728,25 @@ export default function Page() {
   // FIRST: Check password authentication
   if (!isPasswordAuthenticated) {
     return <PasswordProtect onAuthenticated={handlePasswordAuthenticated} />;
+  }
+
+  // SECOND: Check for data loading errors
+  if (dataError) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Data Loading Error</h2>
+          <p className="text-gray-600 mb-4">{dataError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
   
   

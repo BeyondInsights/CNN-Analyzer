@@ -8,19 +8,7 @@ const nextConfig = {
     // Show all ESLint errors but don't fail build immediately
     ignoreDuringBuilds: false,
   },
-  // Better error reporting
-  onDemandEntries: {
-    // period (in ms) where the server will keep pages in the buffer
-    maxInactiveAge: 25 * 1000,
-    // number of pages that should be kept simultaneously without being disposed
-    pagesBufferLength: 2,
-  },
-  // Add experimental features for better error handling
-  experimental: {
-    // Better error overlay
-    forceSwcTransforms: false,
-  },
-  // Custom webpack config to show all errors and fix Firebase/undici issue
+  // Custom webpack config to fix Firebase/undici compatibility issue
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Configure TypeScript to show all errors
     config.stats = {
@@ -30,7 +18,7 @@ const nextConfig = {
       moduleTrace: true,
     };
 
-    // Fix Firebase/undici compatibility issue
+    // More aggressive fix for Firebase/undici compatibility
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -38,27 +26,56 @@ const nextConfig = {
         net: false,
         tls: false,
         crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+      };
+
+      // Completely exclude undici and problematic modules
+      config.externals = config.externals || [];
+      config.externals.push({
+        'undici': 'undici',
+        'firebase-admin': 'firebase-admin',
+        '@firebase/functions': '@firebase/functions',
+        'node:crypto': 'node:crypto',
+        'node:fs': 'node:fs',
+        'node:http': 'node:http',
+        'node:https': 'node:https',
+        'node:net': 'node:net',
+        'node:path': 'node:path',
+        'node:stream': 'node:stream',
+        'node:url': 'node:url',
+        'node:util': 'node:util',
+        'node:zlib': 'node:zlib',
+      });
+      
+      // Alias problematic modules to false
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'undici': false,
+        'node:crypto': false,
+        'node:fs': false,
+        'node:http': false,
+        'node:https': false,
+        'node:net': false,
+        'node:path': false,
+        'node:stream': false,
+        'node:url': false,
+        'node:util': false,
+        'node:zlib': false,
       };
     }
 
-    // Handle undici module parsing issues more aggressively
+    // Add rule for undici specifically
     config.module.rules.push({
-      test: /\.m?js$/,
-      include: /node_modules\/undici/,
-      type: 'javascript/auto',
-      resolve: {
-        fullySpecified: false,
-      },
+      test: /node_modules\/undici/,
+      use: 'null-loader',
     });
-
-    // Exclude problematic Firebase modules from client bundle
-    if (!isServer) {
-      config.externals = config.externals || [];
-      config.externals.push({
-        'firebase-admin': 'firebase-admin',
-        'undici': 'undici',
-      });
-    }
     
     return config;
   },

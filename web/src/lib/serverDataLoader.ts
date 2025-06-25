@@ -1,5 +1,5 @@
 // Server-side data loader for Firebase Storage
-import { adminStorage } from './firebaseAdmin';
+// Uses direct HTTP access to Firebase Storage with public URLs
 
 interface DataFiles {
   respondentUtilities: any[];
@@ -12,6 +12,9 @@ let serverDataCache: DataFiles | null = null;
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 let cacheTimestamp = 0;
 
+// Firebase Storage base URL for public files
+const STORAGE_BASE_URL = `https://firebasestorage.googleapis.com/v0/b/${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebasestorage.app/o`;
+
 export async function loadServerData(): Promise<DataFiles> {
   // Check cache first
   if (serverDataCache && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
@@ -21,14 +24,12 @@ export async function loadServerData(): Promise<DataFiles> {
   try {
     console.log('Loading data from Firebase Storage...');
     
-    const bucket = adminStorage.bucket();
-    
     // Load required data files
     const filePromises = [
-      loadFileFromStorage(bucket, 'data/a7b9c2d1.json'),
-      loadFileFromStorage(bucket, 'data/c9d4e7f1.json'),
-      loadFileFromStorage(bucket, 'data/modelParameters.json'),
-      loadFileFromStorage(bucket, 'data/drnRates.json')
+      loadFileFromStorage('data%2Fa7b9c2d1.json'),
+      loadFileFromStorage('data%2Fc9d4e7f1.json'),
+      loadFileFromStorage('data%2FmodelParameters.json'),
+      loadFileFromStorage('data%2FdrnRates.json')
     ];
 
     const [respondentUtilities, demographics, modelParameters, drnRates] = await Promise.all(filePromises);
@@ -53,23 +54,23 @@ export async function loadServerData(): Promise<DataFiles> {
   }
 }
 
-async function loadFileFromStorage(bucket: any, filePath: string): Promise<any> {
+async function loadFileFromStorage(encodedFilePath: string): Promise<any> {
   try {
-    console.log(`Loading ${filePath} from Firebase Storage...`);
-    const file = bucket.file(filePath);
+    const url = `${STORAGE_BASE_URL}/${encodedFilePath}?alt=media`;
+    console.log(`Loading ${encodedFilePath} from Firebase Storage...`);
     
-    // Check if file exists
-    const [exists] = await file.exists();
-    if (!exists) {
-      throw new Error(`File ${filePath} does not exist in Firebase Storage`);
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
     
-    const [contents] = await file.download();
-    const data = JSON.parse(contents.toString());
-    console.log(`Successfully loaded ${filePath}, ${Array.isArray(data) ? data.length : 'object'} records`);
+    const text = await response.text();
+    const data = JSON.parse(text);
+    console.log(`Successfully loaded ${encodedFilePath}, ${Array.isArray(data) ? data.length : 'object'} records`);
     return data;
   } catch (error) {
-    console.error(`Failed to load ${filePath}:`, error);
+    console.error(`Failed to load ${encodedFilePath}:`, error);
     throw error;
   }
 }

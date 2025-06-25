@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "staging": "cnn-analyzer"
+  },
+  "targets": {},
+  "etags": {}
+}

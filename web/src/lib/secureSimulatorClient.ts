@@ -1,4 +1,6 @@
 // lib/secureSimulatorClient.ts
+// TEMPORARILY DISABLED - Firebase Functions not used in current implementation
+/*
 import { functions } from './firebaseClient';
 import { httpsCallable } from 'firebase/functions';
 
@@ -97,3 +99,4 @@ export async function loadPrimaryDataFiles(): Promise<any> {
   Object.defineProperty(console, 'warn', { value: () => {} });
   Object.defineProperty(console, 'error', { value: () => {} });
 })();
+*/
