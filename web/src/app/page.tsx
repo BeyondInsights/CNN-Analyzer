@@ -3,7 +3,6 @@ const DEBUG_MODE = false;
 
 import React, { useState, useEffect } from 'react';
 import { auth } from '@/lib/firebaseClient';
-import { loadPrimaryDataFiles } from '@/lib/simulatorClient'; // Changed from secureSimulatorClient
 import { onAuthStateChanged } from 'firebase/auth';
 import { signInAnonymously } from 'firebase/auth';
 import marketModalStyles from '@/components/MarketFactorsModal.module.css';
