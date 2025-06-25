@@ -287,8 +287,6 @@ function calculateUtility(
     for (const feature of product.readerFeatures) {
       if ('feature' === undefined || 'feature' === null) continue;
       if (!feature) continue;
-      if (!feature || typeof feature !== 'string') continue;
-      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
       if (readerFeatures[featureKey]) {
         featureUtility += readerFeatures[featureKey];
       }
@@ -301,8 +299,6 @@ function calculateUtility(
     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
       if (!feature) continue;
     for (const feature of product.streamingFeatures) {
-      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
-      if (!feature || typeof feature !== 'string') continue;
       if (streamingFeatures[featureKey]) {
         featureUtility += streamingFeatures[featureKey];
       }
