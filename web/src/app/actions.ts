@@ -12,8 +12,7 @@ import type {
   SimulationOptions 
 } from '@/lib/types';
 import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
-import fs from 'fs/promises';
-import path from 'path';
+import { loadServerData } from '@/lib/serverDataLoader';
 
 // Interface definitions
 interface RespondentUtility {
@@ -69,19 +68,6 @@ const HHI_BANDS: Record<string, { name: string; lower: number; upper: number; wi
   '9': { name: "$300,000 or more", lower: 300000, upper: Infinity, width: Infinity }
 };
 
-async function loadJsonData<T>(filename: string): Promise<T> {
-  // For testing: load from local data directory
-  // TODO: In production, load from Firebase Storage using loadDataFromStorage()
-  const filePath = path.join(process.cwd(), 'src', 'data', filename);
-  try {
-    const fileContents = await fs.readFile(filePath, 'utf8');
-    return JSON.parse(fileContents) as T;
-  } catch (error) {
-    console.error(`Error loading ${filename}:`, error);
-    throw new Error(`Could not load data file: ${filename}`);
-  }
-}
-
 // REAL IMPLEMENTATION
 export async function runServerSimulation(
   activeProducts: ProductSetupConfig[],
@@ -105,14 +91,13 @@ export async function runServerSimulation(
       return null;
     }
 
-    // Load the actual respondent data
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
-    const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
-    const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
+    // Load the actual respondent data from Firebase Storage
+    const serverData = await loadServerData();
+    const { respondentUtilities, demographics: demographicsData, modelParameters: modelParametersList, drnRates: drnData } = serverData;
     
     // Convert model parameters to a map
     const modelParams: Record<string, number> = {};
-    modelParametersList.forEach(p => { 
+    modelParametersList.forEach((p: any) => { 
       modelParams[p.Parameter] = p.Value; 
     });
     
@@ -213,7 +198,6 @@ export async function runServerSimulation(
         const weight = respondent.Weight || 1;
         
         // Apply DRN factor from drnRates data
-        const drnData = await loadJsonData<any[]>('drnRates.json');
         const drnRecord = drnData.find((d: any) => d.Respondent_ID === respondent.Respondent_ID);
         const drnFactor = drnRecord?.DRN_Composite || drnRecord?.DRN_Base || 0.85;
         
@@ -222,7 +206,7 @@ export async function runServerSimulation(
         totalWeight += weight;
         
         // Add to segment calculations
-        const demo = demographicsData.find(d => d.Respondent_ID === respondent.Respondent_ID);
+        const demo = demographicsData.find((d: any) => d.Respondent_ID === respondent.Respondent_ID);
         if (demo) {
           // Determine which segment this respondent belongs to
           // This is simplified - you'd need to map demographics to your segments
@@ -396,11 +380,12 @@ function getSegmentSize(segmentName: string, respondents: RespondentUtility[], d
 
 export async function getProductProfile(productConfig: ProductSetupConfig): Promise<ProductProfileData | null> {
   try {
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
-    const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
-    const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
+    // Load data from Firebase Storage
+    const serverData = await loadServerData();
+    const { respondentUtilities, demographics: demographicsData, modelParameters: modelParametersList } = serverData;
+    
     const modelParams: Record<string, number> = {};
-    modelParametersList.forEach(p => { modelParams[p.Parameter] = p.Value; });
+    modelParametersList.forEach((p: any) => { modelParams[p.Parameter] = p.Value; });
     const TOTAL_TAM = modelParams['Total_TAM'] || 250000000;
     let productChoosersWeightedProbabilities: { demo: DemographicData, prob: number, weight: number }[] = [];
     let totalWeightedProbabilitySumForProduct = 0;
@@ -420,7 +405,7 @@ export async function getProductProfile(productConfig: ProductSetupConfig): Prom
       if (respUtil.Price_Squared) utility += (respUtil.Price_Squared || 0) * lnPrice * lnPrice;
       const probability = 1 / (1 + Math.exp(-utility));
       const weight = respUtil.Weight || 1;
-      const demo = demographicsData.find(d => d.Respondent_ID === respUtil.Respondent_ID);
+      const demo = demographicsData.find((d: any) => d.Respondent_ID === respUtil.Respondent_ID);
       if (demo) {
         productChoosersWeightedProbabilities.push({ demo, prob: probability, weight });
         totalWeightedProbabilitySumForProduct += probability * weight;

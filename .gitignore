@@ -81,3 +81,6 @@ yarn-error.log*
 web/node_modules/
 node_modules/
 web/node_modules/
+
+# Local Netlify folder
+.netlify

@@ -393,7 +393,7 @@ function getSegmentSize(segmentName: string, respondents: RespondentUtility[], d
 
 export async function getProductProfile(productConfig: ProductSetupConfig): Promise<ProductProfileData | null> {
   try {
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
     const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const modelParams: Record<string, number> = {};

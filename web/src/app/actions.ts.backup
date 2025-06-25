@@ -11,7 +11,7 @@ import type {
   MarketFactors,
   SimulationOptions 
 } from '@/lib/types';
-import respondentProfile from "@/data/respondentProfile.json";
+import respondentProfile from "@/data/c9d4e7f1.json";
 import drnRates from "@/data/drnRates.json";
 import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
 import fs from 'fs/promises';
@@ -109,7 +109,7 @@ export async function runServerSimulation(
     }
 
     // Load the actual respondent data
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
     const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     
@@ -398,7 +398,7 @@ function getSegmentSize(segmentName: string, respondents: RespondentUtility[], d
 
 export async function getProductProfile(productConfig: ProductSetupConfig): Promise<ProductProfileData | null> {
   try {
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
     const demographicsData = await loadJsonData<DemographicData[]>('demographics.json');
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const modelParams: Record<string, number> = {};

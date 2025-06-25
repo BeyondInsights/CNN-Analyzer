@@ -16,8 +16,8 @@ import { DEMOGRAPHIC_SEGMENTS } from '@/lib/constants';
 import { applyPriceSensitivity } from '@/lib/calculations'; // Import the new function
 
 // Import JSON data files directly
-import respondentUtilitiesData from '@/data/respondentUtilities.json';
-import respondentProfileData from '@/data/respondentProfile.json';
+import respondentUtilitiesData from '@/data/a7b9c2d1.json';
+import respondentProfileData from '@/data/c9d4e7f1.json';
 import modelParametersData from '@/data/modelParameters.json';
 import drnRatesData from '@/data/drnRates.json';
 
