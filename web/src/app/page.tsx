@@ -527,13 +527,13 @@ export default function Page() {
         }
       };
 
-      const result = await runSimulation(
-        activeConfigured,
-        currentReportTypeState,
-        currentOutputTypeState,
-        marketFactors,
-        simulationOptions
-      );
+      const result = await runSimulation({
+        products: activeConfigured,
+        reportType: currentReportTypeState,
+        outputType: currentOutputTypeState,
+        marketFactors: marketFactors,
+        simulationOptions: simulationOptions
+      });
 
       if (!result) {
         throw new Error("No result returned from simulation");
