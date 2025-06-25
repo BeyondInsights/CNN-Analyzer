@@ -23,7 +23,7 @@ import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runServerSimulation } from './actions';
+import { runSimulation } from './actions';
 
 // Type definitions (keeping all your existing types)
 interface CardData {
@@ -527,7 +527,7 @@ export default function Page() {
         }
       };
 
-      const result = await runServerSimulation(
+      const result = await runSimulation(
         activeConfigured,
         currentReportTypeState,
         currentOutputTypeState,
