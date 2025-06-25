@@ -10,7 +10,7 @@ const createFeatureMapping = () => {
   const readerMapping: Record<string, string> = {};
   const streamingMapping: Record<string, string> = {};
   
-  // Direct mapping based on actual data keys in respondentUtilities.json
+  // Direct mapping based on actual data keys in a7b9c2d1.json
   // Reader features
   readerMapping["Unlimited Articles on CNN.com and the CNN mobile app"] = "Unlimited_Articles_on_CNNcom_and_the_CNN_mobile_app";
   readerMapping["Unlimited articles"] = "Unlimited_Articles_on_CNNcom_and_the_CNN_mobile_app";

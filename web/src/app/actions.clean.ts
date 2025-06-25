@@ -114,8 +114,8 @@ export async function runServerSimulation(
     }
 
     // Load the data files
-    const respondentUtilities = await loadJsonData<RespondentUtility[]>('respondentUtilities.json');
-    const demographicsData = await loadJsonData<DemographicData[]>('respondentProfile.json');
+    const respondentUtilities = await loadJsonData<RespondentUtility[]>('a7b9c2d1.json');
+    const demographicsData = await loadJsonData<DemographicData[]>('c9d4e7f1.json');
     const modelParametersList = await loadJsonData<ModelParameter[]>('modelParameters.json');
     const drnRates = await loadJsonData<any>('drnRates.json');
     
