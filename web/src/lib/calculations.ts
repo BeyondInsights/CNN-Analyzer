@@ -285,9 +285,6 @@ function calculateUtility(
   if (product.readerFeatures && product.readerFeatures.length > 0) {
     const readerFeatures = p.all_features?.reader || p.features?.reader || {};
     for (const feature of product.readerFeatures) {
-      if (!feature) continue;
-      if ('feature' === undefined || 'feature' === null) continue;
-      if (!feature) continue;
       if (readerFeatures[featureKey]) {
         featureUtility += readerFeatures[featureKey];
       }
@@ -298,7 +295,6 @@ function calculateUtility(
   if (product.streamingFeatures && product.streamingFeatures.length > 0) {
     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
     for (const feature of product.streamingFeatures) {
-      if (!feature) continue;
       if (streamingFeatures[featureKey]) {
         featureUtility += streamingFeatures[featureKey];
       }
