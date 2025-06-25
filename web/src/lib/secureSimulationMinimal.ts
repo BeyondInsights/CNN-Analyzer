@@ -10,11 +10,43 @@ import type {
   MarketFactors,
   SimulationOptions 
 } from '@/lib/types';
-import { getAuthToken } from '@/lib/authManager';
 
 // Get the Firebase project ID from environment
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'cnn-analyzer';
 const REGION = 'us-central1';
+
+// Helper function to get auth token (minimal import)
+async function getAuthToken(): Promise<string | null> {
+  try {
+    if (typeof window === 'undefined') return null;
+    
+    // Only import what we need to avoid Firebase Functions import
+    const { initializeApp } = await import('firebase/app');
+    const { getAuth } = await import('firebase/auth');
+    
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
+    return await user.getIdToken();
+  } catch (error) {
+    console.error('Failed to get auth token:', error);
+    throw error;
+  }
+}
 
 // Client-side secure simulation using direct HTTP calls to Firebase Functions
 export async function runSecureSimulation(
@@ -25,7 +57,7 @@ export async function runSecureSimulation(
   simulationOptions: SimulationOptions
 ): Promise<ReportData | null> {
   console.log(
-    '[secureSimulationHttp.ts] Running secure simulation with:',
+    '[secureSimulationMinimal.ts] Running secure simulation with:',
     activeProducts.length,
     reportType,
     outputType,
@@ -103,11 +135,11 @@ export async function runSecureSimulation(
       outputType: simulationResult.outputType
     };
 
-    console.log('[secureSimulationHttp.ts] Secure simulation completed successfully');
+    console.log('[secureSimulationMinimal.ts] Secure simulation completed successfully');
     return reportData;
     
   } catch (error) {
-    console.error('[secureSimulationHttp.ts] Error in runSecureSimulation:', error);
+    console.error('[secureSimulationMinimal.ts] Error in runSecureSimulation:', error);
     throw error;
   }
 }
@@ -120,7 +152,7 @@ export async function runSecurePriceSensitivityAnalysis(
   simulationOptions: SimulationOptions
 ): Promise<SensitivityPoint[] | null> {
   try {
-    console.log('[secureSimulationHttp.ts] Running secure price sensitivity analysis');
+    console.log('[secureSimulationMinimal.ts] Running secure price sensitivity analysis');
 
     // Get auth token
     const token = await getAuthToken();
@@ -177,7 +209,7 @@ export async function runSecurePriceSensitivityAnalysis(
     return sensitivityPoints;
     
   } catch (error) {
-    console.error('[secureSimulationHttp.ts] Error in runSecurePriceSensitivityAnalysis:', error);
+    console.error('[secureSimulationMinimal.ts] Error in runSecurePriceSensitivityAnalysis:', error);
     return null;
   }
 }

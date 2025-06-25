@@ -1,3 +1,11 @@
+console.log('🔥 FIREBASE FUNCTION: Loading FULL respondent-level data...');
+console.log('📊 Data files being loaded:');
+console.log('  - a7b9c2d1.json (6.45 MB) - Respondent Utilities');  
+console.log('  - c9d4e7f1.json (752 KB) - Demographics');
+console.log('  - e5f8a3b2.json (6.56 MB) - Respondent Data');
+console.log('  - modelParameters.json - Model Parameters');
+console.log('  - drnRates.json - DRN Rates');
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 

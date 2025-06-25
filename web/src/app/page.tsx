@@ -2,7 +2,7 @@
 const DEBUG_MODE = false;
 
 import React, { useState, useEffect } from 'react';
-import { auth } from '@/lib/firebaseClient';
+// Note: Firebase auth will be loaded dynamically when needed
 import { ReportType, OutputType, ReportData, ProductProfileData, SensitivityPoint, ProductSensitivityData, SimulationOptions, MarketFactors } from '@/lib/types';
 import marketModalStyles from '@/components/MarketFactorsModal.module.css';
 import AttributeImpactModal from '@/components/AttributeImpactModal';
@@ -22,7 +22,7 @@ import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runSecureSimulation } from '@/lib/secureSimulationHttp';
+import { runSecureSimulation, runPriceSensitivityAnalysis } from '@/lib/httpSimulation';
 
 // Type definitions (keeping all your existing types)
 interface CardData {
