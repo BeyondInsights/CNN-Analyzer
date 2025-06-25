@@ -49,9 +49,7 @@ export async function loadServerData(): Promise<DataFiles> {
 
   } catch (error) {
     console.error('Failed to load data from Firebase Storage:', error);
-    
-    // Fallback to local data if available
-    return loadFallbackData();
+    throw new Error('Could not load required data files from Firebase Storage');
   }
 }
 
@@ -73,33 +71,5 @@ async function loadFileFromStorage(bucket: any, filePath: string): Promise<any> 
   } catch (error) {
     console.error(`Failed to load ${filePath}:`, error);
     throw error;
-  }
-}
-
-async function loadFallbackData(): Promise<DataFiles> {
-  // Import local data as fallback
-  try {
-    const fs = await import('fs/promises');
-    const path = await import('path');
-    
-    const loadLocalFile = async (filename: string) => {
-      const filePath = path.join(process.cwd(), 'src', 'data', filename);
-      const contents = await fs.readFile(filePath, 'utf8');
-      return JSON.parse(contents);
-    };
-
-    const [respondentUtilities, demographics, modelParameters, drnRates] = await Promise.all([
-      loadLocalFile('a7b9c2d1.json'),
-      loadLocalFile('c9d4e7f1.json'),
-      loadLocalFile('modelParameters.json'),
-      loadLocalFile('drnRates.json')
-    ]);
-
-    console.log('Using fallback local data files');
-    return { respondentUtilities, demographics, modelParameters, drnRates };
-    
-  } catch (error) {
-    console.error('Failed to load fallback data:', error);
-    throw new Error('Could not load required data files from Firebase Storage or local fallback');
   }
 }
