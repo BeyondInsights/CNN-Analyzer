@@ -1,16 +1,16 @@
 'use server';
 
-import { runSimulation as runSimulationLogic } from '@/lib/simulatorClient';
+import { adminStorage } from '@/lib/firebaseAdmin';
 
 export async function runSimulation(params: any) {
-  try {
-    console.log('Server: runSimulation called with:', JSON.stringify(params));
-    const results = await runSimulationLogic(params);
-    console.log('Server: simulation completed successfully');
-    return results;
-  } catch (error) {
-    console.error('Server: simulation error:', error);
-    console.error('Stack:', error.stack);
-    throw new Error(`Simulation failed: ${error.message}`);
-  }
+  const bucket = adminStorage.bucket();
+  
+  // Test if we can access storage
+  const [files] = await bucket.getFiles({ prefix: 'data/' });
+  console.log('Found files:', files.length);
+  
+  return {
+    success: true,
+    filesFound: files.length
+  };
 }
