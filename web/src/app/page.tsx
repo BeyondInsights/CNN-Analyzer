@@ -539,15 +539,17 @@ export default function Page() {
         throw new Error("No result returned from simulation");
       }
 
-      if (result.overallShare && result.segmentShares) {
-        setReportData(result);
+      if (result && result.takeRates) {
+        const mappedResult = {
+          overallShare: result.takeRates.map(tr => tr.adjustedTakeRate),
+          segmentShares: Object.entries(result.segmentResults || {}).map(([name, data]) => ({
+            segmentName: name,
+            shares: data.takeRates.map(tr => tr.adjustedTakeRate)
+          }))
+        };
+        setReportData(mappedResult);
         setIsReportOverlay(true);
       } else {
-        console.error("Unexpected result format:", result);
-        alert("Received unexpected data format from server");
-        return;
-      }
-
     } catch (error) {
       console.error('Simulation error:', error);
       alert(`Error running simulation: ${error instanceof Error ? error.message : 'Unknown error'}`);
