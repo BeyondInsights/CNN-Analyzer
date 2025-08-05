@@ -877,7 +877,24 @@ export default function Page() {
         </div>
         
         <div className={styles.headerButtons}>
-          <button
+        <button
+          className={styles.headerButton}
+          onClick={() => alert('How to Use:
+
+1. SELECT PRODUCTS: Click numbered buttons below
+2. CONFIGURE: Choose type, features, pricing
+3. RUN: Click green Run Simulation
+4. ANALYZE: Review results by segment
+
+TIPS:
+• Try $5.99 streaming to match CNN+
+• All-Access wins when cheaper
+• 35-54 age converts best')}
+          style={{ backgroundColor: '#17a2b8', fontWeight: 'bold' }}
+        >
+          <span className={styles.iconSpacing}>📖</span> How to Use
+        </button>
+                  <button
             className={`${styles.headerButton} ${styles.clearButton}`}
             onClick={() => clearAllCards()}
             disabled={isSimulating}
