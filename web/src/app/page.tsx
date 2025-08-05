@@ -544,7 +544,7 @@ export default function Page() {
       if (result.success && result.data) {
 
         reportData = result.data;
-      } else if (result.overallShare) {
+      } else if (result.data) {
 
         reportData = result;
       } else {

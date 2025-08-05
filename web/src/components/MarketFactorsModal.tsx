@@ -66,15 +66,6 @@ export default function MarketFactorsModal({
     }
   }, [currentFactors]);
 
-  // Auth state listener
-  useEffect(() => {
-    const unsubscribe = null => {
-      setUserId(user?.uid || null);
-    });
-
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="fixed inset-0 z-50 overflow-y-auto">
