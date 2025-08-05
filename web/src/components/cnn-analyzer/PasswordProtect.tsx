@@ -16,10 +16,7 @@ export default function PasswordProtect({ onAuthenticated }: PasswordProtectProp
     'jordan.bekier@beyondinsights.com',
     'justin.bekier@beyondinsights.com',
     'andy.borinstein@beyondinsights.com',
-    'brian.brett@beyondinsights.com',
     'elaine.sheng@beyondinsights.com',
-    'justin.eisenband@ftidelta.com',
-    'shane.rahmani@ftidelta.com',
   ];
 
   const handleSubmit = () => {

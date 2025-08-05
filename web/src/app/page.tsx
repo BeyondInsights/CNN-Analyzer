@@ -1385,7 +1385,7 @@ export default function Page() {
               {/* Quick Start Guide */}
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{ color: '#667eea', fontSize: '22px', marginBottom: '20px', borderBottom: '2px solid #667eea', paddingBottom: '10px' }}>
-                  🚀 Quick Start Guide
+                  Quick Start Guide
                 </h3>
                 
                 <div style={{ display: 'grid', gap: '20px' }}>
@@ -1420,7 +1420,7 @@ export default function Page() {
               {/* Button Guide */}
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{ color: '#667eea', fontSize: '22px', marginBottom: '20px', borderBottom: '2px solid #667eea', paddingBottom: '10px' }}>
-                  🎮 Button Guide
+                  Button Guide
                 </h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
@@ -2833,7 +2833,7 @@ export default function Page() {
               {/* Quick Start Guide */}
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{ color: '#667eea', fontSize: '22px', marginBottom: '20px', borderBottom: '2px solid #667eea', paddingBottom: '10px' }}>
-                  🚀 Quick Start Guide
+                  Quick Start Guide
                 </h3>
                 
                 <div style={{ display: 'grid', gap: '20px' }}>
@@ -2868,7 +2868,7 @@ export default function Page() {
               {/* Button Guide */}
               <div style={{ marginBottom: '30px' }}>
                 <h3 style={{ color: '#667eea', fontSize: '22px', marginBottom: '20px', borderBottom: '2px solid #667eea', paddingBottom: '10px' }}>
-                  🎮 Button Guide
+                  Button Guide
                 </h3>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
