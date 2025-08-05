@@ -526,6 +526,7 @@ export default function Page() {
         }
       };
 
+            console.log('[PAGE] Sending products in order:', activeConfigured.map((p, i) => `${i}: ${p.product} @ $${p.monthlyRate}`));
       const result = await runSecureSimulation(
         activeConfigured,
         currentReportTypeState,

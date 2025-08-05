@@ -628,6 +628,8 @@ export function performSimulation(
   drnData?: Record<string, number>,
   reportType?: ReportType
 ): SimulationResults {
+  console.log('[CALC] Processing products:', products.map((p, i) => `${i}: ${p.product}`));
+  
   // Check if we should use incremental logic
   const hasStandalones = products.some(p => 
     p.product.includes('Standalone') || p.product === 'CNN Standalone Vertical'

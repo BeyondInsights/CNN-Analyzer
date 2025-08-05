@@ -16,7 +16,8 @@ export async function runSecureSimulation(
 ): Promise<SimpleSimulationResult> {
   try {
 
-    const response = await fetch('/api/simulation', {
+      console.log('[HTTP] Sending to API:', products.map((p, i) => `${i}: ${p.product}`));
+  const response = await fetch('/api/simulation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
