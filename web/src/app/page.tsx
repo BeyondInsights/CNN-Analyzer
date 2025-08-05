@@ -883,6 +883,30 @@ export default function Page() {
           </button>
           
           <button
+            className={styles.headerButton}
+            onClick={() => {
+              const message = 
+                'HOW TO USE CNN SIMULATOR\n\n' +
+                '1. SELECT PRODUCTS: Click numbered buttons (1-8)\n' +
+                '2. CONFIGURE: Choose type, add features, set price\n' +
+                '3. RUN: Click green Run Simulation button\n' +
+                '4. REVIEW: Check results by segments\n\n' +
+                'KEY BUTTONS:\n' +
+                '• Set Report Type: Tiered vs Independent\n' +
+                '• Market Factors: Adjust real-world constraints\n' +
+                '• Price Sensitivity: See price impact\n' +
+                '• Download Report: Export CSV\n\n' +
+                'TIPS:\n' +
+                '• 35-54 age group converts best\n' +
+                '• All-Access wins when priced below individuals';
+              alert(message);
+            }}
+            style={{ backgroundColor: '#17a2b8', color: 'white', fontWeight: 'bold' }}
+          >
+            <span className={styles.iconSpacing}>📖</span> How to Use
+          </button>
+          
+          <button
             className={`${styles.headerButton} ${styles.runSimulationButton}`}
             onClick={handleRunSimulationClick}
             disabled={isSimulating}
