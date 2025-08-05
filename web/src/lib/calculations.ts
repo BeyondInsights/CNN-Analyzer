@@ -1229,8 +1229,9 @@ export function computeTakeRates(
   const avgDRN = totalWeight > 0 ? drnSum / totalWeight : 0;
   if (DEBUG_MODE) console.log('Average DRN factor:', avgDRN.toFixed(3));
 
-  // Step 2: Calculate overall take rates
+    // Step 2: Calculate overall take rates - PRESERVE INPUT ORDER
   const takeRates: TakeRate[] = products.map((prod, prodIndex) => {
+    console.log(`Processing product ${prodIndex}: ${prod.product}`);
     let totalWeightedProb = 0;
     let totalRespondentWeight = 0;
     
