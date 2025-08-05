@@ -121,11 +121,39 @@ if (Object.keys(VERTICAL_NAME_TO_CODE).length === 0) {
 const MODEL_CALIBRATION_FACTOR = 3.0  
 
 const PRODUCT_CALIBRATION: Record<string, number> = {
-  'CNN Reader': .95,
+  'CNN Reader': 0.95,
   'CNN All-Access': 1.05,
   'CNN Streaming': 0.90,
-  'CNN Standalone Vertical': 0.30  // Much stronger reduction for standalone
+  'CNN Standalone Vertical': 0.30
 };
+
+// Dynamic calibration for tiered bundles based on relative pricing
+function getDynamicCalibration(product: string, products: any[], reportType: string): number {
+  const baseCalib = PRODUCT_CALIBRATION[product] || 1.0;
+  
+  if (reportType !== 'tiered' && reportType !== 'bundle') {
+    return baseCalib;
+  }
+  
+  // Find All-Access and individual product prices
+  const allAccess = products.find(p => p.product === 'CNN All-Access');
+  const reader = products.find(p => p.product === 'CNN Reader');
+  const streaming = products.find(p => p.product === 'CNN Streaming');
+  
+  if (allAccess) {
+    // If All-Access is cheaper than both individuals, boost it significantly
+    if (reader && allAccess.monthlyRate < reader.monthlyRate * 0.8) {
+      if (product === 'CNN All-Access') return baseCalib * 1.5;
+      if (product === 'CNN Reader') return baseCalib * 0.5;
+    }
+    if (streaming && allAccess.monthlyRate < streaming.monthlyRate * 0.8) {
+      if (product === 'CNN All-Access') return baseCalib * 1.5;
+      if (product === 'CNN Streaming') return baseCalib * 0.5;
+    }
+  }
+  
+  return baseCalib;
+}
 
 // DEFAULT DEMOGRAPHIC MULTIPLIERS (can be overridden by UI)
 const DEFAULT_DEMO_MULTIPLIERS: DemoMultipliers = {
@@ -1237,7 +1265,7 @@ export function computeTakeRates(
       : 0;
     
     // Apply market adjustment and product calibration
-    let productCalibration = PRODUCT_CALIBRATION[prod.product];
+    let productCalibration = getDynamicCalibration(prod.product, products, reportType);
     // If not found, check if it's a standalone variant
     if (!productCalibration && prod.product.includes('Standalone')) {
       productCalibration = PRODUCT_CALIBRATION['CNN Standalone Vertical'] || 0.30;
@@ -1321,7 +1349,7 @@ export function computeTakeRates(
             ? (segmentWeightedProb / segmentProdWeight) * 100 
             : 0;
           
-          let productCalibration = PRODUCT_CALIBRATION[prod.product];
+          let productCalibration = getDynamicCalibration(prod.product, products, reportType);
           if (!productCalibration && prod.product.includes('Standalone')) {
             productCalibration = PRODUCT_CALIBRATION['CNN Standalone Vertical'] || 0.30;
           }
