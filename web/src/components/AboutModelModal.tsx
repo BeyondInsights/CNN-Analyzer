@@ -135,7 +135,7 @@ const AboutModelModal: React.FC<AboutModelModalProps> = ({
               <h3>Decision Response Normalization (DRN)</h3>
               <p>
                 We estimate a personal conversion propensity&nbsp;(0.10-0.99)
-                for each respondent, recognising “browsers” vs. “buyers” and
+                for each respondent, recognizing “browsers” vs. “buyers” and
                 reducing calibration error by up to 25%.
               </p>
               <p>
