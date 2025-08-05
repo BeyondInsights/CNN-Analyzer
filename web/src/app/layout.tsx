@@ -3,7 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'CNN Analyzer - Diagnostic',
+  title: 'CNN Digital News Simulator',
   description: 'Product simulation and analysis tool',
 };
 
