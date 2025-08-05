@@ -17,13 +17,8 @@ export default function PasswordProtect({ onAuthenticated }: PasswordProtectProp
 const ALLOWED_EMAILS = [
   'john.bekier@beyondinsights.com',
   'rich.bowell@gmail.com',
-  'jordan.bekier@beyondinsights.com',
-  'justin.bekier@beyondinsights.com',
   'andy.borinstein@beyondinsights.com',
-  'brian.brett@beyondinsights.com',
   'elaine.sheng@beyondinsights.com',
-  'justin.eisenband@ftidelta.com',
-  'shane.rahmani@ftidelta.com',
   ];
 
   const handleSubmit = () => {
