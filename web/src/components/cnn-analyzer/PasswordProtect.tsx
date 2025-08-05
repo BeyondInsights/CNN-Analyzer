@@ -1,148 +1,133 @@
-"use client";
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import React, { useState } from 'react';
 
 interface PasswordProtectProps {
   onAuthenticated: (email: string) => void;
 }
 
 export default function PasswordProtect({ onAuthenticated }: PasswordProtectProps) {
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
-const ALLOWED_EMAILS = [
-  'john.bekier@beyondinsights.com',
-  'rich.bowell@gmail.com',
-  'andy.borinstein@beyondinsights.com',
-  'elaine.sheng@beyondinsights.com',
-  ];
-
-  const handleSubmit = () => {
-    setError('');
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    const correctPassword = "BEYOND Insights Rules";
-    
-    if (!email) {
-      setError('Please enter your email address.');
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return;
     }
     
-    if (password === correctPassword) {
+    // Check password
+    if (password === 'CNNAnalyzer2024!') {
       onAuthenticated(email);
     } else {
-      setError('Invalid credentials. Please try again.');
+      setError('Invalid password');
     }
   };
 
   return (
     <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 50,
+      minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      padding: '1rem'
+      backgroundColor: '#f5f5f5'
     }}>
       <div style={{
-        width: '100%',
-        maxWidth: '28rem',
         backgroundColor: 'white',
-        borderRadius: '0.5rem',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        padding: '2rem'
+        padding: '40px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        width: '100%',
+        maxWidth: '400px'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <img 
-            src="https://i.imgur.com/B4zCjNq.png" 
-            alt="BEYOND Insights" 
-            width={120} 
-          height={60}
-          style={{ objectFit: 'contain' }}
-      />
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ color: '#cc0000', marginBottom: '10px' }}>CNN Digital News Simulator</h1>
+          <p style={{ color: '#666' }}>Please enter your credentials to continue</p>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', color: '#333' }}>
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your.email@company.com"
+              required
+              style={{
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '16px'
+              }}
+            />
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            CNN Subscription Simulator
-          </h2>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            Please enter your credentials to access the simulator.
-          </p>
-        </div>
-        
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
-            Email Address
-          </label>
-          <input
-            type="email"
-            placeholder="your.email@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+          
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', color: '#333' }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter password"
+              required
+              style={{
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '16px'
+              }}
+            />
+          </div>
+          
+          {error && (
+            <div style={{
+              color: '#dc3545',
+              marginBottom: '20px',
+              padding: '10px',
+              backgroundColor: '#f8d7da',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
+          
+          <button
+            type="submit"
             style={{
               width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ddd',
-              borderRadius: '0.375rem',
-              fontSize: '1rem'
+              padding: '12px',
+              backgroundColor: '#cc0000',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
             }}
-          />
+          >
+            Access Simulator
+          </button>
+        </form>
+        
+        <div style={{
+          marginTop: '20px',
+          textAlign: 'center',
+          fontSize: '12px',
+          color: '#999'
+        }}>
+          For access, contact the project administrator
         </div>
-        
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '500' }}>
-            Access Password
-          </label>
-          <input
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: '1px solid #ddd',
-              borderRadius: '0.375rem',
-              fontSize: '1rem'
-            }}
-          />
-        </div>
-        
-        {error && (
-          <p style={{ color: '#dc2626', fontSize: '0.875rem', marginBottom: '1rem' }}>
-            {error}
-          </p>
-        )}
-        
-        <button
-          onClick={handleSubmit}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            backgroundColor: '#CC0000',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            fontSize: '1.125rem',
-            fontWeight: '500',
-            cursor: 'pointer',
-            marginBottom: '1rem'
-          }}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#AA0000'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#CC0000'}
-        >
-          Access Simulator
-        </button>
-        
-        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#666' }}>
-          Authorized users only. Access attempts are logged.
-        </p>
       </div>
     </div>
   );
