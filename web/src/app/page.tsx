@@ -10,6 +10,7 @@ import CNNUtilitiesModal from '@/components/CNNUtilitiesModal';
 import PasswordProtect from '@/components/cnn-analyzer/PasswordProtect'; // Fixed import path
 import styles from './page.module.css';
 import AboutModelModal from '@/components/AboutModelModal';
+import HowToUseGuide from '@/components/HowToUseGuide';
 
 import readerFeatureDescriptionsData from '@/data/readerFeatureDescriptions.json';
 import streamingFeatureDescriptionsData from '@/data/streamingFeatureDescriptions.json';
@@ -214,6 +215,7 @@ export default function Page() {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [sensitivityModalVisible, setSensitivityModalVisible] = useState(false);
   const [showAboutModel, setShowAboutModel] = useState(false);
+  const [showHowToUse, setShowHowToUse] = useState(false);
   const [isMarketSizingModalVisible, setIsMarketSizingModalVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [showNotification, setShowNotification] = useState(false);
@@ -1271,7 +1273,13 @@ export default function Page() {
                   </div>
                 </div>
               )}
-            </div>
+            
+      {/* How to Use Guide */}
+      <HowToUseGuide
+        isOpen={showHowToUse}
+        onClose={() => setShowHowToUse(false)}
+      />
+</div>
           );
         })}
       </div>
@@ -2552,6 +2560,12 @@ export default function Page() {
       productProfiles={profileData}
       totalRespondents={2158}
 /> */}
-    </div>
+    
+      {/* How to Use Guide */}
+      <HowToUseGuide
+        isOpen={showHowToUse}
+        onClose={() => setShowHowToUse(false)}
+      />
+</div>
   );
 }
