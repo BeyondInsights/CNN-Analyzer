@@ -1,1 +1,8 @@
 .env.local
+
+# Exclude test files that might look like secrets
+*.backup
+*.backup.old
+*.orig.old
+*_fixed.json
+.env*
