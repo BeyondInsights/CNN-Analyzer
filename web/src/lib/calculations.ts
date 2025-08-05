@@ -124,7 +124,7 @@ const PRODUCT_CALIBRATION: Record<string, number> = {
   'CNN Reader': 0.95,
   'CNN All-Access': 1.05,
   'CNN Streaming': 0.90,
-  'CNN Standalone Vertical': 0.30
+  'CNN Standalone Vertical': 0.20
 };
 
 // Dynamic calibration for tiered bundles based on relative pricing
@@ -159,25 +159,25 @@ function getDynamicCalibration(product: string, products: any[], reportType: str
 const DEFAULT_DEMO_MULTIPLIERS: DemoMultipliers = {
   gender: {
     'Male': 1.0,
-    'Female': 1.1,
+    'Female': 1.05,  // Slightly higher engagement with subscription content
   },
   age: {
-    '18-34': 0.975,
-    '35-54': 1.1,
-    '55-74': 0.975
+    '18-34': 0.85,    // More price sensitive, less likely to pay
+    '35-54': 1.15,    // Sweet spot - disposable income + digital comfort
+    '55-74': 0.90     // Prefer linear TV, harder sell for digital
   },
   cnnAccess: {
-    'Regularly Access CNN': 1.0,
-    'Occasionally Access CNN': 1.1,
-    'Rarely Access CNN': 1.0
+    'Regularly Access CNN': 0.95,     // Harder to convert free users
+    'Occasionally Access CNN': 1.10,   // More convertible - seeking more content
+    'Rarely Access CNN': 0.85         // Low brand affinity
   },
   linearTV: {
-    'Have Linear TV': 1.0,
-    'No Linear TV': 1.1
+    'Have Linear TV': 0.85,   // Already getting CNN through cable
+    'No Linear TV': 1.20      // Digital-first, more likely to subscribe
   },
   digitalNews: {
-    'Digital News Subscriber': 0.975,
-    'Non-Subscriber': 1.0
+    'Digital News Subscriber': 1.15,  // Already paying for news
+    'Non-Subscriber': 0.95           // Haven't shown willingness to pay
   }
 };
 
