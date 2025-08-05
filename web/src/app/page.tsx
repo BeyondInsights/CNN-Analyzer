@@ -882,6 +882,47 @@ export default function Page() {
           >
             <span className={styles.iconSpacing}>🗑️</span> Clear All Selections
           </button>
+
+          <button
+            className={styles.headerButton}
+            onClick={() => {
+              const helpText = `HOW TO USE THE CNN DIGITAL NEWS SIMULATOR
+
+` +
+                `1. SELECT PRODUCTS: Click numbered buttons (1-8) to include/exclude
+` +
+                `2. CONFIGURE: Choose type, add features, set pricing
+` +
+                `3. RUN: Click green Run Simulation button
+` +
+                `4. REVIEW: Check results by demographic segments
+
+` +
+                `BUTTONS:
+` +
+                `• Set Report Type: Tiered (compete) vs Independent
+` +
+                `• Market Factors: Adjust real-world constraints (70-90% is optimistic)
+` +
+                `• Price Sensitivity: See adoption at different prices
+` +
+                `• Download Report: Export CSV for Excel
+
+` +
+                `TIPS:
+` +
+                `• All-Access should win when priced below individuals
+` +
+                `• 35-54 age group typically converts best
+` +
+                `• Try Streaming at $5.99 with 60% factors to match CNN+ benchmark`;
+              alert(helpText);
+            }}
+            style={{ backgroundColor: '#17a2b8', color: 'white', fontWeight: 'bold' }}
+          >
+            <span className={styles.iconSpacing}>📖</span> How to Use
+          </button>
+
           
           <button
             className={`${styles.headerButton} ${styles.runSimulationButton}`}
