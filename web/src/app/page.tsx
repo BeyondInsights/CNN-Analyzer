@@ -10,7 +10,6 @@ import CNNUtilitiesModal from '@/components/CNNUtilitiesModal';
 import PasswordProtect from '@/components/cnn-analyzer/PasswordProtect'; // Fixed import path
 import styles from './page.module.css';
 import AboutModelModal from '@/components/AboutModelModal';
-import HowToUseGuide from '@/components/HowToUseGuide';
 
 import readerFeatureDescriptionsData from '@/data/readerFeatureDescriptions.json';
 import streamingFeatureDescriptionsData from '@/data/streamingFeatureDescriptions.json';
@@ -215,7 +214,6 @@ export default function Page() {
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const [sensitivityModalVisible, setSensitivityModalVisible] = useState(false);
   const [showAboutModel, setShowAboutModel] = useState(false);
-  const [showHowToUse, setShowHowToUse] = useState(false);
   const [isMarketSizingModalVisible, setIsMarketSizingModalVisible] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
   const [showNotification, setShowNotification] = useState(false);
@@ -877,14 +875,11 @@ export default function Page() {
         </div>
         
         <div className={styles.headerButtons}>
-        <button
-          className={styles.headerButton}
-TIPS:
-• Try $5.99 streaming to match CNN+
-• All-Access wins when cheaper
-• 35-54 age converts best')}
-          style={{ backgroundColor: '#17a2b8', fontWeight: 'bold' }}
-        >
+          <button
+            className={`${styles.headerButton} ${styles.clearButton}`}
+            onClick={() => clearAllCards()}
+            disabled={isSimulating}
+          >
             <span className={styles.iconSpacing}>🗑️</span> Clear All Selections
           </button>
           
@@ -1276,7 +1271,8 @@ TIPS:
                   </div>
                 </div>
               )}
-            
+            </div>
+          );
         })}
       </div>
 
@@ -2556,5 +2552,6 @@ TIPS:
       productProfiles={profileData}
       totalRespondents={2158}
 /> */}
-    
+    </div>
+  );
 }
