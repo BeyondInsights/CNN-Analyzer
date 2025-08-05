@@ -857,41 +857,7 @@ export default function Page() {
           <div className={styles.headerTamInfo}>
             <div className={styles.tamDisplay}>
               TAM Universe = 105,624,640
-              <button className={styles.learnMoreLink} onClick={() => setIsMarketSizingModalVisible(true)}>
-                Click here to learn more
-              </button>
-            </div>
-          </div>
-          <button 
-            className={styles.headerButton}
-            onClick={() => setReportModalVisible(true)}
-            disabled={isSimulating}
-          >
-            <span className={styles.iconSpacing}>📊</span> Set Report Type
-          </button>
-          <div className={styles.reportTypeDisplayControlsInfo}>
-            Report Type: {currentReportTypeState === 'tiered' ? 'Tiered Bundles' : 'Independent Products'} | 
-            Output: {currentOutputTypeState === 'percentage' ? 'Take Rates (%)' : 
-                    currentOutputTypeState === 'count' ? 'Population Counts (#)' : 'Revenue ($)'}
-          </div>
-        </div>
-        
-        <div className={styles.headerButtons}>
-          <button
-            className={`${styles.headerButton} ${styles.clearButton}`}
-            onClick={() => clearAllCards()}
-            disabled={isSimulating}
-          >
-            <span className={styles.iconSpacing}>🗑️</span> Clear All Selections
-          </button>
-
-          <button
-            className={styles.headerButton}
-            onClick={() => setShowHowToModal(true)}
-            style={{ backgroundColor: '#17a2b8', color: 'white', fontWeight: 'bold' }}
-          >
-            <span className={styles.iconSpacing}>📖</span> How to Use
-          </button>
+              
 
 
           <button
