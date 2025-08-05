@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { X } from 'lucide-react';
 import type { MarketFactors, MarketFactorSettings } from '@/lib/types';
-import { auth } from '@/lib/firebaseClient';
+
 
 interface MarketFactorsModalProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ export default function MarketFactorsModal({
 
   // Auth state listener
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = null => {
       setUserId(user?.uid || null);
     });
 

@@ -1,0 +1,32 @@
+[
+  {
+    "Respondent_ID": "R001",
+    "Age": "25-34",
+    "Gender": "Female",
+    "Income": "$50,000-$75,000",
+    "Education": "Bachelor's Degree",
+    "Region": "Northeast",
+    "MediaConsumption": "Heavy",
+    "NewsInterest": "High"
+  },
+  {
+    "Respondent_ID": "R002",
+    "Age": "35-44",
+    "Gender": "Male", 
+    "Income": "$75,000-$100,000",
+    "Education": "Master's Degree",
+    "Region": "West",
+    "MediaConsumption": "Moderate",
+    "NewsInterest": "Medium"
+  },
+  {
+    "Respondent_ID": "R003",
+    "Age": "45-54",
+    "Gender": "Female",
+    "Income": "$100,000+",
+    "Education": "Bachelor's Degree",
+    "Region": "South",
+    "MediaConsumption": "Light",
+    "NewsInterest": "High"
+  }
+]

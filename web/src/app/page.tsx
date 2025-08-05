@@ -2,10 +2,8 @@
 const DEBUG_MODE = false;
 
 import React, { useState, useEffect } from 'react';
-import { auth } from '@/lib/firebaseClient';
-import { loadPrimaryDataFiles } from '@/lib/simulatorClient'; // Changed from secureSimulatorClient
-import { onAuthStateChanged } from 'firebase/auth';
-import { signInAnonymously } from 'firebase/auth';
+import { runSecureSimulation } from '@/lib/httpSimulation';
+
 import marketModalStyles from '@/components/MarketFactorsModal.module.css';
 import AttributeImpactModal from '@/components/AttributeImpactModal';
 import CNNUtilitiesModal from '@/components/CNNUtilitiesModal';
@@ -24,7 +22,7 @@ import PriceSensitivityControl from '@/components/PriceSensitivityControl';
 
 // Import components
 import ReportDisplay from '@/components/ReportDisplay';
-import { runServerSimulation } from './actions';
+import { runSimulation } from './actions';
 
 // Type definitions (keeping all your existing types)
 interface CardData {
@@ -528,20 +526,35 @@ export default function Page() {
         }
       };
 
-      const result = await runServerSimulation(
+      const result = await runSecureSimulation(
         activeConfigured,
         currentReportTypeState,
         currentOutputTypeState,
         marketFactors,
         simulationOptions
       );
+      
 
       if (!result) {
         throw new Error("No result returned from simulation");
       }
+      
+      // Handle both wrapped and unwrapped results
+      let reportData = null;
+      if (result.success && result.data) {
 
-      if (result.overallShare && result.segmentShares) {
-        setReportData(result);
+        reportData = result.data;
+      } else if (result.overallShare) {
+
+        reportData = result;
+      } else {
+        console.error("Unexpected result format:", result);
+        throw new Error("Invalid result format");
+      }
+      
+      if (reportData) {
+
+        setReportData(reportData);
         setIsReportOverlay(true);
       } else {
         console.error("Unexpected result format:", result);

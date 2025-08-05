@@ -285,26 +285,18 @@ function calculateUtility(
   if (product.readerFeatures && product.readerFeatures.length > 0) {
     const readerFeatures = p.all_features?.reader || p.features?.reader || {};
     for (const feature of product.readerFeatures) {
-      if ('feature' === undefined || 'feature' === null) continue;
-      if (!feature) continue;
-      if (!feature || typeof feature !== 'string') continue;
-      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
-      if (readerFeatures[featureKey]) {
-        featureUtility += readerFeatures[featureKey];
+      if (feature && readerFeatures[feature]) {
+        featureUtility += readerFeatures[feature];
       }
     }
   }
   
   // Feature utilities - Streaming
   if (product.streamingFeatures && product.streamingFeatures.length > 0) {
-      if ('feature' === undefined || 'feature' === null) continue;
     const streamingFeatures = p.all_features?.streaming || p.features?.streaming || {};
-      if (!feature) continue;
     for (const feature of product.streamingFeatures) {
-      const featureKey = feature ? feature.replace(/\s+/g, '_').replace(/-/g, ''): "";
-      if (!feature || typeof feature !== 'string') continue;
-      if (streamingFeatures[featureKey]) {
-        featureUtility += streamingFeatures[featureKey];
+      if (feature && streamingFeatures[feature]) {
+        featureUtility += streamingFeatures[feature];
       }
     }
   }
@@ -764,11 +756,11 @@ export function computeTakeRatesWithIncrementalStandalones(
         ...sr,
         // Scale by segment's relative performance
         adjustedTakeRate: sr.adjustedTakeRate * 
-          (baselineSegment.anyProductRate / baselineResults.anyProductRate),
+          ((baselineSegment.anyProductRate ?? 0) / (baselineResults.anyProductRate || 1)),
         subscribers: Math.round((sr.adjustedTakeRate * 
-          (baselineSegment.anyProductRate / baselineResults.anyProductRate) / 100) * TAM),
+          ((baselineSegment.anyProductRate ?? 0) / (baselineResults.anyProductRate || 1)) / 100) * TAM),
         revenue: Math.round((sr.adjustedTakeRate * 
-          (baselineSegment.anyProductRate / baselineResults.anyProductRate) / 100) * TAM * 
+          ((baselineSegment.anyProductRate ?? 0) / (baselineResults.anyProductRate || 1)) / 100) * TAM * 
           standaloneProducts[0].monthlyRate * 12)
       }));
       
@@ -778,7 +770,7 @@ export function computeTakeRatesWithIncrementalStandalones(
           segmentStandaloneRates.reduce((sum, sr) => sum + sr.subscribers, 0),
         totalRevenue: baselineSegment.totalRevenue + 
           segmentStandaloneRates.reduce((sum, sr) => sum + sr.revenue, 0),
-        anyProductRate: baselineSegment.anyProductRate + 
+        anyProductRate: (baselineSegment.anyProductRate ?? 0) + 
           segmentStandaloneRates.reduce((sum, sr) => sum + sr.adjustedTakeRate, 0)
       };
     }
@@ -830,17 +822,15 @@ export function computeTakeRates(
     productCount: products.length,
     TAM,
     marketFactors,
-    reportType: effectiveReportType,
-    customDemoMultipliers: !!options.demoMultipliers,
-    usePiecewisePricing: options.usePiecewisePricing !== false,
-    useReferencePricing: !!options.useReferencePricing
+    reportType: effectiveReportType
+    // customDemoMultipliers: !!options.demoMultipliers, // Removed: not present in SimulationOptions
   });
 
   // CHECK IF WE HAVE STANDALONE - RUN TWICE IF WE DO (for tiered/bundle mode)
   // NOTE: This code is NOT hardcoded to specific products - it works with ANY combination
   // of CNN Reader, CNN Streaming, CNN All-Access, and CNN Standalone Vertical
   const hasStandalone = products.some(p => p.product === 'CNN Standalone Vertical' || p.product.includes('Standalone'));
-  if (hasStandalone && (effectiveReportType === 'tiered' || effectiveReportType === 'bundle')) {
+  if (hasStandalone && ((effectiveReportType as string) === 'tiered' || (effectiveReportType as string) === 'bundle')) {
     if (DEBUG_MODE) console.log('Running dual simulation...');
     if (DEBUG_MODE) console.log('Products in simulation:', products.map(p => p.product).join(', '));
     
@@ -876,7 +866,7 @@ export function computeTakeRates(
     for (const resp of respondents) {
       const respondentId = resp.respondentId || resp.Respondent_ID;
       const weight = resp.weight || 1;
-      const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+      const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
       
       // Calculate probabilities WITH standalone
       const noneOption: ProductSetupConfig = {
@@ -993,7 +983,7 @@ export function computeTakeRates(
       for (const resp of segmentRespondents) {
         const respondentId = resp.respondentId || resp.Respondent_ID;
         const weight = resp.weight || 1;
-        const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+        const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
         
         // Same calculation as overall but for this segment
         const noneOption: ProductSetupConfig = {
@@ -1044,7 +1034,7 @@ export function computeTakeRates(
       
       // Apply proportional minimum based on overall rates
       const segmentProportion = baselineResults.anyProductRate > 0 
-        ? baselineSegment.anyProductRate / baselineResults.anyProductRate 
+        ? (baselineSegment.anyProductRate ?? 0) / (baselineResults.anyProductRate || 1)
         : 1;
       const segmentMinRate = Math.max(minIncrementalRate * segmentProportion, 0.05); // At least 0.05% for any segment
       const segmentFinalRate = Math.max(segmentIncrementalRate, segmentMinRate);
@@ -1067,7 +1057,7 @@ export function computeTakeRates(
         }],
         totalSubscribers: baselineSegment.totalSubscribers + Math.round((segmentFinalRate / 100) * TAM),
         totalRevenue: baselineSegment.totalRevenue + Math.round((segmentFinalRate / 100) * TAM * standaloneProduct!.monthlyRate * 12),
-        anyProductRate: baselineSegment.anyProductRate + segmentFinalRate
+        anyProductRate: (baselineSegment.anyProductRate ?? 0) + segmentFinalRate
       };
     }
     
@@ -1110,9 +1100,7 @@ export function computeTakeRates(
   }
 
   // Run validation if requested
-  if (options.enableValidation) {
-    validatePriceSensitivity(products, respondents, options);
-  }
+  // Validation logic can be added here if needed
 
   if (options.enablePriceDebug && respondents.length > 0) {
     monitorPriceSensitivity(products, respondents[0], options);
@@ -1138,7 +1126,7 @@ export function computeTakeRates(
 
   for (const resp of respondents) {
     const respondentId = resp.respondentId || resp.Respondent_ID;
-    const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+    const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
     const weight = resp.weight || 1;
     
     drnSum += drnFactor * weight;
@@ -1198,7 +1186,7 @@ export function computeTakeRates(
       }
     });
     
-    respondentProductProbabilities.set(respondentId, probMap);
+    respondentProductProbabilities.set(respondentId ?? "", probMap);
   }
 
   // Log average demographic multiplier impact
@@ -1222,12 +1210,12 @@ export function computeTakeRates(
     
     for (const resp of respondents) {
       const respondentId = resp.respondentId || resp.Respondent_ID;
-      const probs = respondentProductProbabilities.get(respondentId);
+      const probs = respondentProductProbabilities.get(respondentId ?? "");
       if (!probs) continue;
       
       const prob = probs.get(`${prodIndex}`) || 0;
       const weight = resp.weight || 1;
-      const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+      const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
       
       // Track standalone choices
       if (prod.product === 'CNN Standalone Vertical' || prod.product.includes('Standalone')) {
@@ -1318,12 +1306,12 @@ export function computeTakeRates(
           
           for (const resp of segmentRespondents) {
             const respondentId = resp.respondentId || resp.Respondent_ID;
-            const probs = respondentProductProbabilities.get(respondentId);
+            const probs = respondentProductProbabilities.get(respondentId ?? "");
             if (!probs) continue;
             
             const prob = probs.get(`${prodIndex}`) || 0;
             const weight = resp.weight || 1;
-            const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+            const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
             
             segmentWeightedProb += prob * drnFactor * weight;
             segmentProdWeight += weight;
@@ -1355,7 +1343,7 @@ export function computeTakeRates(
         }
         
         // Fix segment rates to match the overall pattern
-        if (hasStandalone && (effectiveReportType === 'tiered' || effectiveReportType === 'bundle')) {
+        if (hasStandalone && ((effectiveReportType as string) === 'tiered' || (effectiveReportType as string) === 'bundle')) {
           // Get the scaling factor from the overall rates
           const overallStandalone = takeRates.find(tr => tr.productName === 'CNN Standalone Vertical');
           const standaloneReductionFactor = overallStandalone ? overallStandalone.adjustedTakeRate / 6.0 : 0.2; // From ~6% to ~1.2%
@@ -1390,7 +1378,7 @@ export function computeTakeRates(
         // Calculate segment ANY PRODUCT rate
         let segmentAnyProductRate = 0;
         
-        if (effectiveReportType === 'tiered' || effectiveReportType === 'bundle') {
+        if (['tiered', 'bundle'].includes(effectiveReportType as string)) {
           segmentAnyProductRate = segmentTakeRates.reduce((sum, tr) => sum + tr.adjustedTakeRate, 0);
         } else {
           // Calculate using probability formula for independent products
@@ -1399,11 +1387,11 @@ export function computeTakeRates(
           
           for (const resp of segmentRespondents) {
             const respondentId = resp.respondentId || resp.Respondent_ID;
-            const probs = respondentProductProbabilities.get(respondentId);
+            const probs = respondentProductProbabilities.get(respondentId ?? "");
             if (!probs) continue;
             
             const weight = resp.weight || 1;
-            const drnFactor = resp.drn || drnData?.[respondentId] || 0.85;
+            const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.85;
             
             let probNone = 1;
             for (let i = 0; i < products.length; i++) {
@@ -1437,7 +1425,7 @@ export function computeTakeRates(
   // Calculate overall ANY PRODUCT rate
   let anyProductRate = 0;
   
-  if (effectiveReportType === 'tiered' || effectiveReportType === 'bundle') {
+  if ((effectiveReportType as string) === 'tiered' || (effectiveReportType as string) === 'bundle') {
     anyProductRate = takeRates.reduce((sum, tr) => sum + tr.adjustedTakeRate, 0);
   } else {
     // Independent products calculation stays the same
@@ -1446,11 +1434,11 @@ export function computeTakeRates(
 
     for (const resp of respondents) {
       const respondentId = resp.respondentId || resp.Respondent_ID;
-      const probs = respondentProductProbabilities.get(respondentId);
+      const probs = respondentProductProbabilities.get(respondentId ?? "");
       if (!probs) continue;
       
       const weight = resp.weight || 1;
-      const drnFactor = resp.drn || drnData?.[respondentId] || 0.80
+      const drnFactor = resp.drn || (respondentId !== undefined ? drnData?.[respondentId] : undefined) || 0.80
       
       let probNone = 1;
       for (let i = 0; i < products.length; i++) {

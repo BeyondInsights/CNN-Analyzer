@@ -1,3 +1,4 @@
+const DEBUG_MODE = false;
 // src/components/ReportDisplay.tsx
 import React from 'react';
 import type { ReportData, ProductSetupConfig } from '@/lib/types';

@@ -1,16 +1,25 @@
-'use server';
+// Client-side action wrapper (no server actions)
+import type { 
+  ProductSetupConfig, 
+  ReportData, 
+  ReportType, 
+  OutputType, 
+  MarketFactors,
+  SimulationOptions 
+} from '@/lib/types';
 
-import { runSimulation as runSimulationLogic } from '@/lib/simulatorClient';
+// This just exports the type for backward compatibility
+export type { ReportData };
 
-export async function runSimulation(params: any) {
-  try {
-    console.log('Server: runSimulation called with:', JSON.stringify(params));
-    const results = await runSimulationLogic(params);
-    console.log('Server: simulation completed successfully');
-    return results;
-  } catch (error) {
-    console.error('Server: simulation error:', error);
-    console.error('Stack:', error.stack);
-    throw new Error(`Simulation failed: ${error.message}`);
-  }
+// Placeholder function - actual simulation happens via API
+export async function runSimulation(
+  activeProducts: ProductSetupConfig[],
+  reportType: ReportType,
+  outputType: OutputType,
+  marketFactors: MarketFactors,
+  simulationOptions: SimulationOptions
+): Promise<ReportData | null> {
+  // This function is not used anymore - httpSimulation.ts handles everything
+  console.log('Note: This function is deprecated. Use runSecureSimulation instead.');
+  return null;
 }
