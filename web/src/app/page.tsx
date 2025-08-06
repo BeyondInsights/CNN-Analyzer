@@ -2078,11 +2078,13 @@ export default function Page() {
                       style={{
                         flex: 1,
                         padding: '0.75rem',
-                        border: '1px solid #ddd',
+                        border: '1px solid #cc0000',
                         borderRadius: '4px',
-                        background: priceThreshold === 10 ? '#f0f0f0' : 'white',
+                        background: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? '#cc0000' : 'white',
+                        color: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? 'white' : '#333',
                         cursor: 'pointer',
-                        fontWeight: priceThreshold === 10 ? 'bold' : 'normal'
+                        fontWeight: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? 'bold' : 'normal',
+                        transition: 'all 0.2s'
                       }}
                     >
                       Low Sensitivity
@@ -2097,11 +2099,13 @@ export default function Page() {
                       style={{
                         flex: 1,
                         padding: '0.75rem',
-                        border: '1px solid #ddd',
+                        border: '1px solid #cc0000',
                         borderRadius: '4px',
-                        background: priceThreshold === 12 ? '#f0f0f0' : 'white',
+                        background: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? '#cc0000' : 'white',
+                        color: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? 'white' : '#333',
                         cursor: 'pointer',
-                        fontWeight: priceThreshold === 12 ? 'bold' : 'normal'
+                        fontWeight: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? 'bold' : 'normal',
+                        transition: 'all 0.2s'
                       }}
                     >
                       Standard
@@ -2118,10 +2122,11 @@ export default function Page() {
                         padding: '0.75rem',
                         border: '1px solid #cc0000',
                         borderRadius: '4px',
-                        background: priceThreshold === 15 ? '#cc0000' : 'white',
-                        color: priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7 ? 'white' : '#333',
+                        background: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? '#cc0000' : 'white',
+                        color: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? 'white' : '#333',
                         cursor: 'pointer',
-                        fontWeight: priceThreshold === 15 ? 'bold' : 'normal'
+                        fontWeight: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? 'bold' : 'normal',
+                        transition: 'all 0.2s'
                       }}
                     >
                       High Sensitivity
