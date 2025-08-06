@@ -2064,6 +2064,32 @@ export default function Page() {
                   onChange={(e) => setPriceSensitivityEnabled(e.target.checked)}
                 />
                 Enable Price Sensitivity Analysis
+              <div style={{ 
+                marginTop: "1rem", 
+                padding: "1rem", 
+                background: "#e3f2fd", 
+                border: "1px solid #1976d2",
+                borderRadius: "8px",
+                fontSize: "14px",
+                color: "#333"
+              }}>
+                <strong>📊 Price Sensitivity Help:</strong><br/>
+                <br/>
+                <strong>Price Threshold:</strong> The price point where people hesitate<br/>
+                • $10 = Entertainment level (Netflix/Spotify)<br/>
+                • $12 = Standard news (recommended for CNN)<br/>
+                • $15 = Premium news (NYT/WSJ level)<br/>
+                <br/>
+                <strong>Low Price Boost:</strong> Extra adoption below threshold<br/>
+                • 1.1x = 10% more (price insensitive)<br/>
+                • 1.3x = 30% more (standard)<br/>
+                • 1.5x = 50% more (very price sensitive)<br/>
+                <br/>
+                <strong>High Price Penalty:</strong> Less adoption above threshold<br/>
+                • 0.9x = 10% less (loyal customers)<br/>
+                • 0.8x = 20% less (standard)<br/>
+                • 0.7x = 30% less (price sensitive)<br/>
+              </div>
                 <div className={marketModalStyles.tooltip} style={{ display: 'inline-block', marginLeft: '8px' }}>
                   <span className={marketModalStyles.tooltipIcon}>?</span>
                   <div className={marketModalStyles.tooltipContent} style={{ width: '350px' }}>
