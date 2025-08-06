@@ -122,7 +122,7 @@ const MODEL_CALIBRATION_FACTOR = 3.0
 
 const PRODUCT_CALIBRATION: Record<string, number> = {
   'CNN Reader': 0.95,
-  'CNN All-Access': 1.05,
+  'CNN All-Access': 1.10,
   'CNN Streaming': 0.90,
   'CNN Standalone Vertical': 0.20
 };
