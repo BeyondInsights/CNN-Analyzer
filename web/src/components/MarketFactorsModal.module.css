@@ -174,15 +174,31 @@
   position: absolute;
   background: #333;
   color: white;
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-size: 13px;
+  width: 300px;  /* Fixed width for consistency */
+  max-width: 300px;
+  white-space: normal;  /* Allow text wrapping */
+  line-height: 1.4;
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 5px;
-  z-index: 10;
+  margin-bottom: 8px;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Arrow pointing down */
+.tooltipContent::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
 }
 
 .tooltip:hover .tooltipContent {
