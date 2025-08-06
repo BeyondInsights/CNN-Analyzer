@@ -248,9 +248,13 @@ const AttributeImpactModal: React.FC<AttributeImpactModalProps> = ({ isVisible, 
       <div style={{ marginBottom: '30px' }}>
         <h4 style={{ color: '#666', marginBottom: '10px' }}>Utility Values</h4>
         <p style={{ lineHeight: '1.6' }}>
-          Utility values are derived from conjoint analysis of respondent preferences. Positive 
-          values indicate features that increase purchase likelihood, while negative values 
-          indicate features that decrease it.
+        <p style={{ fontSize: "14px", color: "#333", lineHeight: "1.6" }}>
+          Utility values are derived from a zero-centered hierarchical Bayesian conjoint analysis. 
+          <strong>Important:</strong> Since the model is zero-centered, negative values do NOT mean 
+          decreased preference - they simply indicate values below the centered mean. What matters is 
+          the relative difference: a feature with -0.5 utility is preferred over one with -1.0 utility. 
+          Higher values (whether positive or negative) indicate stronger preference.
+        </p>
         </p>
       </div>
 
