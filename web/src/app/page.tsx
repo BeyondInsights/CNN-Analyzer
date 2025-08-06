@@ -2119,7 +2119,7 @@ export default function Page() {
                         border: '1px solid #cc0000',
                         borderRadius: '4px',
                         background: priceThreshold === 15 ? '#cc0000' : 'white',
-                        color: priceThreshold === 15 ? 'white' : '#333',
+                        color: priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7 ? 'white' : '#333',
                         cursor: 'pointer',
                         fontWeight: priceThreshold === 15 ? 'bold' : 'normal'
                       }}
