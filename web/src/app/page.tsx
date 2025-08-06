@@ -476,7 +476,23 @@ export default function Page() {
     }
 
     setIsSimulating(true);
-    
+
+      // Simple pricing validation
+      const products = Array.from(activeProductsState)
+        .filter(id => cardDataState[id] && cardDataState[id].product)
+        .map(id => cardDataState[id]);
+      
+      const readerPrice = products.find(p => p.product === 'CNN Reader')?.monthlyRate || 999;
+      const streamingPrice = products.find(p => p.product === 'CNN Streaming')?.monthlyRate || 999;
+      const allAccessPrice = products.find(p => p.product === 'CNN All-Access')?.monthlyRate || 0;
+      
+      if (allAccessPrice > 0 && allAccessPrice < Math.min(readerPrice, streamingPrice)) {
+        if (!confirm('Warning: All-Access is priced below individual products. This is unrealistic. Continue anyway?')) {
+          setIsSimulating(false);
+          return;
+        }
+      }
+
     try {
       const activeConfigured = Array.from(activeProductsState)
   .filter(id => cardDataState[id] && cardDataState[id].product)
@@ -1850,7 +1866,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        % aware product exists. New: 20-40%, Established: 60-80%, Leader: 80-95%
+                        How well your target market knows about your product
                       </div>
                     </div>
                   </label>
@@ -1873,7 +1889,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Payment/platform access. Basic: 70%, Good: 85%, Excellent: 95%
+                        How easily customers can access your product
                       </div>
                     </div>
                   </label>
@@ -1896,7 +1912,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        vs. competitors. Weak: 50-70%, Parity: 70-85%, Strong: 85-100%
+                        Your advantage compared to alternatives
                       </div>
                     </div>
                   </label>
@@ -1919,7 +1935,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Conversion rate. Poor: 40-60%, Average: 60-80%, Best: 80-95%
+                        How well your marketing converts to customers
                       </div>
                     </div>
                   </label>
@@ -1942,7 +1958,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Y1 adoption %. Conservative: 40-60%, Moderate: 60-75%, Aggressive: 75-90%
+                        Expected adoption speed in the first year
                       </div>
                     </div>
                   </label>
@@ -2064,50 +2080,7 @@ export default function Page() {
                   onChange={(e) => setPriceSensitivityEnabled(e.target.checked)}
                 />
                 Enable Price Sensitivity Analysis
-              <div style={{ 
-                marginTop: "1rem", 
-                padding: "1rem", 
-                background: "#e3f2fd", 
-                border: "1px solid #1976d2",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "#333"
-              }}>
-                <strong>📊 Price Sensitivity Help:</strong><br/>
-                <br/>
-                <strong>Price Threshold:</strong> The price point where people hesitate<br/>
-                • $10 = Entertainment level (Netflix/Spotify)<br/>
-                • $12 = Standard news (recommended for CNN)<br/>
-                • $15 = Premium news (NYT/WSJ level)<br/>
-                <br/>
-                <strong>Low Price Boost:</strong> Extra adoption below threshold<br/>
-                • 1.1x = 10% more (price insensitive)<br/>
-                • 1.3x = 30% more (standard)<br/>
-                • 1.5x = 50% more (very price sensitive)<br/>
-                <br/>
-                <strong>High Price Penalty:</strong> Less adoption above threshold<br/>
-                • 0.9x = 10% less (loyal customers)<br/>
-                • 0.8x = 20% less (standard)<br/>
-                • 0.7x = 30% less (price sensitive)<br/>
-              </div>
-                <div className={marketModalStyles.tooltip} style={{ display: 'inline-block', marginLeft: '8px' }}>
-                  <span className={marketModalStyles.tooltipIcon}>?</span>
-                  <div className={marketModalStyles.tooltipContent} style={{ width: '350px' }}>
-                    <strong>Price Sensitivity Settings:</strong><br/><br/>
-                    <strong>Threshold:</strong> The psychological "expensive" barrier<br/>
-                    • $10: Entertainment benchmark (Netflix)<br/>
-                    • $12: Standard news (recommended)<br/>
-                    • $15: Premium news (NYT/WSJ)<br/><br/>
-                    <strong>Low Price Boost:</strong> Extra adoption below threshold<br/>
-                    • 1.1x = 10% boost (price insensitive)<br/>
-                    • 1.3x = 30% boost (standard)<br/>
-                    • 1.5x = 50% boost (very price sensitive)<br/><br/>
-                    <strong>High Price Penalty:</strong> Lost adoption above threshold<br/>
-                    • 0.9x = 10% penalty (loyal audience)<br/>
-                    • 0.8x = 20% penalty (standard)<br/>
-                    • 0.7x = 30% penalty (price sensitive)
-                  </div>
-                </div></label>
+              </label>
               
               {priceSensitivityEnabled && (
                 <div className={marketModalStyles.advancedContent} style={{ marginTop: '1rem' }}>
@@ -2121,13 +2094,11 @@ export default function Page() {
                       style={{
                         flex: 1,
                         padding: '0.75rem',
-                        border: '1px solid #cc0000',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        background: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? '#cc0000' : 'white',
-                        color: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? 'white' : '#333',
+                        background: priceThreshold === 10 ? '#f0f0f0' : 'white',
                         cursor: 'pointer',
-                        fontWeight: (priceThreshold === 10 && lowPriceMultiplier === 1.1 && highPriceMultiplier === 0.9) ? 'bold' : 'normal',
-                        transition: 'all 0.2s'
+                        fontWeight: priceThreshold === 10 ? 'bold' : 'normal'
                       }}
                     >
                       Low Sensitivity
@@ -2142,13 +2113,11 @@ export default function Page() {
                       style={{
                         flex: 1,
                         padding: '0.75rem',
-                        border: '1px solid #cc0000',
+                        border: '1px solid #ddd',
                         borderRadius: '4px',
-                        background: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? '#cc0000' : 'white',
-                        color: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? 'white' : '#333',
+                        background: priceThreshold === 12 ? '#f0f0f0' : 'white',
                         cursor: 'pointer',
-                        fontWeight: (priceThreshold === 12 && lowPriceMultiplier === 1.3 && highPriceMultiplier === 0.8) ? 'bold' : 'normal',
-                        transition: 'all 0.2s'
+                        fontWeight: priceThreshold === 12 ? 'bold' : 'normal'
                       }}
                     >
                       Standard
@@ -2165,11 +2134,10 @@ export default function Page() {
                         padding: '0.75rem',
                         border: '1px solid #cc0000',
                         borderRadius: '4px',
-                        background: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? '#cc0000' : 'white',
-                        color: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? 'white' : '#333',
+                        background: priceThreshold === 15 ? '#cc0000' : 'white',
+                        color: priceThreshold === 15 ? 'white' : '#333',
                         cursor: 'pointer',
-                        fontWeight: (priceThreshold === 15 && lowPriceMultiplier === 1.5 && highPriceMultiplier === 0.7) ? 'bold' : 'normal',
-                        transition: 'all 0.2s'
+                        fontWeight: priceThreshold === 15 ? 'bold' : 'normal'
                       }}
                     >
                       High Sensitivity
