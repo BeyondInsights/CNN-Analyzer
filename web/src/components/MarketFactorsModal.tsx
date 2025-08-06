@@ -96,6 +96,26 @@ export default function MarketFactorsModal({
                     className="w-full"
                   />
                 </div>
+            <div className={styles.helpBox} style={{ marginTop: '1rem' }}>
+              <h4>�� Price Sensitivity Guide</h4>
+              <p><strong>Price Threshold:</strong> The psychological barrier. Below = value, Above = expensive</p>
+              <ul>
+                <li>$10 - Digital subscription benchmark (Netflix/Spotify)</li>
+                <li>$12 - Standard news (recommended)</li>
+                <li>$15 - Premium news (NYT/WSJ)</li>
+              </ul>
+              <p><strong>Low Price Boost:</strong> Extra adoption when below threshold</p>
+              <ul>
+                <li>1.3x = 30% boost (standard)</li>
+                <li>1.5x = 50% boost (aggressive)</li>
+              </ul>
+              <p><strong>High Price Penalty:</strong> Reduced adoption when above threshold</p>
+              <ul>
+                <li>0.8x = 20% penalty (mild)</li>
+                <li>0.7x = 30% penalty (standard)</li>
+                <li>0.5x = 50% penalty (severe)</li>
+              </ul>
+            </div>
 
                 <div>
                   <label className="block text-sm font-medium">
@@ -296,6 +316,26 @@ export default function MarketFactorsModal({
                     />
                   </div>
                 </div>
+            <div className={styles.helpBox} style={{ marginTop: '1rem' }}>
+              <h4>�� Price Sensitivity Guide</h4>
+              <p><strong>Price Threshold:</strong> The psychological barrier. Below = value, Above = expensive</p>
+              <ul>
+                <li>$10 - Digital subscription benchmark (Netflix/Spotify)</li>
+                <li>$12 - Standard news (recommended)</li>
+                <li>$15 - Premium news (NYT/WSJ)</li>
+              </ul>
+              <p><strong>Low Price Boost:</strong> Extra adoption when below threshold</p>
+              <ul>
+                <li>1.3x = 30% boost (standard)</li>
+                <li>1.5x = 50% boost (aggressive)</li>
+              </ul>
+              <p><strong>High Price Penalty:</strong> Reduced adoption when above threshold</p>
+              <ul>
+                <li>0.8x = 20% penalty (mild)</li>
+                <li>0.7x = 30% penalty (standard)</li>
+                <li>0.5x = 50% penalty (severe)</li>
+              </ul>
+            </div>
               )}
             </div>
 
