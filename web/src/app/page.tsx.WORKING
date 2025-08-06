@@ -1850,7 +1850,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        % aware product exists. New: 20-40%, Established: 60-80%, Leader: 80-95%
+                        How well your target market knows about your product
                       </div>
                     </div>
                   </label>
@@ -1873,7 +1873,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Payment/platform access. Basic: 70%, Good: 85%, Excellent: 95%
+                        How easily customers can access your product
                       </div>
                     </div>
                   </label>
@@ -1896,7 +1896,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        vs. competitors. Weak: 50-70%, Parity: 70-85%, Strong: 85-100%
+                        Your advantage compared to alternatives
                       </div>
                     </div>
                   </label>
@@ -1919,7 +1919,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Conversion rate. Poor: 40-60%, Average: 60-80%, Best: 80-95%
+                        How well your marketing converts to customers
                       </div>
                     </div>
                   </label>
@@ -1942,7 +1942,7 @@ export default function Page() {
                     <div className={marketModalStyles.tooltip}>
                       <span className={marketModalStyles.tooltipIcon}>?</span>
                       <div className={marketModalStyles.tooltipContent}>
-                        Y1 adoption %. Conservative: 40-60%, Moderate: 60-75%, Aggressive: 75-90%
+                        Expected adoption speed in the first year
                       </div>
                     </div>
                   </label>
