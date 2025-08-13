@@ -16,6 +16,7 @@ export default function PasswordProtect({ onAuthenticated }: PasswordProtectProp
     'jordan.bekier@beyondinsights.com',
     'justin.bekier@beyondinsights.com',
     'andy.borinstein@beyondinsights.com',
+    'joel.kaji@beyondinsights.com',
     'elaine.sheng@beyondinsights.com',
   ];
 
